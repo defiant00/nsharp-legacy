@@ -1,54 +1,50 @@
 namespace NSharp.Core.Ast;
 
-public interface IAstItem
+public abstract class AstItem
 {
     public Position Position { get; set; }
 }
 
-public interface IExpression : IAstItem { }
+public abstract class Expression : AstItem { }
 
-public interface IStatement : IAstItem { }
+public abstract class Statement : AstItem { }
 
-public class AstItem : IAstItem
-{
-    public Position Position { get; set; }
-}
-
-public class Class : AstItem, IStatement
+public class Class : Statement
 {
     public string? Name { get; set; }
-    public List<IStatement>? Statements { get; set; }
+    public List<Statement>? Statements { get; set; }
 }
 
-public class Comment : AstItem, IStatement
+public class Comment : Statement
 {
     public string? Content { get; set; }
 }
 
-public class CurrentObjectInstance : AstItem, IExpression { }
+public class CurrentObjectInstance : Expression { }
 
-public class ExpressionStatement : AstItem, IStatement
+public class ExpressionStatement : Statement
 {
-    public IExpression? Expression { get; set; }
+    public Expression? Expression { get; set; }
 }
 
-public class File : AstItem, IStatement
+public class File : Statement
+{
+    public string? Name { get; set; }
+    public List<Statement>? Statements { get; set; }
+}
+
+public class FunctionDefinition : Statement
+{
+    public string? Name { get; set; }
+    public List<Statement>? Statements { get; set; }
+}
+
+public class Property : Statement
 {
     public string? Name { get; set; }
 }
 
-public class FunctionDefinition : AstItem, IStatement
-{
-    public string? Name { get; set; }
-    public List<IStatement>? Statements { get; set; }
-}
-
-public class Property : AstItem, IStatement
-{
-    public string? Name { get; set; }
-}
-
-public class Space : AstItem, IStatement
+public class Space : Statement
 {
     public int Size { get; set; }
 }
