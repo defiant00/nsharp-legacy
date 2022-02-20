@@ -1,6 +1,8 @@
-﻿using System.Text.Json;
+﻿namespace NSharp.Compiler;
 
-namespace NSharp.Compiler;
+// using System.Text.Json;
+using NSharp.Core.Ast;
+using NSharp.Language;
 
 public static class Program
 {
@@ -9,25 +11,40 @@ public static class Program
         Console.WriteLine("N# Compiler v0.1.0");
 
         string file = "test.ns.json";
-        var ast = new Core.Ast.File
+        var ast = new File
         {
             Name = file,
-            Statements = new List<Core.Ast.Statement>
+            Statements = new List<Statement>
             {
-                new Core.Ast.Class
+                new Class
                 {
                     Name = "TestClass",
-                    Statements = new List<Core.Ast.Statement>
+                    Statements = new List<Statement>
                     {
-                        new Core.Ast.FunctionDefinition
+                        new FunctionDefinition
                         {
                             Name = "TestFunc",
+                            Statements = new List<Statement>
+                            {
+                                new ExpressionStatement
+                                {
+                                    Expression = new CurrentObjectInstance{},
+                                },
+                                new Space {Size = 3},
+                                new Comment {Content = "This is a comment!"},
+                                new ExpressionStatement
+                                {
+                                    Expression = new CurrentObjectInstance{},
+                                },
+                            },
                         },
                     },
                 },
             },
         };
-        
-        File.WriteAllText(file, JsonSerializer.Serialize(ast, new JsonSerializerOptions { WriteIndented = true }));
+
+        System.IO.File.WriteAllText("test.txt", CLang.Process(ast));
+
+        // System.IO.File.WriteAllText(file, JsonSerializer.Serialize(ast, new JsonSerializerOptions { WriteIndented = true }));
     }
 }
