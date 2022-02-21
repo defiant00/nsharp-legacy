@@ -1,6 +1,7 @@
 ﻿namespace NSharp.Compiler;
 
 // using System.Text.Json;
+using NSharp.Core;
 using NSharp.Core.Ast;
 using NSharp.Language;
 
@@ -19,22 +20,61 @@ public static class Program
                 new Class
                 {
                     Name = "TestClass",
-                    Statements = new List<Statement>
+                    Block = new Block
                     {
-                        new FunctionDefinition
+                        Statements = new List<Statement>
                         {
-                            Name = "TestFunc",
-                            Statements = new List<Statement>
+                            new FunctionDefinition
                             {
-                                new ExpressionStatement
+                                Name = "TestFunc",
+                                Block = new Block
                                 {
-                                    Expression = new CurrentObjectInstance{},
-                                },
-                                new Space {Size = 3},
-                                new Comment {Content = "This is a comment!"},
-                                new ExpressionStatement
-                                {
-                                    Expression = new CurrentObjectInstance{},
+                                    Statements = new List<Statement>
+                                    {
+                                        new ExpressionStatement
+                                        {
+                                            Expression = new CurrentObjectInstance{},
+                                        },
+                                        new Space {Size = 1},
+                                        new Block
+                                        {
+                                            Statements = new List<Statement>
+                                            {
+                                                new If
+                                                {
+                                                    Condition = new LiteralToken { Token = Token.False },
+                                                    Block = new Block
+                                                    {
+                                                        Statements = new List<Statement>
+                                                        {
+                                                            new Break{},
+                                                        }
+                                                    },
+                                                },
+                                                new Comment {Content = "While loop!"},
+                                                new Loop{},
+                                            },
+                                        },
+                                        new Space {Size = 1},
+                                        new Block
+                                        {
+                                            Statements = new List<Statement>
+                                            {
+                                                new Comment {Content = "Do While loop!"},
+                                                new If
+                                                {
+                                                    Condition = new LiteralToken { Token = Token.True },
+                                                    Block = new Block
+                                                    {
+                                                        Statements = new List<Statement>
+                                                        {
+                                                            new Loop{},
+                                                        }
+                                                    },
+                                                },
+                                            },
+                                        },
+                                    },
                                 },
                             },
                         },
