@@ -38,9 +38,6 @@ public static class CLang
         {
             case null:
                 return;
-            case Block b:
-                Process(sb, indent, b);
-                break;
             case Break b:
                 Process(sb, indent, b);
                 break;
@@ -48,6 +45,9 @@ public static class CLang
                 Process(sb, indent, c);
                 break;
             case Comment c:
+                Process(sb, indent, c);
+                break;
+            case Continue c:
                 Process(sb, indent, c);
                 break;
             case CurrentObjectInstance c:
@@ -74,56 +74,17 @@ public static class CLang
         }
     }
 
-    private static void Process(StringBuilder sb, int indent, Block b)
-    {
-        // while loop
-        if (b.Statements.Count >= 2
-            && b.Statements[0] is If ifSt && ifSt.Block.Statements.Count == 1
-            && ifSt.Block.Statements[0] is Break
-            && b.Statements[^1] is Loop)
-        {
-            sb.AppendIndented(indent, "while (!(");
-            Process(sb, indent, ifSt.Condition);
-            sb.AppendLine("))");
-            ProcessBlockRange(sb, indent, b, 1, b.Statements.Count - 1);
-            sb.AppendLine();
-            return;
-        }
-
-        // do while loop
-        if (b.Statements.Count >= 1
-            && b.Statements[^1] is If ifSt2 && ifSt2.Block.Statements.Count == 1
-            && ifSt2.Block.Statements[0] is Loop)
-        {
-            sb.AppendLineIndented(indent, "do");
-            ProcessBlockRange(sb, indent, b, 0, b.Statements.Count - 1);
-            sb.Append(" while (");
-            Process(sb, indent, ifSt2.Condition);
-            sb.AppendLine(");");
-            return;
-        }
-
-        ProcessBlockRange(sb, indent, b, 0, b.Statements.Count);
-        sb.AppendLine();
-    }
-
-    private static void ProcessBlockRange(StringBuilder sb, int indent, Block block, int start, int max)
-    {
-        sb.AppendLineIndented(indent, "{");
-        for (int i = start; i < max; i++)
-            Process(sb, indent + 1, block.Statements[i]);
-        sb.AppendIndented(indent, "}");
-    }
-
     private static void Process(StringBuilder sb, int indent, Break br) => sb.AppendLineIndented(indent, "break;");
 
     private static void Process(StringBuilder sb, int indent, Class cl)
     {
         sb.AppendLineIndented(indent, $"class {cl.Name}");
-        Process(sb, indent, cl.Block);
+        Process(sb, indent, cl.Statements);
     }
 
     private static void Process(StringBuilder sb, int indent, Comment comment) => sb.AppendLineIndented(indent, $"// {comment.Content}");
+
+    private static void Process(StringBuilder sb, int indent, Continue cont) => sb.AppendLineIndented(indent, "continue;");
 
     private static void Process(StringBuilder sb, CurrentObjectInstance co) => sb.Append("this");
 
@@ -137,7 +98,7 @@ public static class CLang
     private static void Process(StringBuilder sb, int indent, FunctionDefinition fd)
     {
         sb.AppendLineIndented(indent, $"public static void {fd.Name}()");
-        Process(sb, indent, fd.Block);
+        Process(sb, indent, fd.Statements);
     }
 
     private static void Process(StringBuilder sb, int indent, If i)
@@ -145,7 +106,7 @@ public static class CLang
         sb.AppendIndented(indent, "if (");
         Process(sb, indent, i.Condition);
         sb.AppendLine(")");
-        Process(sb, indent, i.Block);
+        Process(sb, indent, i.Statements);
         if (i.Else != null)
         {
             sb.AppendLineIndented(indent, "else");
@@ -169,11 +130,43 @@ public static class CLang
         }
     }
 
-    private static void Process(StringBuilder sb, int indent, Loop loop) => sb.AppendLineIndented(indent, "loop;");
+    private static void Process(StringBuilder sb, int indent, Loop loop)
+    {
+        if (loop.ConditionAtEnd)
+            sb.AppendLineIndented(indent, "do");
+        else
+        {
+            sb.AppendIndented(indent, "while (");
+            Process(sb, indent, loop.Condition);
+            sb.AppendLine(")");
+        }
+        sb.AppendLineIndented(indent, "{");
+        foreach (var statement in loop.Statements)
+            Process(sb, indent + 1, statement);
+        if (loop.ConditionAtEnd)
+        {
+            sb.AppendIndented(indent, "} while (");
+            Process(sb, indent, loop.Condition);
+            sb.AppendLine(");");
+        }
+        else
+            sb.AppendLineIndented(indent, "}");
+    }
 
     private static void Process(StringBuilder sb, Space space)
     {
         for (int i = 0; i < space.Size; i++)
             sb.AppendLine();
+    }
+
+    private static void Process(StringBuilder sb, int indent, List<Statement> statements)
+    {
+        bool curlies = !(statements.Count == 1 && statements[0].IsCode);
+        if (curlies)
+            sb.AppendLineIndented(indent, "{");
+        foreach (var s in statements)
+            Process(sb, indent + 1, s);
+        if (curlies)
+            sb.AppendLineIndented(indent, "}");
     }
 }

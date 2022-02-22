@@ -11,7 +11,7 @@ public static class Program
     {
         Console.WriteLine("N# Compiler v0.1.0");
 
-        string file = "test.ns.json";
+        string file = "test.ns";
         var ast = new File
         {
             Name = file,
@@ -20,59 +20,48 @@ public static class Program
                 new Class
                 {
                     Name = "TestClass",
-                    Block = new Block
+                    Statements = new List<Statement>
                     {
-                        Statements = new List<Statement>
+                        new FunctionDefinition
                         {
-                            new FunctionDefinition
+                            Name = "TestFunc",
+                            Statements = new List<Statement>
                             {
-                                Name = "TestFunc",
-                                Block = new Block
+                                new ExpressionStatement
                                 {
+                                    Expression = new CurrentObjectInstance{},
+                                },
+                                new Space {Size = 1},
+                                new Loop {
+                                    Condition = new LiteralToken { Token = Token.True },
                                     Statements = new List<Statement>
                                     {
-                                        new ExpressionStatement
+                                        new Comment {Content = "While loop!"},
+                                        new Break{},
+                                    },
+                                },
+                                new Space {Size = 1},
+                                new Loop {
+                                    Condition = new LiteralToken { Token = Token.True },
+                                    ConditionAtEnd = true,
+                                    Statements = new List<Statement>
+                                    {
+                                        new Comment {Content = "Do While loop!"},
+                                        new If
                                         {
-                                            Expression = new CurrentObjectInstance{},
-                                        },
-                                        new Space {Size = 1},
-                                        new Block
-                                        {
+                                            Condition = new LiteralToken { Token = Token.False },
                                             Statements = new List<Statement>
                                             {
-                                                new If
-                                                {
-                                                    Condition = new LiteralToken { Token = Token.False },
-                                                    Block = new Block
-                                                    {
-                                                        Statements = new List<Statement>
-                                                        {
-                                                            new Break{},
-                                                        }
-                                                    },
-                                                },
-                                                new Comment {Content = "While loop!"},
-                                                new Loop{},
+                                                new Comment { Content = "Hi!" },
                                             },
                                         },
-                                        new Space {Size = 1},
-                                        new Block
+                                        new If
                                         {
+                                            Condition = new LiteralToken { Token = Token.False },
                                             Statements = new List<Statement>
                                             {
-                                                new Comment {Content = "Do While loop!"},
-                                                new If
-                                                {
-                                                    Condition = new LiteralToken { Token = Token.True },
-                                                    Block = new Block
-                                                    {
-                                                        Statements = new List<Statement>
-                                                        {
-                                                            new Loop{},
-                                                        }
-                                                    },
-                                                },
-                                            },
+                                                new Continue{},
+                                            }
                                         },
                                     },
                                 },
