@@ -1,12 +1,13 @@
-﻿namespace NSharp.Language.CLang;
+
+namespace NSharp.Language.PyStyle;
 
 using System.Text;
 using NSharp.Core;
 using NSharp.Core.Ast;
 
-public static class CLang
+public static class PyStyle
 {
-    private static void Indent(this StringBuilder sb, int indent) => sb.Append('\t', indent);
+    private static void Indent(this StringBuilder sb, int indent) => sb.Append(' ', indent * 4);
 
     private static void AppendIndented(this StringBuilder sb, int indent, string content)
     {
@@ -24,7 +25,7 @@ public static class CLang
     {
         var sb = new StringBuilder();
 
-        sb.AppendLine($"// {file.Name}");
+        sb.AppendLine($"# {file.Name}");
         sb.AppendLine();
         for (int i = 0; i < file.Statements.Count; i++)
             Process(sb, i, 0, file.Statements[i]);
@@ -77,7 +78,7 @@ public static class CLang
         }
     }
 
-    private static void Process(StringBuilder sb, int indent, Break br) => sb.AppendLineIndented(indent, "break;");
+    private static void Process(StringBuilder sb, int indent, Break br) => sb.AppendLineIndented(indent, "break");
 
     private static void Process(StringBuilder sb, int index, int indent, Class cl)
     {
@@ -86,21 +87,21 @@ public static class CLang
 
         sb.AppendIndented(indent, $"class ");
         Process(sb, cl.Name);
-        sb.AppendLine();
+        sb.AppendLine(":");
         Process(sb, indent, cl.Statements);
     }
 
-    private static void Process(StringBuilder sb, int indent, Comment comment) => sb.AppendLineIndented(indent, $"// {comment.Content}");
+    private static void Process(StringBuilder sb, int indent, Comment comment) => sb.AppendLineIndented(indent, $"# {comment.Content}");
 
-    private static void Process(StringBuilder sb, int indent, Continue cont) => sb.AppendLineIndented(indent, "continue;");
+    private static void Process(StringBuilder sb, int indent, Continue cont) => sb.AppendLineIndented(indent, "continue");
 
-    private static void Process(StringBuilder sb, CurrentObjectInstance co) => sb.Append("this");
+    private static void Process(StringBuilder sb, CurrentObjectInstance co) => sb.Append("self");
 
     private static void Process(StringBuilder sb, int indent, ExpressionStatement es)
     {
         sb.Indent(indent);
         Process(sb, 0, indent, es.Expression);
-        sb.AppendLine(";");
+        sb.AppendLine();
     }
 
     private static void Process(StringBuilder sb, int index, int indent, FunctionDefinition fd)
@@ -121,16 +122,16 @@ public static class CLang
         sb.Append(id.Value);
     }
 
-    private static void Process(StringBuilder sb, int indent, If i)
+    private static void Process(StringBuilder sb, int indent, If ifSt)
     {
-        sb.AppendIndented(indent, "if (");
-        Process(sb, 0, indent, i.Condition);
-        sb.AppendLine(")");
-        Process(sb, indent, i.Statements);
-        if (i.Else != null)
+        sb.AppendIndented(indent, "if ");
+        Process(sb, 0, indent, ifSt.Condition);
+        sb.AppendLine(":");
+        Process(sb, indent, ifSt.Statements);
+        if (ifSt.Else != null)
         {
-            sb.AppendLineIndented(indent, "else");
-            Process(sb, indent, i.Else);
+            sb.AppendLineIndented(indent, "else:");
+            Process(sb, indent, ifSt.Else);
         }
     }
 
@@ -139,38 +140,33 @@ public static class CLang
         switch (lit.Token)
         {
             case Token.True:
-                sb.Append("true");
+                sb.Append("True");
                 break;
             case Token.False:
-                sb.Append("false");
+                sb.Append("False");
                 break;
             case Token.Null:
-                sb.Append("null");
+                sb.Append("None");
                 break;
         }
     }
 
     private static void Process(StringBuilder sb, int indent, Loop loop)
     {
+        sb.AppendIndented(indent, "while ");
         if (loop.ConditionAtEnd)
-            sb.AppendLineIndented(indent, "do");
+            sb.Append("True");
         else
-        {
-            sb.AppendIndented(indent, "while (");
             Process(sb, 0, indent, loop.Condition);
-            sb.AppendLine(")");
-        }
-        sb.AppendLineIndented(indent, "{");
-        for (int i = 0; i < loop.Statements.Count; i++)
-            Process(sb, i, indent, loop.Statements[i]);
+        sb.AppendLine(":");
+        Process(sb, indent, loop.Statements);
         if (loop.ConditionAtEnd)
         {
-            sb.AppendIndented(indent, "} while (");
+            sb.AppendIndented(indent + 1, "if ");
             Process(sb, 0, indent, loop.Condition);
-            sb.AppendLine(");");
+            sb.AppendLine(":");
+            sb.AppendLineIndented(indent + 2, "break");
         }
-        else
-            sb.AppendLineIndented(indent, "}");
     }
 
     private static void Process(StringBuilder sb, Space space)
@@ -181,12 +177,9 @@ public static class CLang
 
     private static void Process(StringBuilder sb, int indent, List<Statement> statements)
     {
-        bool curlies = !(statements.Count == 1 && statements[0].IsCode);
-        if (curlies)
-            sb.AppendLineIndented(indent, "{");
         for (int i = 0; i < statements.Count; i++)
             Process(sb, i, indent + 1, statements[i]);
-        if (curlies)
-            sb.AppendLineIndented(indent, "}");
+        if (!statements.Any(s => s.IsCode))
+            sb.AppendLineIndented(indent + 1, "pass");
     }
 }

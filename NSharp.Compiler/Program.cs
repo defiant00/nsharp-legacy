@@ -1,15 +1,21 @@
 ﻿namespace NSharp.Compiler;
 
-// using System.Text.Json;
 using NSharp.Core;
 using NSharp.Core.Ast;
-using NSharp.Language.CLang;
+using NSharp.Language.CStyle;
+using NSharp.Language.PyStyle;
 
 public static class Program
 {
     public static void Main(string[] args)
     {
         Console.WriteLine("N# Compiler v0.1.0");
+
+        // commands:
+        // nsc edit <file(s)>
+        //   creates a file.ns.edit file per input file, following the .nsedit settings
+        // nsc save <file(s)>
+        //   creates a file.ns file per input file, following the .nssave settings, and deletes the edit files on success
 
         string file = "test.ns";
         var ast = new File
@@ -24,7 +30,7 @@ public static class Program
                     {
                         new FunctionDefinition
                         {
-                            Name = new Identifier { Value = "TestFunc" },
+                            Name = new Identifier { Value = "None" },
                             Statements = new List<Statement>
                             {
                                 new ExpressionStatement
@@ -76,8 +82,7 @@ public static class Program
             },
         };
 
-        System.IO.File.WriteAllText("test.txt", CLang.Process(ast));
-
-        // System.IO.File.WriteAllText(file, JsonSerializer.Serialize(ast, new JsonSerializerOptions { WriteIndented = true }));
+        System.IO.File.WriteAllText("cstyle.txt", CStyle.Process(ast));
+        System.IO.File.WriteAllText("pystyle.txt", PyStyle.Process(ast));
     }
 }
