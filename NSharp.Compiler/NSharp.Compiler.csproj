@@ -2,7 +2,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\NSharp.Core\NSharp.Core.csproj" />
-    <ProjectReference Include="..\NSharp.Language\NSharp.Language.csproj" />
+    <ProjectReference Include="..\NSharp.Language.CLang\NSharp.Language.CLang.csproj" />
   </ItemGroup>
 
   <PropertyGroup>

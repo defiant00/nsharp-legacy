@@ -3,7 +3,7 @@
 // using System.Text.Json;
 using NSharp.Core;
 using NSharp.Core.Ast;
-using NSharp.Language;
+using NSharp.Language.CLang;
 
 public static class Program
 {
@@ -19,12 +19,12 @@ public static class Program
             {
                 new Class
                 {
-                    Name = "TestClass",
+                    Name = new Identifier { Value = "TestClass" },
                     Statements = new List<Statement>
                     {
                         new FunctionDefinition
                         {
-                            Name = "TestFunc",
+                            Name = new Identifier { Value = "TestFunc" },
                             Statements = new List<Statement>
                             {
                                 new ExpressionStatement
@@ -66,6 +66,10 @@ public static class Program
                                     },
                                 },
                             },
+                        },
+                        new FunctionDefinition
+                        {
+                            Name = new Identifier { Value = "true" }
                         },
                     },
                 },

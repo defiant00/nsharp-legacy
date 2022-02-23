@@ -16,7 +16,7 @@ public class Break : Statement { }
 
 public class Class : Statement
 {
-    public string Name { get; set; } = string.Empty;
+    public Identifier Name { get; set; } = new();
     public List<Statement> Statements { get; set; } = new();
 }
 
@@ -43,8 +43,13 @@ public class File : Statement
 
 public class FunctionDefinition : Statement
 {
-    public string Name { get; set; } = string.Empty;
+    public Identifier Name { get; set; } = new();
     public List<Statement> Statements { get; set; } = new();
+}
+
+public class Identifier : Expression
+{
+    public string Value { get; set; } = string.Empty;
 }
 
 public class If : Statement

@@ -1,4 +1,4 @@
-﻿namespace NSharp.Language;
+﻿namespace NSharp.Language.CLang;
 
 using System.Text;
 using NSharp.Core;
@@ -26,13 +26,13 @@ public static class CLang
 
         sb.AppendLine($"// {file.Name}");
         sb.AppendLine();
-        foreach (var s in file.Statements)
-            Process(sb, 0, s);
+        for (int i = 0; i < file.Statements.Count; i++)
+            Process(sb, i, 0, file.Statements[i]);
 
         return sb.ToString();
     }
 
-    private static void Process(StringBuilder sb, int indent, AstItem? ast)
+    private static void Process(StringBuilder sb, int index, int indent, AstItem? ast)
     {
         switch (ast)
         {
@@ -42,7 +42,7 @@ public static class CLang
                 Process(sb, indent, b);
                 break;
             case Class c:
-                Process(sb, indent, c);
+                Process(sb, index, indent, c);
                 break;
             case Comment c:
                 Process(sb, indent, c);
@@ -57,7 +57,10 @@ public static class CLang
                 Process(sb, indent, es);
                 break;
             case FunctionDefinition fd:
-                Process(sb, indent, fd);
+                Process(sb, index, indent, fd);
+                break;
+            case Identifier i:
+                Process(sb, i);
                 break;
             case If i:
                 Process(sb, indent, i);
@@ -76,9 +79,14 @@ public static class CLang
 
     private static void Process(StringBuilder sb, int indent, Break br) => sb.AppendLineIndented(indent, "break;");
 
-    private static void Process(StringBuilder sb, int indent, Class cl)
+    private static void Process(StringBuilder sb, int index, int indent, Class cl)
     {
-        sb.AppendLineIndented(indent, $"class {cl.Name}");
+        if (index > 0)
+            sb.AppendLine();
+
+        sb.AppendIndented(indent, $"class ");
+        Process(sb, cl.Name);
+        sb.AppendLine();
         Process(sb, indent, cl.Statements);
     }
 
@@ -91,20 +99,32 @@ public static class CLang
     private static void Process(StringBuilder sb, int indent, ExpressionStatement es)
     {
         sb.Indent(indent);
-        Process(sb, indent, es.Expression);
+        Process(sb, 0, indent, es.Expression);
         sb.AppendLine(";");
     }
 
-    private static void Process(StringBuilder sb, int indent, FunctionDefinition fd)
+    private static void Process(StringBuilder sb, int index, int indent, FunctionDefinition fd)
     {
-        sb.AppendLineIndented(indent, $"public static void {fd.Name}()");
+        if (index > 0)
+            sb.AppendLine();
+
+        sb.AppendIndented(indent, $"public static void ");
+        Process(sb, fd.Name);
+        sb.AppendLine("()");
         Process(sb, indent, fd.Statements);
+    }
+
+    private static void Process(StringBuilder sb, Identifier id)
+    {
+        if (Helpers.Keywords.Contains(id.Value))
+            sb.Append("`");
+        sb.Append(id.Value);
     }
 
     private static void Process(StringBuilder sb, int indent, If i)
     {
         sb.AppendIndented(indent, "if (");
-        Process(sb, indent, i.Condition);
+        Process(sb, 0, indent, i.Condition);
         sb.AppendLine(")");
         Process(sb, indent, i.Statements);
         if (i.Else != null)
@@ -137,16 +157,16 @@ public static class CLang
         else
         {
             sb.AppendIndented(indent, "while (");
-            Process(sb, indent, loop.Condition);
+            Process(sb, 0, indent, loop.Condition);
             sb.AppendLine(")");
         }
         sb.AppendLineIndented(indent, "{");
-        foreach (var statement in loop.Statements)
-            Process(sb, indent + 1, statement);
+        for (int i = 0; i < loop.Statements.Count; i++)
+            Process(sb, i, indent, loop.Statements[i]);
         if (loop.ConditionAtEnd)
         {
             sb.AppendIndented(indent, "} while (");
-            Process(sb, indent, loop.Condition);
+            Process(sb, 0, indent, loop.Condition);
             sb.AppendLine(");");
         }
         else
@@ -164,8 +184,8 @@ public static class CLang
         bool curlies = !(statements.Count == 1 && statements[0].IsCode);
         if (curlies)
             sb.AppendLineIndented(indent, "{");
-        foreach (var s in statements)
-            Process(sb, indent + 1, s);
+        for (int i = 0; i < statements.Count; i++)
+            Process(sb, i, indent + 1, statements[i]);
         if (curlies)
             sb.AppendLineIndented(indent, "}");
     }
