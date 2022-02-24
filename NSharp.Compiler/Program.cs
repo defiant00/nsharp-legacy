@@ -16,6 +16,12 @@ public static class Program
         //   creates a file.ns.edit file per input file, following the .nsedit settings
         // nsc save <file(s)>
         //   creates a file.ns file per input file, following the .nssave settings, and deletes the edit files on success
+        // nsc format <file(s)>
+        //   formats the specified files with either .nsedit (.ns.edit) or .nssave (.ns) settings, depending on file name
+        // nsc compile <file(s)>
+        //   compile the specified files - will need command-line args
+        // nsc build <folder? project file?>
+        //   build a project or folder or something - tbd
 
         string file = "test.ns";
         var ast = new File
