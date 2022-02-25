@@ -3,6 +3,12 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/master/VisualStudio.gitignore
 
+# NSharp edit files
+*.ns.edit
+
+# User-specific files (NSharp)
+.nsedit
+
 # User-specific files
 *.rsuser
 *.suo

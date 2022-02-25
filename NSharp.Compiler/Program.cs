@@ -1,94 +1,155 @@
-﻿namespace NSharp.Compiler;
-
+﻿using System.Diagnostics;
 using NSharp.Core;
-using NSharp.Core.Ast;
-using NSharp.Language.CStyle;
-using NSharp.Language.PyStyle;
+using NSharp.Language.Neutral;
+
+namespace NSharp.Compiler;
 
 public static class Program
 {
+    private const string EDIT_SETTINGS = ".nsedit";
+
+    private const string SAVE_SETTINGS = ".nssave";
+
     public static void Main(string[] args)
     {
         Console.WriteLine("N# Compiler v0.1.0");
 
-        // commands:
-        // nsc edit <file(s)>
-        //   creates a file.ns.edit file per input file, following the .nsedit settings
-        // nsc save <file(s)>
-        //   creates a file.ns file per input file, following the .nssave settings, and deletes the edit files on success
-        // nsc format <file(s)>
-        //   formats the specified files with either .nsedit (.ns.edit) or .nssave (.ns) settings, depending on file name
-        // nsc compile <file(s)>
-        //   compile the specified files - will need command-line args
-        // nsc build <folder? project file?>
-        //   build a project or folder or something - tbd
+        var stopwatch = new Stopwatch();
+        stopwatch.Start();
 
-        string file = "test.ns";
-        var ast = new File
+        if (args.Length < 2 || args[0] == "?" || args[0] == "help")
         {
-            Name = file,
-            Statements = new List<Statement>
-            {
-                new Class
-                {
-                    Name = new Identifier { Value = "TestClass" },
-                    Statements = new List<Statement>
-                    {
-                        new FunctionDefinition
-                        {
-                            Name = new Identifier { Value = "None" },
-                            Statements = new List<Statement>
-                            {
-                                new ExpressionStatement
-                                {
-                                    Expression = new CurrentObjectInstance{},
-                                },
-                                new Space {Size = 1},
-                                new Loop {
-                                    Condition = new LiteralToken { Token = Token.True },
-                                    Statements = new List<Statement>
-                                    {
-                                        new Comment {Content = "While loop!"},
-                                        new Break{},
-                                    },
-                                },
-                                new Space {Size = 1},
-                                new Loop {
-                                    Condition = new LiteralToken { Token = Token.True },
-                                    ConditionAtEnd = true,
-                                    Statements = new List<Statement>
-                                    {
-                                        new Comment {Content = "Do While loop!"},
-                                        new If
-                                        {
-                                            Condition = new LiteralToken { Token = Token.False },
-                                            Statements = new List<Statement>
-                                            {
-                                                new Comment { Content = "Hi!" },
-                                            },
-                                        },
-                                        new If
-                                        {
-                                            Condition = new LiteralToken { Token = Token.False },
-                                            Statements = new List<Statement>
-                                            {
-                                                new Continue{},
-                                            }
-                                        },
-                                    },
-                                },
-                            },
-                        },
-                        new FunctionDefinition
-                        {
-                            Name = new Identifier { Value = "true" }
-                        },
-                    },
-                },
-            },
-        };
+            Console.WriteLine();
+            Console.WriteLine("Usage: nsc [command] [file(s)]");
+            Console.WriteLine();
+            Console.WriteLine("Commands:");
+            Console.WriteLine("    build [project paths] - tbd, build projects");
+            Console.WriteLine("    compile [files]       - compile files");
+            Console.WriteLine("    edit [files]          - create a file.ns.edit file per input file for editing per the .nsedit settings");
+            Console.WriteLine("    format [files]        - format the specified files per the .nsedit and .nssave settings");
+            Console.WriteLine("    save [files]          - save the specified files per the .nssave settings, deleting the .edit file on success");
+            Console.WriteLine("    validate [files]      - validate the specified files' syntax");
+            return;
+        }
 
-        System.IO.File.WriteAllText("cstyle.txt", CStyle.Process(ast));
-        System.IO.File.WriteAllText("pystyle.txt", PyStyle.Process(ast));
+        switch (args[0].ToLower())
+        {
+            case "build":
+                Console.WriteLine("Build not yet supported");
+                break;
+            case "compile":
+                Console.WriteLine("Compile not yet supported");
+                break;
+            case "edit":
+                for (int i = 1; i < args.Length; i++)
+                    Edit(args[i]);
+                break;
+            case "format":
+                for (int i = 1; i < args.Length; i++)
+                    Format(args[i]);
+                break;
+            case "save":
+                for (int i = 1; i < args.Length; i++)
+                    Save(args[i]);
+                break;
+            case "validate":
+                for (int i = 1; i < args.Length; i++)
+                    Validate(args[i]);
+                break;
+            default:
+                Console.WriteLine($"Unknown command '{args[0]}'");
+                return;
+        }
+
+        Console.WriteLine($"Elapsed: {stopwatch.Elapsed}");
+    }
+
+    private static void Edit(string file)
+    {
+        if (!File.Exists(file))
+            throw new Exception($"File '{file}' does not exist.");
+        if (!file.EndsWith(".ns", StringComparison.OrdinalIgnoreCase))
+            throw new Exception($"File '{file}' does not end with .ns");
+
+        ILanguage loadLang = FindSpecifiedLanguage(SAVE_SETTINGS, file);
+        ILanguage saveLang = FindSpecifiedLanguage(EDIT_SETTINGS, file);
+
+        Core.Ast.AstItem ast = loadLang.Load(file);
+        File.WriteAllText(file + ".edit", saveLang.Save(ast));
+    }
+
+    private static void Format(string file)
+    {
+        if (!File.Exists(file))
+            throw new Exception($"File '{file}' does not exist.");
+
+        ILanguage language;
+
+        if (file.EndsWith(".ns", StringComparison.OrdinalIgnoreCase))
+            language = FindSpecifiedLanguage(SAVE_SETTINGS, file);
+        else if (file.EndsWith(".ns.edit", StringComparison.OrdinalIgnoreCase))
+            language = FindSpecifiedLanguage(EDIT_SETTINGS, file);
+        else
+            throw new Exception($"File '{file}' does not end with .ns or .ns.edit");
+
+        Core.Ast.AstItem ast = language.Load(file);
+        File.WriteAllText(file, language.Save(ast));
+    }
+
+    private static void Save(string file)
+    {
+        if (!File.Exists(file))
+            throw new Exception($"File '{file}' does not exist.");
+        if (!file.EndsWith(".ns.edit", StringComparison.OrdinalIgnoreCase))
+            throw new Exception($"File '{file}' does not end with .ns.edit");
+
+        ILanguage loadLang = FindSpecifiedLanguage(EDIT_SETTINGS, file);
+        ILanguage saveLang = FindSpecifiedLanguage(SAVE_SETTINGS, file);
+
+        Core.Ast.AstItem ast = loadLang.Load(file);
+        File.WriteAllText(file[..^5], saveLang.Save(ast));
+        // TODO - delete the .ns.edit file on success
+    }
+
+    private static void Validate(string file)
+    {
+        if (!File.Exists(file))
+            throw new Exception($"File '{file}' does not exist.");
+
+        ILanguage language;
+
+        if (file.EndsWith(".ns", StringComparison.OrdinalIgnoreCase))
+            language = FindSpecifiedLanguage(SAVE_SETTINGS, file);
+        else if (file.EndsWith(".ns.edit", StringComparison.OrdinalIgnoreCase))
+            language = FindSpecifiedLanguage(EDIT_SETTINGS, file);
+        else
+            throw new Exception($"File '{file}' does not end with .ns or .ns.edit");
+
+        Core.Ast.AstItem ast = language.Load(file);
+    }
+
+    private static ILanguage DefaultLanguage() => new Neutral();
+
+    private static ILanguage GetLanguage(string settingsPath)
+    {
+        //  TODO - load the language and config options from the settings file
+        return DefaultLanguage();
+    }
+
+    private static ILanguage FindSpecifiedLanguage(string settingsFileName, string startingPath)
+    {
+        string? dirName = Path.GetDirectoryName(startingPath);
+        if (dirName == null)
+            return DefaultLanguage();
+        DirectoryInfo? dir = new DirectoryInfo(dirName);
+        while (dir != null)
+        {
+            string settingsPath = Path.Combine(dir.FullName, settingsFileName);
+            if (File.Exists(settingsPath))
+                return GetLanguage(settingsPath);
+            dir = dir.Parent;
+        }
+        Console.WriteLine($"'{settingsFileName}' not found, using the default language.");
+        return DefaultLanguage();
     }
 }

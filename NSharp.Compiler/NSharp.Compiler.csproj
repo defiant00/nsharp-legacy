@@ -3,6 +3,7 @@
   <ItemGroup>
     <ProjectReference Include="..\NSharp.Core\NSharp.Core.csproj" />
     <ProjectReference Include="..\NSharp.Language.CStyle\NSharp.Language.CStyle.csproj" />
+    <ProjectReference Include="..\NSharp.Language.Neutral\NSharp.Language.Neutral.csproj" />
     <ProjectReference Include="..\NSharp.Language.PyStyle\NSharp.Language.PyStyle.csproj" />
   </ItemGroup>
 

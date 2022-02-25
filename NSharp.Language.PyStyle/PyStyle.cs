@@ -1,27 +1,12 @@
-
-namespace NSharp.Language.PyStyle;
-
 using System.Text;
 using NSharp.Core;
 using NSharp.Core.Ast;
 
-public static class PyStyle
+namespace NSharp.Language.PyStyle;
+
+public class PyStyle
 {
-    private static void Indent(this StringBuilder sb, int indent) => sb.Append(' ', indent * 4);
-
-    private static void AppendIndented(this StringBuilder sb, int indent, string content)
-    {
-        sb.Indent(indent);
-        sb.Append(content);
-    }
-
-    private static void AppendLineIndented(this StringBuilder sb, int indent, string content)
-    {
-        sb.Indent(indent);
-        sb.AppendLine(content);
-    }
-
-    public static string Process(File file)
+    public static string Process(Core.Ast.File file)
     {
         var sb = new StringBuilder();
 

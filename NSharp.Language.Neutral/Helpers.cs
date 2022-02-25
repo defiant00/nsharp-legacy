@@ -1,10 +1,10 @@
 using System.Text;
 
-namespace NSharp.Language.CStyle;
+namespace NSharp.Language.Neutral;
 
 public static class Helpers
 {
-    public static void Indent(this StringBuilder sb, int indent) => sb.Append('\t', indent);
+    public static void Indent(this StringBuilder sb, int indent) => sb.Append(' ', indent * 4);
 
     public static void AppendIndented(this StringBuilder sb, int indent, string content)
     {
@@ -17,11 +17,9 @@ public static class Helpers
         sb.Indent(indent);
         sb.AppendLine(content);
     }
-
+    
     public static HashSet<string> Keywords = new HashSet<string> {
         "true",
         "false",
-        "null",
-        "this",
     };
 }

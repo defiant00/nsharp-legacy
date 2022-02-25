@@ -1,26 +1,12 @@
-﻿namespace NSharp.Language.CStyle;
-
-using System.Text;
+﻿using System.Text;
 using NSharp.Core;
 using NSharp.Core.Ast;
 
-public static class CStyle
+namespace NSharp.Language.CStyle;
+
+public class CStyle
 {
-    private static void Indent(this StringBuilder sb, int indent) => sb.Append('\t', indent);
-
-    private static void AppendIndented(this StringBuilder sb, int indent, string content)
-    {
-        sb.Indent(indent);
-        sb.Append(content);
-    }
-
-    private static void AppendLineIndented(this StringBuilder sb, int indent, string content)
-    {
-        sb.Indent(indent);
-        sb.AppendLine(content);
-    }
-
-    public static string Process(File file)
+    public static string Process(Core.Ast.File file)
     {
         var sb = new StringBuilder();
 
