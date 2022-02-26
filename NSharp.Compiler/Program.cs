@@ -24,7 +24,6 @@ public static class Program
             Console.WriteLine();
             Console.WriteLine("Commands:");
             Console.WriteLine("    build [project paths] - tbd, build projects");
-            Console.WriteLine("    compile [files]       - compile files");
             Console.WriteLine("    edit [files]          - create a file.ns.edit file per input file for editing per the .nsedit settings");
             Console.WriteLine("    format [files]        - format the specified files per the .nsedit and .nssave settings");
             Console.WriteLine("    save [files]          - save the specified files per the .nssave settings, deleting the .edit file on success");
@@ -36,9 +35,6 @@ public static class Program
         {
             case "build":
                 Console.WriteLine("Build not yet supported");
-                break;
-            case "compile":
-                Console.WriteLine("Compile not yet supported");
                 break;
             case "edit":
                 for (int i = 1; i < args.Length; i++)
@@ -74,8 +70,10 @@ public static class Program
         ILanguage loadLang = FindSpecifiedLanguage(SAVE_SETTINGS, file);
         ILanguage saveLang = FindSpecifiedLanguage(EDIT_SETTINGS, file);
 
-        Core.Ast.AstItem ast = loadLang.Load(file);
-        File.WriteAllText(file + ".edit", saveLang.Save(ast));
+        LoadResult loadResult = loadLang.Load(file);
+        HandleResult(loadResult);
+        if (loadResult.Ast != null)
+            HandleResult(saveLang.Save(file + ".edit", loadResult.Ast));
     }
 
     private static void Format(string file)
@@ -92,8 +90,10 @@ public static class Program
         else
             throw new Exception($"File '{file}' does not end with .ns or .ns.edit");
 
-        Core.Ast.AstItem ast = language.Load(file);
-        File.WriteAllText(file, language.Save(ast));
+        LoadResult loadResult = language.Load(file);
+        HandleResult(loadResult);
+        if (loadResult.Ast != null)
+            HandleResult(language.Save(file, loadResult.Ast));
     }
 
     private static void Save(string file)
@@ -106,9 +106,15 @@ public static class Program
         ILanguage loadLang = FindSpecifiedLanguage(EDIT_SETTINGS, file);
         ILanguage saveLang = FindSpecifiedLanguage(SAVE_SETTINGS, file);
 
-        Core.Ast.AstItem ast = loadLang.Load(file);
-        File.WriteAllText(file[..^5], saveLang.Save(ast));
-        // TODO - delete the .ns.edit file on success
+        LoadResult loadResult = loadLang.Load(file);
+        HandleResult(loadResult);
+        if (loadResult.Ast != null)
+        {
+            SaveResult saveResult = saveLang.Save(file[..^5], loadResult.Ast);
+            HandleResult(saveResult);
+            // if (saveResult.Success)
+            //     File.Delete(file);
+        }
     }
 
     private static void Validate(string file)
@@ -125,7 +131,18 @@ public static class Program
         else
             throw new Exception($"File '{file}' does not end with .ns or .ns.edit");
 
-        Core.Ast.AstItem ast = language.Load(file);
+        LoadResult loadResult = language.Load(file);
+        HandleResult(loadResult);
+    }
+
+    private static void HandleResult(Result result)
+    {
+        if (result.Diagnostics.Count > 0)
+        {
+            Console.WriteLine(result.FileName);
+            foreach (var diagnostic in result.Diagnostics)
+                Console.WriteLine($"  {diagnostic.Severity}: {diagnostic.Message}");
+        }
     }
 
     private static ILanguage DefaultLanguage() => new Neutral();

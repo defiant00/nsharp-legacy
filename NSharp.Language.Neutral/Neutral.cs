@@ -1,38 +1,36 @@
-using System.Text;
 using NSharp.Core;
 using NSharp.Core.Ast;
+using NSharp.Language.Neutral.Compiler;
 
 namespace NSharp.Language.Neutral;
 
 public class Neutral : ILanguage
 {
-    public AstItem Load(string fileName)
+    public LoadResult Load(string fileName)
     {
-        return new Core.Ast.File { Name = Path.GetFileName(fileName) };
-    }
-
-    public string Save(AstItem ast)
-    {
-        var sb = new StringBuilder();
-        Process(sb, 0, 0, ast);
-        return sb.ToString();
-    }
-
-    private static void Process(StringBuilder sb, int index, int indent, AstItem? ast)
-    {
-        switch (ast)
+        var result = new LoadResult
         {
-            case null:
-                return;
-            case Core.Ast.File file:
-                ProcessFile(sb, file);
-                break;
-        }
+            FileName = fileName,
+            Ast = new Core.Ast.File { Name = Path.GetFileName(fileName) },
+        };
+
+        var lexer = new Lexer(System.IO.File.ReadAllText(fileName));
+        
+        foreach (var token in lexer.Tokens)
+            Console.WriteLine(token);
+
+        return result;
     }
 
-    private static void ProcessFile(StringBuilder sb, Core.Ast.File file)
+    public SaveResult Save(string fileName, AstItem ast)
     {
-        for (int i = 0; i < file.Statements.Count; i++)
-            Process(sb, i, 0, file.Statements[i]);
+        var result = new SaveResult
+        {
+            FileName = fileName,
+            Success = true,
+        };
+        string code = Decompiler.Decompile(ast);
+        System.IO.File.WriteAllText(fileName, code);
+        return result;
     }
 }

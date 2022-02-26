@@ -4,6 +4,6 @@ namespace NSharp.Core;
 
 public interface ILanguage
 {
-    public AstItem Load(string fileName);
-    public string Save(AstItem ast);
+    public LoadResult Load(string fileName);
+    public SaveResult Save(string fileName, AstItem ast);
 }
