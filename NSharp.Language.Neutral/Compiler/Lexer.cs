@@ -257,7 +257,8 @@ public class Lexer
         Next();
         for (char c = Peek; IsValidLiteral(c); c = Peek)
             Next();
-        Emit(Helpers.ToTokenType(CurrentValue));
+        bool found = Helpers.KeywordTokens.TryGetValue(CurrentValue, out TokenType tokenType);
+        Emit(found ? tokenType : TokenType.Literal);
         return LexStatement;
     }
 
@@ -285,11 +286,11 @@ public class Lexer
     {
         AcceptRun(OPERATOR_CHARACTERS);
         int initialPos = InputPosition;
-        TokenType tokenType = Helpers.ToTokenType(CurrentValue);
-        while (tokenType == TokenType.Literal && InputPosition > InputStart)
+        bool found = Helpers.KeywordTokens.TryGetValue(CurrentValue, out TokenType tokenType);
+        while (!found && InputPosition > InputStart)
         {
             Backup();
-            tokenType = Helpers.ToTokenType(CurrentValue);
+            found = Helpers.KeywordTokens.TryGetValue(CurrentValue, out tokenType);
         }
         if (InputPosition > InputStart)
         {
