@@ -14,8 +14,8 @@ public class Lexer
     private int InputPosition { get; set; }
     private StateFunction? State { get; set; }
     private Stack<int> IndentationLevels { get; set; }
-    private Stack<int> Widths { get; set; }
     private bool InStatement { get; set; }
+    private Stack<char> StringTerminators { get; set; }
 
     public List<Token> Tokens { get; set; }
 
@@ -27,8 +27,8 @@ public class Lexer
         State = LexIndent;
         IndentationLevels = new Stack<int>();
         IndentationLevels.Push(0);
-        Widths = new Stack<int>();
         InStatement = false;
+        StringTerminators = new Stack<char>();
         Tokens = new List<Token>();
 
         while (State != null)
@@ -40,6 +40,8 @@ public class Lexer
 
     // Literals can contain letters, numbers, and _
     private bool IsValidLiteral(char c) => char.IsLetter(c) || c == '_' || char.IsDigit(c);
+
+    private bool IsLineEnd(char c) => c == EOF || c == '\r' || c == '\n';
 
     private Position CurrentPosition
     {
@@ -66,32 +68,26 @@ public class Lexer
 
     private char Next()
     {
-        if (InputPosition >= Input.Length)
-        {
-            Widths.Push(0);
-            return EOF;
-        }
-        Widths.Push(1);
-        return Input[InputPosition++];
+        char next = Peek;
+        InputPosition++;
+        return next;
     }
 
-    private char Peek
-    {
-        get
-        {
-            char c = Next();
-            Backup();
-            return c;
-        }
-    }
+    private char Peek => (InputPosition >= Input.Length) ? EOF : Input[InputPosition];
 
-    private void Backup() => InputPosition -= Widths.Pop();
+    private void Backup() => InputPosition--;
 
     private void Discard(int increment = 0)
     {
         InputPosition += increment;
         InputStart = InputPosition;
-        Widths.Clear();
+    }
+
+    private void ValidateResetStringTerminators()
+    {
+        if (StringTerminators.Count > 0)
+            Error($"Missing {string.Join(" ", StringTerminators)}");
+        StringTerminators.Clear();
     }
 
     private bool Accept(string valid)
@@ -118,7 +114,6 @@ public class Lexer
     {
         Tokens.Add(new Token { Type = token, Position = CurrentPosition, Value = CurrentValue });
         InputStart = InputPosition;
-        Widths.Clear();
     }
 
     private void EmitIndent(int indent)
@@ -138,7 +133,7 @@ public class Lexer
                 currentIndent = IndentationLevels.Peek();
             }
             if (IndentationLevels.Count == 0 || currentIndent != indent)
-                Error("Mismatched indentation level encountered");
+                Error("Mismatched indentation level");
         }
     }
 
@@ -151,6 +146,7 @@ public class Lexer
             switch (Next())
             {
                 case EOF:
+                    Backup();
                     Discard();
                     EmitIndent(0);
                     Emit(TokenType.EOF);
@@ -183,6 +179,7 @@ public class Lexer
             switch (peekVal)
             {
                 case EOF:
+                    ValidateResetStringTerminators();
                     if (InStatement)
                         Emit(TokenType.EOL);
                     EmitIndent(0);
@@ -195,6 +192,7 @@ public class Lexer
                     break;
                 case '\n':
                     Next();
+                    ValidateResetStringTerminators();
                     if (InStatement)
                         Emit(TokenType.EOL);
                     return LexIndent;
@@ -225,12 +223,12 @@ public class Lexer
         // discard the '
         Discard(1);
         char c = Next();
-        if (c == EOF || c == '\r' || c == '\n')
+        if (IsLineEnd(c))
             return Error("Unclosed '");
         else if (c == '\\')
         {
             c = Next();
-            if (c == EOF || c == '\r' || c == '\n')
+            if (IsLineEnd(c))
                 return Error("Unclosed '");
         }
         if (Peek != '\'')
@@ -244,9 +242,10 @@ public class Lexer
     {
         // discard the ;
         Discard(1);
-        for (char c = Peek; c != EOF && c != '\r' && c != '\n'; c = Peek)
+        for (char c = Peek; !IsLineEnd(c); c = Peek)
             Next();
         Emit(TokenType.Comment);
+        ValidateResetStringTerminators();
         Emit(TokenType.EOL);
         return LexIndent;
     }
@@ -302,6 +301,27 @@ public class Lexer
 
     private StateFunction? LexString()
     {
-        return null;
+        if (Peek == '"')
+        {
+            // discard the "
+            Discard(1);
+
+            // TODO - only push this if you run into a {, since otherwise you can take
+            // care of the whole thing inline
+            StringTerminators.Push('"');
+
+            // TODO - go until you run into a " or a {
+        }
+        else
+        {
+            // accept the {
+            Next();
+            Emit(TokenType.LeftCurly);
+            StringTerminators.Push('}');
+
+            // TODO - in LexStatement, start looking for }, but only accept it if
+            // StringTerminators.Peek == } (and pop), otherwise complain
+        }
+        return LexStatement;
     }
 }
