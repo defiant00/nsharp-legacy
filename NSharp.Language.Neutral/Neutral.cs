@@ -14,8 +14,14 @@ public class Neutral : ILanguage
             Ast = new Core.Ast.File { Name = Path.GetFileName(fileName) },
         };
 
-        var lexer = new Lexer(System.IO.File.ReadAllText(fileName));
-        
+        var lexer = new Lexer();
+
+        using var reader = new StreamReader(fileName);
+        string? line;
+        while ((line = reader.ReadLine()) != null)
+            lexer.Lex(line);
+        lexer.EndOfFile();
+
         foreach (var token in lexer.Tokens)
             Console.WriteLine(token);
 

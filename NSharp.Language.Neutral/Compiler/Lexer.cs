@@ -4,34 +4,46 @@ namespace NSharp.Language.Neutral.Compiler;
 
 public class Lexer
 {
-    const char EOF = '\0';
+    const char EOL = '\0';
     const string OPERATOR_CHARACTERS = "()[]<>!=+-*/%,.:&|^~";
     const char LITERAL_INDICATOR = '`';
 
     private delegate StateFunction? StateFunction();
 
-    private string Input { get; set; }
-    private int InputStart { get; set; }
-    private int InputPosition { get; set; }
+    private string Line { get; set; }
+    private int LineNumber { get; set; }
+    private int LineStartIndex { get; set; }
+    private int LineCurrentIndex { get; set; }
     private StateFunction? State { get; set; }
     private Stack<int> IndentationLevels { get; set; }
-    private bool InStatement { get; set; }
 
     public List<Token> Tokens { get; set; }
 
-    public Lexer(string input)
+    public Lexer()
     {
-        Input = input;
-        InputStart = 0;
-        InputPosition = 0;
-        State = LexIndent;
         IndentationLevels = new Stack<int>();
         IndentationLevels.Push(0);
-        InStatement = false;
         Tokens = new List<Token>();
+        Line = string.Empty;
+        LineNumber = 0;
+    }
+
+    public void Lex(string line)
+    {
+        LineNumber++;
+        Line = line;
+        LineStartIndex = 0;
+        LineCurrentIndex = 0;
+        State = LexIndent;
 
         while (State != null)
             State = State();
+    }
+
+    public void EndOfFile()
+    {
+        EmitIndent(0);
+        Emit(TokenType.EOF);
     }
 
     // Literals can start with a letter, _, or ` to indicate an identifier that matches a keyword
@@ -40,46 +52,27 @@ public class Lexer
     // Literals can contain letters, numbers, and _
     private bool IsValidLiteral(char c) => char.IsLetter(c) || c == '_' || char.IsDigit(c);
 
-    private bool IsLineEnd(char c) => c == EOF || c == '\r' || c == '\n';
+    private bool IsLineEnd(char c) => c == EOL || c == '\r' || c == '\n';
 
-    private Position CurrentPosition
-    {
-        get
-        {
-            var pos = new Position { Line = 1, Column = 1 };
-            bool currentLine = true;
-            for (int i = InputStart - 1; i >= 0; i--)
-            {
-                if (Input[i] == '\n')
-                {
-                    pos.Line++;
-                    currentLine = false;
-                }
-                else if (currentLine)
-                    pos.Column++;
-            }
+    private Position CurrentPosition => new Position { Line = LineNumber, Column = LineStartIndex + 1 };
 
-            return pos;
-        }
-    }
-
-    private string CurrentValue => Input[InputStart..InputPosition];
+    private string CurrentValue => Line[LineStartIndex..LineCurrentIndex];
 
     private char Next()
     {
         char next = Peek;
-        InputPosition++;
+        LineCurrentIndex++;
         return next;
     }
 
-    private char Peek => (InputPosition >= Input.Length) ? EOF : Input[InputPosition];
+    private char Peek => (LineCurrentIndex >= Line.Length) ? EOL : Line[LineCurrentIndex];
 
-    private void Backup() => InputPosition--;
+    private void Backup() => LineCurrentIndex--;
 
     private void Discard(int increment = 0)
     {
-        InputPosition += increment;
-        InputStart = InputPosition;
+        LineCurrentIndex += increment;
+        LineStartIndex = LineCurrentIndex;
     }
 
     private bool Accept(string valid)
@@ -105,7 +98,7 @@ public class Lexer
     private void Emit(TokenType token)
     {
         Tokens.Add(new Token { Type = token, Position = CurrentPosition, Value = CurrentValue });
-        InputStart = InputPosition;
+        LineStartIndex = LineCurrentIndex;
     }
 
     private void EmitIndent(int indent)
@@ -131,23 +124,18 @@ public class Lexer
 
     private StateFunction? LexIndent()
     {
-        InStatement = false;
         int indent = 0;
         while (true)
         {
             switch (Next())
             {
-                case EOF:
-                    Backup();
-                    Discard();
-                    EmitIndent(0);
-                    Emit(TokenType.EOF);
-                    return null;
+                case EOL:
                 case '\r':
                 case '\n':
-                    indent = 0;
+                    Backup();
                     Discard();
-                    break;
+                    Emit(TokenType.EOL);
+                    return null;
                 case ' ':
                     indent++;
                     break;
@@ -155,6 +143,7 @@ public class Lexer
                     indent += 4;
                     break;
                 case ';':
+                    Backup();
                     return LexComment;
                 default:
                     Backup();
@@ -172,32 +161,23 @@ public class Lexer
             char peekVal = Peek;
             switch (peekVal)
             {
-                case EOF:
-                    if (InStatement)
-                        Emit(TokenType.EOL);
-                    EmitIndent(0);
-                    Emit(TokenType.EOF);
-                    return null;
                 case ' ':
                 case '\t':
-                case '\r':
                     Discard(1);
                     break;
+                case EOL:
+                case '\r':
                 case '\n':
-                    Next();
-                    if (InStatement)
-                        Emit(TokenType.EOL);
-                    return LexIndent;
+                    Discard();
+                    Emit(TokenType.EOL);
+                    return null;
                 case ';':
                     return Error("Comments must be on their own line");
                 case '\'':
-                    InStatement = true;
                     return LexCharacter;
                 case '"':
-                    InStatement = true;
                     return LexString;
                 default:
-                    InStatement = true;
                     if (IsValidLiteralStart(peekVal))
                         return LexLiteral;
                     else if (char.IsDigit(peekVal))
@@ -247,7 +227,7 @@ public class Lexer
             Next();
         Emit(TokenType.Comment);
         Emit(TokenType.EOL);
-        return LexIndent;
+        return null;
     }
 
     private StateFunction? LexLiteral()
@@ -296,19 +276,19 @@ public class Lexer
     private StateFunction? LexOperator()
     {
         AcceptRun(OPERATOR_CHARACTERS);
-        int initialPos = InputPosition;
+        int initialIndex = LineCurrentIndex;
         bool found = Helpers.KeywordTokens.TryGetValue(CurrentValue, out TokenType tokenType);
-        while (!found && InputPosition > InputStart)
+        while (!found && LineCurrentIndex > LineStartIndex)
         {
             Backup();
             found = Helpers.KeywordTokens.TryGetValue(CurrentValue, out tokenType);
         }
-        if (InputPosition > InputStart)
+        if (LineCurrentIndex > LineStartIndex)
         {
             Emit(tokenType);
             return LexStatement;
         }
-        return Error($"Invalid operator '{Input[InputStart..initialPos]}'");
+        return Error($"Invalid operator '{Line[LineStartIndex..initialIndex]}'");
     }
 
     private StateFunction? LexString()
