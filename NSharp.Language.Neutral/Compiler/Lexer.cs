@@ -6,6 +6,7 @@ public class Lexer
 {
     const char EOF = '\0';
     const string OPERATOR_CHARACTERS = "()[]<>!=+-*/%,.:&|^~";
+    const char LITERAL_INDICATOR = '`';
 
     private delegate StateFunction? StateFunction();
 
@@ -15,7 +16,6 @@ public class Lexer
     private StateFunction? State { get; set; }
     private Stack<int> IndentationLevels { get; set; }
     private bool InStatement { get; set; }
-    private Stack<char> StringTerminators { get; set; }
 
     public List<Token> Tokens { get; set; }
 
@@ -28,7 +28,6 @@ public class Lexer
         IndentationLevels = new Stack<int>();
         IndentationLevels.Push(0);
         InStatement = false;
-        StringTerminators = new Stack<char>();
         Tokens = new List<Token>();
 
         while (State != null)
@@ -36,7 +35,7 @@ public class Lexer
     }
 
     // Literals can start with a letter, _, or ` to indicate an identifier that matches a keyword
-    private bool IsValidLiteralStart(char c) => char.IsLetter(c) || c == '_' || c == '`';
+    private bool IsValidLiteralStart(char c) => char.IsLetter(c) || c == '_' || c == LITERAL_INDICATOR;
 
     // Literals can contain letters, numbers, and _
     private bool IsValidLiteral(char c) => char.IsLetter(c) || c == '_' || char.IsDigit(c);
@@ -81,13 +80,6 @@ public class Lexer
     {
         InputPosition += increment;
         InputStart = InputPosition;
-    }
-
-    private void ValidateResetStringTerminators()
-    {
-        if (StringTerminators.Count > 0)
-            Error($"Missing {string.Join(" ", StringTerminators)}");
-        StringTerminators.Clear();
     }
 
     private bool Accept(string valid)
@@ -162,6 +154,8 @@ public class Lexer
                 case '\t':
                     indent += 4;
                     break;
+                case ';':
+                    return LexComment;
                 default:
                     Backup();
                     Discard();
@@ -179,7 +173,6 @@ public class Lexer
             switch (peekVal)
             {
                 case EOF:
-                    ValidateResetStringTerminators();
                     if (InStatement)
                         Emit(TokenType.EOL);
                     EmitIndent(0);
@@ -192,12 +185,11 @@ public class Lexer
                     break;
                 case '\n':
                     Next();
-                    ValidateResetStringTerminators();
                     if (InStatement)
                         Emit(TokenType.EOL);
                     return LexIndent;
                 case ';':
-                    return LexComment;
+                    return Error("Comments must be on their own line");
                 case '\'':
                     InStatement = true;
                     return LexCharacter;
@@ -212,7 +204,7 @@ public class Lexer
                         return LexNumber;
                     else if (Accept(OPERATOR_CHARACTERS))
                         return LexOperator;
-                    return Error($"Invalid character '{peekVal}' encountered.");
+                    return Error($"Invalid character '{peekVal}'");
 
             }
         }
@@ -224,17 +216,26 @@ public class Lexer
         Discard(1);
         char c = Next();
         if (IsLineEnd(c))
-            return Error("Unclosed '");
+        {
+            Error("Unclosed '");
+            return LexStatement;
+        }
         else if (c == '\\')
         {
             c = Next();
             if (IsLineEnd(c))
-                return Error("Unclosed '");
+            {
+                Error("Unclosed '");
+                return LexStatement;
+            }
         }
         if (Peek != '\'')
-            return Error("Unclosed '");
-        Emit(TokenType.Character);
-        Discard(1);
+            Error("Unclosed '");
+        else
+        {
+            Emit(TokenType.Character);
+            Discard(1);
+        }
         return LexStatement;
     }
 
@@ -245,7 +246,6 @@ public class Lexer
         for (char c = Peek; !IsLineEnd(c); c = Peek)
             Next();
         Emit(TokenType.Comment);
-        ValidateResetStringTerminators();
         Emit(TokenType.EOL);
         return LexIndent;
     }
@@ -253,11 +253,23 @@ public class Lexer
     private StateFunction? LexLiteral()
     {
         // accept the starting literal character
-        Next();
+        bool isLiteral = Next() == LITERAL_INDICATOR;
+        // if it starts with `, discard it
+        if (isLiteral)
+            Discard();
+
         for (char c = Peek; IsValidLiteral(c); c = Peek)
             Next();
-        bool found = Helpers.KeywordTokens.TryGetValue(CurrentValue, out TokenType tokenType);
-        Emit(found ? tokenType : TokenType.Literal);
+
+        if (CurrentValue.Length == 0)
+            Error("A literal must have a value");
+        else if (isLiteral)
+            Emit(TokenType.Literal);
+        else
+        {
+            bool found = Helpers.KeywordTokens.TryGetValue(CurrentValue, out TokenType tokenType);
+            Emit(found ? tokenType : TokenType.Literal);
+        }
         return LexStatement;
     }
 
@@ -301,27 +313,35 @@ public class Lexer
 
     private StateFunction? LexString()
     {
-        if (Peek == '"')
-        {
-            // discard the "
-            Discard(1);
+        // discard the "
+        Discard(1);
 
-            // TODO - only push this if you run into a {, since otherwise you can take
-            // care of the whole thing inline
-            StringTerminators.Push('"');
-
-            // TODO - go until you run into a " or a {
-        }
-        else
+        while (true)
         {
-            // accept the {
+            char c = Peek;
+            if (c == '"')
+            {
+                Emit(TokenType.String);
+                Discard(1);
+                break;
+            }
+            else if (c == '\\')
+            {
+                Next();
+                if (IsLineEnd(Peek))
+                {
+                    Error("Unclosed \"");
+                    break;
+                }
+            }
+            else if (IsLineEnd(c))
+            {
+                Error("Unclosed \"");
+                break;
+            }
             Next();
-            Emit(TokenType.LeftCurly);
-            StringTerminators.Push('}');
-
-            // TODO - in LexStatement, start looking for }, but only accept it if
-            // StringTerminators.Peek == } (and pop), otherwise complain
         }
+
         return LexStatement;
     }
 }

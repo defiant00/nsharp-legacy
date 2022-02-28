@@ -1,8 +1,4 @@
-; a comment
-
 "hello"
 "hello\n"
 "he\"llo"
 "hey'o"
-"hello {name}"
-"hello {name + "person{name}"}, how are you?"
