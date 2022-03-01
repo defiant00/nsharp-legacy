@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics;
 using NSharp.Core;
-using NSharp.Language.Neutral;
+using NSharp.Language.Min;
 
 namespace NSharp.Compiler;
 
@@ -145,7 +145,7 @@ public static class Program
         }
     }
 
-    private static ILanguage DefaultLanguage() => new Neutral();
+    private static ILanguage DefaultLanguage() => new Min();
 
     private static ILanguage GetLanguage(string settingsPath)
     {

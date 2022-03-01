@@ -1,7 +1,7 @@
 using System.Text;
-using NSharp.Language.Neutral.Compiler;
+using NSharp.Language.Min.Compiler;
 
-namespace NSharp.Language.Neutral;
+namespace NSharp.Language.Min;
 
 public static class Helpers
 {

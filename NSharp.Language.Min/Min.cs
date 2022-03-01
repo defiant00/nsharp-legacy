@@ -1,10 +1,10 @@
 using NSharp.Core;
 using NSharp.Core.Ast;
-using NSharp.Language.Neutral.Compiler;
+using NSharp.Language.Min.Compiler;
 
-namespace NSharp.Language.Neutral;
+namespace NSharp.Language.Min;
 
-public class Neutral : ILanguage
+public class Min : ILanguage
 {
     public LoadResult Load(string fileName)
     {

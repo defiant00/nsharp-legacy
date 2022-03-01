@@ -1,6 +1,6 @@
 # nsharp
 
-Feature                 | Neutral   | CStyle    | PyStyle
+Feature                 | Min       | CStyle    | PyStyle
 ---                     | ---       | ---       | ---
 Space                   |           |           |
 Comments                | In        |           |

@@ -1,4 +1,4 @@
-namespace NSharp.Language.Neutral.Compiler;
+namespace NSharp.Language.Min.Compiler;
 
 public class ParseResult<T>
 {

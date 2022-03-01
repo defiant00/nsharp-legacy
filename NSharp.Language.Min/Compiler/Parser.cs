@@ -1,7 +1,7 @@
 using NSharp.Core;
 using NSharp.Core.Ast;
 
-namespace NSharp.Language.Neutral.Compiler;
+namespace NSharp.Language.Min.Compiler;
 
 public class Parser
 {

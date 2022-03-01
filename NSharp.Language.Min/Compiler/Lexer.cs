@@ -1,6 +1,6 @@
 using NSharp.Core;
 
-namespace NSharp.Language.Neutral.Compiler;
+namespace NSharp.Language.Min.Compiler;
 
 public class Lexer
 {

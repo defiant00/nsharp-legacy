@@ -1,7 +1,7 @@
 using System.Text;
 using NSharp.Core.Ast;
 
-namespace NSharp.Language.Neutral;
+namespace NSharp.Language.Min;
 
 public static class Decompiler
 {
