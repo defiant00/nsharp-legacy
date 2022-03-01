@@ -91,13 +91,13 @@ public class Lexer
 
     private StateFunction? Error(string error)
     {
-        Tokens.Add(new Token { Type = TokenType.Error, Position = CurrentPosition, Value = error });
+        Tokens.Add(new Token(TokenType.Error, CurrentPosition, error));
         return null;
     }
 
     private void Emit(TokenType token)
     {
-        Tokens.Add(new Token { Type = token, Position = CurrentPosition, Value = CurrentValue });
+        Tokens.Add(new Token(token, CurrentPosition, CurrentValue));
         LineStartIndex = LineCurrentIndex;
     }
 

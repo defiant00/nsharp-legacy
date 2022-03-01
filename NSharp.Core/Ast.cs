@@ -1,6 +1,6 @@
 namespace NSharp.Core.Ast;
 
-public abstract class AstItem
+public abstract partial class AstItem
 {
     public Position Position { get; set; }
 }
@@ -20,9 +20,9 @@ public class Class : Statement
     public List<Statement> Statements { get; set; } = new();
 }
 
-public class Comment : Statement
+public partial class Comment : Statement
 {
-    public string Content { get; set; } = string.Empty;
+    public string Value { get; set; } = string.Empty;
     public override bool IsCode => false;
 }
 
@@ -30,12 +30,23 @@ public class Continue : Statement { }
 
 public class CurrentObjectInstance : Expression { }
 
+public class ErrorExpression : Expression
+{
+    public string Value { get; set; } = string.Empty;
+}
+
+public class ErrorStatement : Statement
+{
+    public string Value { get; set; } = string.Empty;
+    public override bool IsCode => false;
+}
+
 public class ExpressionStatement : Statement
 {
     public Expression? Expression { get; set; }
 }
 
-public class File : Statement
+public partial class File : Statement
 {
     public string Name { get; set; } = string.Empty;
     public List<Statement> Statements { get; set; } = new();

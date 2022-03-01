@@ -11,19 +11,10 @@ public class Neutral : ILanguage
         var result = new LoadResult
         {
             FileName = fileName,
-            Ast = new Core.Ast.File { Name = Path.GetFileName(fileName) },
         };
 
-        var lexer = new Lexer();
-
-        using var reader = new StreamReader(fileName);
-        string? line;
-        while ((line = reader.ReadLine()) != null)
-            lexer.Lex(line);
-        lexer.EndOfFile();
-
-        foreach (var token in lexer.Tokens)
-            Console.WriteLine(token);
+        var parser = new Parser();
+        result.Ast = parser.Parse(fileName).Result;
 
         return result;
     }

@@ -76,7 +76,7 @@ public class PyStyle
         Process(sb, indent, cl.Statements);
     }
 
-    private static void Process(StringBuilder sb, int indent, Comment comment) => sb.AppendLineIndented(indent, $"# {comment.Content}");
+    private static void Process(StringBuilder sb, int indent, Comment comment) => sb.AppendLineIndented(indent, $"# {comment.Value}");
 
     private static void Process(StringBuilder sb, int indent, Continue cont) => sb.AppendLineIndented(indent, "continue");
 
