@@ -138,20 +138,20 @@ public class PyStyle
 
     private static void Process(StringBuilder sb, int indent, Loop loop)
     {
-        sb.AppendIndented(indent, "while ");
-        if (loop.ConditionAtEnd)
-            sb.Append("True");
-        else
-            Process(sb, 0, indent, loop.Condition);
-        sb.AppendLine(":");
-        Process(sb, indent, loop.Statements);
-        if (loop.ConditionAtEnd)
-        {
-            sb.AppendIndented(indent + 1, "if ");
-            Process(sb, 0, indent, loop.Condition);
-            sb.AppendLine(":");
-            sb.AppendLineIndented(indent + 2, "break");
-        }
+        // sb.AppendIndented(indent, "while ");
+        // if (loop.ConditionAtEnd)
+        //     sb.Append("True");
+        // else
+        //     Process(sb, 0, indent, loop.Condition);
+        // sb.AppendLine(":");
+        // Process(sb, indent, loop.Statements);
+        // if (loop.ConditionAtEnd)
+        // {
+        //     sb.AppendIndented(indent + 1, "if ");
+        //     Process(sb, 0, indent, loop.Condition);
+        //     sb.AppendLine(":");
+        //     sb.AppendLineIndented(indent + 2, "break");
+        // }
     }
 
     private static void Process(StringBuilder sb, Space space)

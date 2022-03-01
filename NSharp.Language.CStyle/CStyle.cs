@@ -138,25 +138,25 @@ public class CStyle
 
     private static void Process(StringBuilder sb, int indent, Loop loop)
     {
-        if (loop.ConditionAtEnd)
-            sb.AppendLineIndented(indent, "do");
-        else
-        {
-            sb.AppendIndented(indent, "while (");
-            Process(sb, 0, indent, loop.Condition);
-            sb.AppendLine(")");
-        }
-        sb.AppendLineIndented(indent, "{");
-        for (int i = 0; i < loop.Statements.Count; i++)
-            Process(sb, i, indent + 1, loop.Statements[i]);
-        if (loop.ConditionAtEnd)
-        {
-            sb.AppendIndented(indent, "} while (");
-            Process(sb, 0, indent, loop.Condition);
-            sb.AppendLine(");");
-        }
-        else
-            sb.AppendLineIndented(indent, "}");
+        // if (loop.ConditionAtEnd)
+        //     sb.AppendLineIndented(indent, "do");
+        // else
+        // {
+        //     sb.AppendIndented(indent, "while (");
+        //     Process(sb, 0, indent, loop.Condition);
+        //     sb.AppendLine(")");
+        // }
+        // sb.AppendLineIndented(indent, "{");
+        // for (int i = 0; i < loop.Statements.Count; i++)
+        //     Process(sb, i, indent + 1, loop.Statements[i]);
+        // if (loop.ConditionAtEnd)
+        // {
+        //     sb.AppendIndented(indent, "} while (");
+        //     Process(sb, 0, indent, loop.Condition);
+        //     sb.AppendLine(");");
+        // }
+        // else
+        //     sb.AppendLineIndented(indent, "}");
     }
 
     private static void Process(StringBuilder sb, Space space)
