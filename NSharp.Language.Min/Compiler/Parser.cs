@@ -70,7 +70,7 @@ public class Parser
             if (current.Type != token)
             {
                 CurrentIndex = result.StartingIndex;
-                result.Success = false;
+                result.Failure = true;
                 return result;
             }
             result.Count++;
@@ -85,7 +85,7 @@ public class Parser
     private ParseResult<Statement> ParseBreak()
     {
         var res = Accept(TokenType.Break, TokenType.EOL);
-        if (!res.Success)
+        if (res.Failure)
             return InvalidTokenErrorStatement("Invalid token in break", res);
         return new ParseResult<Statement>(new Break(GetToken(res).Position));
     }
@@ -94,7 +94,7 @@ public class Parser
     {
         var res = Accept(TokenType.Class, TokenType.Literal);
 
-        if (!res.Success)
+        if (res.Failure)
             return InvalidTokenErrorStatement("Invalid token in class", res);
 
         var classResult = new Class(GetToken(res, 1).Position)
@@ -105,11 +105,15 @@ public class Parser
 
         res = Accept(TokenType.EOL, TokenType.Indent);
 
-        if (!res.Success)
+        if (res.Failure)
             return InvalidTokenErrorStatement("Invalid token in class", res);
 
         while (Peek.Type != TokenType.Dedent)
             classResult.Statements.Add(ParseClassStatement().Result);
+        
+        res = Accept(TokenType.Dedent);
+        if (res.Failure)
+            return InvalidTokenErrorStatement($"Invalid token in function {classResult.Name}", res);
 
         return new ParseResult<Statement>(classResult);
     }
@@ -117,24 +121,37 @@ public class Parser
     private ParseResult<Statement> ParseClassStatement()
     {
         var modifiers = new List<Core.Token>();
-        while (CurrentIndex < Tokens.Count && Peek.Type.IsModifier())
+        while (Peek.Type.IsModifier())
             modifiers.Add(Next().Type.ToCoreToken());
 
         var returnType = ParseType();
         if (returnType.Error)
             return ErrorStatement("Invalid return type", returnType.Result.Position);
 
-        var res = Accept(TokenType.Literal);
+        var res = Accept(TokenType.Literal,
+            TokenType.LeftParenthesis,
+            TokenType.RightParenthesis,
+            TokenType.EOL,
+            TokenType.Indent);
 
-        if (!res.Success)
+        if (res.Failure)
             return InvalidTokenErrorStatement("Invalid token in class", res);
 
-        return new ParseResult<Statement>(new FunctionDefinition(GetToken(res).Position)
+        var functionDef = new FunctionDefinition(GetToken(res).Position)
         {
             Modifiers = modifiers,
             ReturnType = returnType.Result,
             Name = GetToken(res).Value
-        });
+        };
+
+        while (Peek.Type != TokenType.Dedent)
+            functionDef.Statements.Add(ParseFunctionStatement().Result);
+        
+        res = Accept(TokenType.Dedent);
+        if (res.Failure)
+            return InvalidTokenErrorStatement($"Invalid token in function {functionDef.Name}", res);
+
+        return new ParseResult<Statement>(functionDef);
     }
 
     private ParseResult<Statement> ParseComment()
@@ -143,7 +160,7 @@ public class Parser
         Next();
 
         var res = Accept(TokenType.EOL);
-        if (!res.Success)
+        if (res.Failure)
             return InvalidTokenErrorStatement("Invalid token in comment", res);
 
         return commentResult;
@@ -152,7 +169,7 @@ public class Parser
     private ParseResult<Statement> ParseContinue()
     {
         var res = Accept(TokenType.Continue, TokenType.EOL);
-        if (!res.Success)
+        if (res.Failure)
             return InvalidTokenErrorStatement("Invalid token in continue", res);
         return new ParseResult<Statement>(new Continue(GetToken(res).Position));
     }
@@ -211,7 +228,7 @@ public class Parser
     private ParseResult<Statement> ParseFileModifiableStatement()
     {
         var modifiers = new List<Core.Token>();
-        while (CurrentIndex < Tokens.Count && Peek.Type.IsModifier())
+        while (Peek.Type.IsModifier())
             modifiers.Add(Next().Type.ToCoreToken());
 
         return Peek.Type switch

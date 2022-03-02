@@ -1,5 +1,6 @@
 ; a comment
 
 public static class MyClass
-    public void Test
+    public void Test()
         break
+        continue

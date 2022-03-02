@@ -12,6 +12,11 @@ public abstract partial class AstItem
     public virtual void Print(int indent) => WriteLineIndented(indent, $"[{this}]");
 }
 
+public partial class Break
+{
+    public override void Print(int indent) => WriteLineIndented(indent, "Break");
+}
+
 public partial class Class
 {
     public override void Print(int indent)
@@ -25,6 +30,11 @@ public partial class Class
 public partial class Comment
 {
     public override void Print(int indent) => WriteLineIndented(indent, $"Comment: {Value}");
+}
+
+public partial class Continue
+{
+    public override void Print(int indent) => WriteLineIndented(indent, "Continue");
 }
 
 public partial class CurrentObjectInstance
@@ -61,7 +71,7 @@ public partial class FunctionDefinition
 {
     public override void Print(int indent)
     {
-        WriteLineIndented(indent, $"Function: {string.Join(" ", Modifiers)} {Name}");
+        WriteLineIndented(indent, $"Function: {string.Join(" ", Modifiers)} {ReturnType} {Name}()");
         foreach (var statement in Statements)
             statement.Print(indent + 1);
     }
@@ -111,4 +121,9 @@ public partial class Property
 public partial class Space
 {
     public override void Print(int indent) => WriteLineIndented(indent, $"Space: {Size}");
+}
+
+public partial class Void
+{
+    public override string ToString() => "Void";
 }

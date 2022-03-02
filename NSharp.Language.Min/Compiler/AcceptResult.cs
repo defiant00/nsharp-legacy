@@ -2,7 +2,7 @@ namespace NSharp.Language.Min.Compiler;
 
 public struct AcceptResult
 {
-    public bool Success { get; set; } = true;
+    public bool Failure { get; set; } = false;
     public int StartingIndex { get; set; }
     public int Count { get; set; } = 0;
 
