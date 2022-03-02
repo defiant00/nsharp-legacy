@@ -30,6 +30,7 @@ public static class Helpers
         ["internal"] = TokenType.Internal,
         ["private"] = TokenType.Private,
         ["static"] = TokenType.Static,
+        ["void"] = TokenType.Void,
         // types
         ["class"] = TokenType.Class,
         ["struct"] = TokenType.Struct,

@@ -61,7 +61,7 @@ public partial class FunctionDefinition
 {
     public override void Print(int indent)
     {
-        WriteLineIndented(indent, $"Function: {Name}");
+        WriteLineIndented(indent, $"Function: {string.Join(" ", Modifiers)} {Name}");
         foreach (var statement in Statements)
             statement.Print(indent + 1);
     }

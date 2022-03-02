@@ -17,13 +17,13 @@ public class Parser
     private ParseResult<Expression> ErrorExpression(string error, Position position)
     {
         // todo - log the error
-        return new ParseResult<Expression>(new ErrorExpression { Position = position, Value = error }, true);
+        return new ParseResult<Expression>(new ErrorExpression(position) { Position = position, Value = error }, true);
     }
 
     private ParseResult<Statement> ErrorStatement(string error, Position position)
     {
         // todo - log the error
-        return new ParseResult<Statement>(new ErrorStatement { Position = position, Value = error }, true);
+        return new ParseResult<Statement>(new ErrorStatement(position) { Position = position, Value = error }, true);
     }
 
     private ParseResult<Expression> InvalidTokenErrorExpression(string error, AcceptResult result)
@@ -82,21 +82,79 @@ public class Parser
 
     private Token ErrorToken(AcceptResult result) => Tokens[result.StartingIndex + result.Count];
 
+    private ParseResult<Statement> ParseBreak()
+    {
+        var res = Accept(TokenType.Break, TokenType.EOL);
+        if (!res.Success)
+            return InvalidTokenErrorStatement("Invalid token in break", res);
+        return new ParseResult<Statement>(new Break(GetToken(res).Position));
+    }
+
     private ParseResult<Statement> ParseClass(List<Core.Token> modifiers)
     {
-        Next();
-        return ErrorStatement("Class parsing not supported yet", new Position());
+        var res = Accept(TokenType.Class, TokenType.Literal);
+
+        if (!res.Success)
+            return InvalidTokenErrorStatement("Invalid token in class", res);
+
+        var classResult = new Class(GetToken(res, 1).Position)
+        {
+            Modifiers = modifiers,
+            Name = GetToken(res, 1).Value,
+        };
+
+        res = Accept(TokenType.EOL, TokenType.Indent);
+
+        if (!res.Success)
+            return InvalidTokenErrorStatement("Invalid token in class", res);
+
+        while (Peek.Type != TokenType.Dedent)
+            classResult.Statements.Add(ParseClassStatement().Result);
+
+        return new ParseResult<Statement>(classResult);
+    }
+
+    private ParseResult<Statement> ParseClassStatement()
+    {
+        var modifiers = new List<Core.Token>();
+        while (CurrentIndex < Tokens.Count && Peek.Type.IsModifier())
+            modifiers.Add(Next().Type.ToCoreToken());
+
+        var returnType = ParseType();
+        if (returnType.Error)
+            return ErrorStatement("Invalid return type", returnType.Result.Position);
+
+        var res = Accept(TokenType.Literal);
+
+        if (!res.Success)
+            return InvalidTokenErrorStatement("Invalid token in class", res);
+
+        return new ParseResult<Statement>(new FunctionDefinition(GetToken(res).Position)
+        {
+            Modifiers = modifiers,
+            ReturnType = returnType.Result,
+            Name = GetToken(res).Value
+        });
     }
 
     private ParseResult<Statement> ParseComment()
     {
-        var commentResult = new ParseResult<Statement>(new Comment { Value = Next().Value }, false);
+        var commentResult = new ParseResult<Statement>(new Comment(Peek.Position) { Value = Peek.Value });
+        Next();
 
         var res = Accept(TokenType.EOL);
         if (!res.Success)
             return InvalidTokenErrorStatement("Invalid token in comment", res);
 
         return commentResult;
+    }
+
+    private ParseResult<Statement> ParseContinue()
+    {
+        var res = Accept(TokenType.Continue, TokenType.EOL);
+        if (!res.Success)
+            return InvalidTokenErrorStatement("Invalid token in continue", res);
+        return new ParseResult<Statement>(new Continue(GetToken(res).Position));
     }
 
     private ParseResult<Statement> ParseEnum(List<Core.Token> modifiers)
@@ -117,7 +175,7 @@ public class Parser
                 case TokenType.Enum:
                 case TokenType.Interface:
                 case TokenType.Struct:
-                    file.Statements.Add(ParseFileModifiableItem().Result);
+                    file.Statements.Add(ParseFileModifiableStatement().Result);
                     break;
                 case TokenType.Comment:
                     file.Statements.Add(ParseComment().Result);
@@ -127,8 +185,8 @@ public class Parser
                     Next();
                     break;
                 case TokenType.EOL:
+                    file.Statements.Add(new Space(Peek.Position) { Size = 1 });
                     Next();
-                    file.Statements.Add(new Space { Size = 1 });
                     break;
                 case TokenType.Namespace:
                     break;
@@ -136,7 +194,7 @@ public class Parser
                     break;
                 default:
                     if (Peek.Type.IsModifier())
-                        file.Statements.Add(ParseFileModifiableItem().Result);
+                        file.Statements.Add(ParseFileModifiableStatement().Result);
                     else
                     {
                         file.Statements.Add(ErrorStatement($"Invalid token: {Peek}", Peek.Position).Result);
@@ -150,7 +208,7 @@ public class Parser
         return new ParseResult<Statement>(file, error);
     }
 
-    private ParseResult<Statement> ParseFileModifiableItem()
+    private ParseResult<Statement> ParseFileModifiableStatement()
     {
         var modifiers = new List<Core.Token>();
         while (CurrentIndex < Tokens.Count && Peek.Type.IsModifier())
@@ -166,6 +224,14 @@ public class Parser
         };
     }
 
+    private ParseResult<Statement> ParseFunctionStatement() =>
+        Peek.Type switch
+        {
+            TokenType.Break => ParseBreak(),
+            TokenType.Continue => ParseContinue(),
+            _ => ErrorStatement($"Invalid token: {Peek}", Peek.Position),
+        };
+
     private ParseResult<Statement> ParseInterface(List<Core.Token> modifiers)
     {
         Next();
@@ -176,5 +242,15 @@ public class Parser
     {
         Next();
         return ErrorStatement("Struct parsing not supported yet", new Position());
+    }
+
+    private ParseResult<Expression> ParseType()
+    {
+        var token = Next();
+        return token.Type switch
+        {
+            TokenType.Void => new ParseResult<Expression>(new Core.Ast.Void(token.Position)),
+            _ => ErrorExpression("Type parsing not supported yet", new Position()),
+        };
     }
 }

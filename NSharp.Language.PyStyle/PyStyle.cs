@@ -70,9 +70,7 @@ public class PyStyle
         if (index > 0)
             sb.AppendLine();
 
-        sb.AppendIndented(indent, $"class ");
-        Process(sb, cl.Name);
-        sb.AppendLine(":");
+        sb.AppendLineIndented(indent, $"class {cl.Name}:");
         Process(sb, indent, cl.Statements);
     }
 
@@ -94,9 +92,7 @@ public class PyStyle
         if (index > 0)
             sb.AppendLine();
 
-        sb.AppendIndented(indent, $"public static void ");
-        Process(sb, fd.Name);
-        sb.AppendLine("()");
+        sb.AppendLineIndented(indent, $"public static void {fd.Name}()");
         Process(sb, indent, fd.Statements);
     }
 

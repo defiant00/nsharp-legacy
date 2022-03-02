@@ -1,3 +1,5 @@
 ; a comment
 
-public static class
+public static class MyClass
+    public void Test
+        break
