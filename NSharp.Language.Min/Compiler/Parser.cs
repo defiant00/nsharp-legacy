@@ -82,6 +82,12 @@ public class Parser
 
     private Token ErrorToken(AcceptResult result) => Tokens[result.StartingIndex + result.Count];
 
+    private ParseResult<Statement> ParseClass(List<Core.Token> modifiers)
+    {
+        Next();
+        return ErrorStatement("Class parsing not supported yet", new Position());
+    }
+
     private ParseResult<Statement> ParseComment()
     {
         var commentResult = new ParseResult<Statement>(new Comment { Value = Next().Value }, false);
@@ -93,6 +99,12 @@ public class Parser
         return commentResult;
     }
 
+    private ParseResult<Statement> ParseEnum(List<Core.Token> modifiers)
+    {
+        Next();
+        return ErrorStatement("Enum parsing not supported yet", new Position());
+    }
+
     private ParseResult<Statement> ParseFile(string fileName)
     {
         var file = new Core.Ast.File { Name = Path.GetFileName(fileName) };
@@ -101,6 +113,12 @@ public class Parser
         {
             switch (Peek.Type)
             {
+                case TokenType.Class:
+                case TokenType.Enum:
+                case TokenType.Interface:
+                case TokenType.Struct:
+                    file.Statements.Add(ParseFileModifiableItem().Result);
+                    break;
                 case TokenType.Comment:
                     file.Statements.Add(ParseComment().Result);
                     break;
@@ -114,14 +132,49 @@ public class Parser
                     break;
                 case TokenType.Namespace:
                     break;
+                case TokenType.Use:
+                    break;
                 default:
-                    file.Statements.Add(ErrorStatement($"Invalid token: {Peek}", Peek.Position).Result);
-                    Next();
-                    error = true;
+                    if (Peek.Type.IsModifier())
+                        file.Statements.Add(ParseFileModifiableItem().Result);
+                    else
+                    {
+                        file.Statements.Add(ErrorStatement($"Invalid token: {Peek}", Peek.Position).Result);
+                        Next();
+                        error = true;
+                    }
                     break;
             }
         }
 
         return new ParseResult<Statement>(file, error);
+    }
+
+    private ParseResult<Statement> ParseFileModifiableItem()
+    {
+        var modifiers = new List<Core.Token>();
+        while (CurrentIndex < Tokens.Count && Peek.Type.IsModifier())
+            modifiers.Add(Next().Type.ToCoreToken());
+
+        return Peek.Type switch
+        {
+            TokenType.Class => ParseClass(modifiers),
+            TokenType.Enum => ParseEnum(modifiers),
+            TokenType.Interface => ParseInterface(modifiers),
+            TokenType.Struct => ParseStruct(modifiers),
+            _ => ErrorStatement($"Invalid token: {Peek}", Peek.Position),
+        };
+    }
+
+    private ParseResult<Statement> ParseInterface(List<Core.Token> modifiers)
+    {
+        Next();
+        return ErrorStatement("Interface parsing not supported yet", new Position());
+    }
+
+    private ParseResult<Statement> ParseStruct(List<Core.Token> modifiers)
+    {
+        Next();
+        return ErrorStatement("Struct parsing not supported yet", new Position());
     }
 }

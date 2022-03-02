@@ -16,7 +16,7 @@ public partial class Class
 {
     public override void Print(int indent)
     {
-        WriteLineIndented(indent, $"Class: {Name}");
+        WriteLineIndented(indent, $"Class: {string.Join(" ", Modifiers)} {Name}");
         foreach (var statement in Statements)
             statement.Print(indent + 1);
     }

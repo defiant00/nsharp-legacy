@@ -16,6 +16,7 @@ public partial class Break : Statement { }
 
 public partial class Class : Statement
 {
+    public List<Token> Modifiers { get; set; } = new();
     public Identifier Name { get; set; } = new();
     public List<Statement> Statements { get; set; } = new();
 }

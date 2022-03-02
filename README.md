@@ -30,3 +30,5 @@ Properties              |           |           |
 Getters and Setters     |           |           |
 Types                   |           |           |
 Using                   |           |           |
+Attributes              |           |           |
+Tuples                  |           |           |
