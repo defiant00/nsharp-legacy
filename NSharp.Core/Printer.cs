@@ -86,7 +86,7 @@ public partial class If
 {
     public override void Print(int indent)
     {
-        WriteLineIndented(indent, $"If: {Condition}");
+        WriteLineIndented(indent, $"If {Condition}");
         foreach (var statement in Statements)
             statement.Print(indent + 1);
         if (Else != null)
@@ -103,16 +103,6 @@ public partial class LiteralToken
     public override string ToString() => Token.ToString();
 }
 
-public partial class Loop
-{
-    public override void Print(int indent)
-    {
-        WriteLineIndented(indent, "Loop");
-        foreach (var statement in Statements)
-            statement.Print(indent + 1);
-    }
-}
-
 public partial class Property
 {
     public override void Print(int indent) => WriteLineIndented(indent, $"Property: {Name}");
@@ -126,4 +116,14 @@ public partial class Space
 public partial class Void
 {
     public override string ToString() => "Void";
+}
+
+public partial class While
+{
+    public override void Print(int indent)
+    {
+        WriteLineIndented(indent, $"While {Condition}");
+        foreach (var statement in Statements)
+            statement.Print(indent + 1);
+    }
 }

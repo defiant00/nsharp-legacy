@@ -54,9 +54,6 @@ public class PyStyle
             case LiteralToken lt:
                 Process(sb, lt);
                 break;
-            case Loop l:
-                Process(sb, indent, l);
-                break;
             case Space s:
                 Process(sb, s);
                 break;
@@ -130,24 +127,6 @@ public class PyStyle
                 sb.Append("None");
                 break;
         }
-    }
-
-    private static void Process(StringBuilder sb, int indent, Loop loop)
-    {
-        // sb.AppendIndented(indent, "while ");
-        // if (loop.ConditionAtEnd)
-        //     sb.Append("True");
-        // else
-        //     Process(sb, 0, indent, loop.Condition);
-        // sb.AppendLine(":");
-        // Process(sb, indent, loop.Statements);
-        // if (loop.ConditionAtEnd)
-        // {
-        //     sb.AppendIndented(indent + 1, "if ");
-        //     Process(sb, 0, indent, loop.Condition);
-        //     sb.AppendLine(":");
-        //     sb.AppendLineIndented(indent + 2, "break");
-        // }
     }
 
     private static void Process(StringBuilder sb, Space space)

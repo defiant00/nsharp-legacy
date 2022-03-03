@@ -17,13 +17,13 @@ public class Parser
     private ParseResult<Expression> ErrorExpression(string error, Position position)
     {
         // todo - log the error
-        return new ParseResult<Expression>(new ErrorExpression(position) { Position = position, Value = error }, true);
+        return new ParseResult<Expression>(new ErrorExpression(position, error), true);
     }
 
     private ParseResult<Statement> ErrorStatement(string error, Position position)
     {
         // todo - log the error
-        return new ParseResult<Statement>(new ErrorStatement(position) { Position = position, Value = error }, true);
+        return new ParseResult<Statement>(new ErrorStatement(position, error), true);
     }
 
     private ParseResult<Expression> InvalidTokenErrorExpression(string error, AcceptResult result)
@@ -97,11 +97,7 @@ public class Parser
         if (res.Failure)
             return InvalidTokenErrorStatement("Invalid token in class", res);
 
-        var classResult = new Class(GetToken(res, 1).Position)
-        {
-            Modifiers = modifiers,
-            Name = GetToken(res, 1).Value,
-        };
+        var classResult = new Class(GetToken(res, 1).Position, modifiers, GetToken(res, 1).Value);
 
         res = Accept(TokenType.EOL, TokenType.Indent);
 
@@ -110,7 +106,7 @@ public class Parser
 
         while (Peek.Type != TokenType.Dedent)
             classResult.Statements.Add(ParseClassStatement().Result);
-        
+
         res = Accept(TokenType.Dedent);
         if (res.Failure)
             return InvalidTokenErrorStatement($"Invalid token in function {classResult.Name}", res);
@@ -137,16 +133,11 @@ public class Parser
         if (res.Failure)
             return InvalidTokenErrorStatement("Invalid token in class", res);
 
-        var functionDef = new FunctionDefinition(GetToken(res).Position)
-        {
-            Modifiers = modifiers,
-            ReturnType = returnType.Result,
-            Name = GetToken(res).Value
-        };
+        var functionDef = new FunctionDefinition(GetToken(res).Position, modifiers, returnType.Result, GetToken(res).Value);
 
         while (Peek.Type != TokenType.Dedent)
             functionDef.Statements.Add(ParseFunctionStatement().Result);
-        
+
         res = Accept(TokenType.Dedent);
         if (res.Failure)
             return InvalidTokenErrorStatement($"Invalid token in function {functionDef.Name}", res);
@@ -156,7 +147,7 @@ public class Parser
 
     private ParseResult<Statement> ParseComment()
     {
-        var commentResult = new ParseResult<Statement>(new Comment(Peek.Position) { Value = Peek.Value });
+        var commentResult = new ParseResult<Statement>(new Comment(Peek.Position, Peek.Value));
         Next();
 
         var res = Accept(TokenType.EOL);
@@ -182,7 +173,7 @@ public class Parser
 
     private ParseResult<Statement> ParseFile(string fileName)
     {
-        var file = new Core.Ast.File { Name = Path.GetFileName(fileName) };
+        var file = new Core.Ast.File(Path.GetFileName(fileName));
         bool error = false;
         while (CurrentIndex < Tokens.Count)
         {
@@ -202,7 +193,7 @@ public class Parser
                     Next();
                     break;
                 case TokenType.EOL:
-                    file.Statements.Add(new Space(Peek.Position) { Size = 1 });
+                    file.Statements.Add(new Space(Peek.Position, 1));
                     Next();
                     break;
                 case TokenType.Namespace:
