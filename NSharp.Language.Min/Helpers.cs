@@ -19,6 +19,29 @@ public static class Helpers
         sb.AppendLine(content);
     }
 
+    public static void AppendModifiersIndented(this StringBuilder sb, int indent, List<Core.Token> modifiers)
+    {
+        sb.Indent(indent);
+        foreach (var mod in modifiers)
+        {
+            sb.Append(mod.StringVal());
+            sb.Append(" ");
+        }
+    }
+
+    public static string GetLiteral(this string val) => KeywordTokens.ContainsKey(val) ? "`" + val : val;
+
+    public static string StringVal(this Core.Token token) =>
+        token switch
+        {
+            Core.Token.Public => "public",
+            Core.Token.Protected => "protected",
+            Core.Token.Internal => "internal",
+            Core.Token.Private => "private",
+            Core.Token.Static => "static",
+            _ => $"[{token}]",
+        };
+
     public static readonly Dictionary<string, TokenType> KeywordTokens = new()
     {
         ["ns"] = TokenType.Namespace,

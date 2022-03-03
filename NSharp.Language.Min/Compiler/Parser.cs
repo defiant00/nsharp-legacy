@@ -54,7 +54,7 @@ public class Parser
             Console.WriteLine(token);
         Console.WriteLine();
 
-        var file = ParseFile(fileName);
+        var file = ParseFileStatement(fileName);
 
         file.Result.Print(0);
 
@@ -171,7 +171,23 @@ public class Parser
         return ErrorStatement("Enum parsing not supported yet", new Position());
     }
 
-    private ParseResult<Statement> ParseFile(string fileName)
+    private ParseResult<Statement> ParseFileModifiableStatement()
+    {
+        var modifiers = new List<Core.Token>();
+        while (Peek.Type.IsModifier())
+            modifiers.Add(Next().Type.ToCoreToken());
+
+        return Peek.Type switch
+        {
+            TokenType.Class => ParseClass(modifiers),
+            TokenType.Enum => ParseEnum(modifiers),
+            TokenType.Interface => ParseInterface(modifiers),
+            TokenType.Struct => ParseStruct(modifiers),
+            _ => ErrorStatement($"Invalid token: {Peek}", Peek.Position),
+        };
+    }
+
+    private ParseResult<Statement> ParseFileStatement(string fileName)
     {
         var file = new Core.Ast.File(Path.GetFileName(fileName));
         bool error = false;
@@ -193,8 +209,7 @@ public class Parser
                     Next();
                     break;
                 case TokenType.EOL:
-                    file.Statements.Add(new Space(Peek.Position, 1));
-                    Next();
+                    file.Statements.Add(ParseSpace().Result);
                     break;
                 case TokenType.Namespace:
                     break;
@@ -216,27 +231,12 @@ public class Parser
         return new ParseResult<Statement>(file, error);
     }
 
-    private ParseResult<Statement> ParseFileModifiableStatement()
-    {
-        var modifiers = new List<Core.Token>();
-        while (Peek.Type.IsModifier())
-            modifiers.Add(Next().Type.ToCoreToken());
-
-        return Peek.Type switch
-        {
-            TokenType.Class => ParseClass(modifiers),
-            TokenType.Enum => ParseEnum(modifiers),
-            TokenType.Interface => ParseInterface(modifiers),
-            TokenType.Struct => ParseStruct(modifiers),
-            _ => ErrorStatement($"Invalid token: {Peek}", Peek.Position),
-        };
-    }
-
     private ParseResult<Statement> ParseFunctionStatement() =>
         Peek.Type switch
         {
             TokenType.Break => ParseBreak(),
             TokenType.Continue => ParseContinue(),
+            TokenType.EOL => ParseSpace(),
             _ => ErrorStatement($"Invalid token: {Peek}", Peek.Position),
         };
 
@@ -244,6 +244,18 @@ public class Parser
     {
         Next();
         return ErrorStatement("Interface parsing not supported yet", new Position());
+    }
+
+    private ParseResult<Statement> ParseSpace()
+    {
+        var position = Peek.Position;
+        int size = 0;
+        while (Peek.Type == TokenType.EOL)
+        {
+            Next();
+            size++;
+        }
+        return new ParseResult<Statement>(new Space(position, size));
     }
 
     private ParseResult<Statement> ParseStruct(List<Core.Token> modifiers)
