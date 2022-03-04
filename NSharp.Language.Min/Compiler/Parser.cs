@@ -116,16 +116,38 @@ public class Parser
 
     private ParseResult<Statement> ParseClassStatement()
     {
+        var startToken = Peek;
+        int size = 0;
+        while (Peek.Type == TokenType.EOL)
+        {
+            Next();
+            size++;
+        }
+        if (size > 0)
+            return new ParseResult<Statement>(new Space(startToken.Position, size));
+
         var modifiers = new List<Core.Token>();
         while (Peek.Type.IsModifier())
             modifiers.Add(Next().Type.ToCoreToken());
 
-        var returnType = ParseType();
-        if (returnType.Error)
-            return ErrorStatement("Invalid return type", returnType.Result.Position);
+        if (Peek.Type == TokenType.Class)
+            return ParseClass(modifiers);
 
-        var res = Accept(TokenType.Literal,
-            TokenType.LeftParenthesis,
+        var type = ParseType();
+        if (type.Error)
+            return ErrorStatement("Invalid type", type.Result.Position);
+
+        var nameToken = Next();
+        if (nameToken.Type != TokenType.Literal)
+            return ErrorStatement("Invalid token in class: " + nameToken, nameToken.Position);
+
+        if (Peek.Type == TokenType.EOL)
+        {
+            Next();
+            return new ParseResult<Statement>(new Property(nameToken.Position, modifiers, type.Result, nameToken.Value));
+        }
+
+        var res = Accept(TokenType.LeftParenthesis,
             TokenType.RightParenthesis,
             TokenType.EOL,
             TokenType.Indent);
@@ -133,7 +155,7 @@ public class Parser
         if (res.Failure)
             return InvalidTokenErrorStatement("Invalid token in class", res);
 
-        var functionDef = new FunctionDefinition(GetToken(res).Position, modifiers, returnType.Result, GetToken(res).Value);
+        var functionDef = new FunctionDefinition(nameToken.Position, modifiers, type.Result, nameToken.Value);
 
         while (Peek.Type != TokenType.Dedent)
             functionDef.Statements.Add(ParseFunctionStatement().Result);
@@ -240,6 +262,21 @@ public class Parser
             _ => ErrorStatement($"Invalid token: {Peek}", Peek.Position),
         };
 
+    private ParseResult<Expression> ParseIdentifier()
+    {
+        var identifier = new Identifier(Peek.Position, Peek.Value);
+        Next();
+
+        var res = Accept(TokenType.Dot, TokenType.Literal);
+        while (!res.Failure)
+        {
+            identifier.Parts.Add(new IdentifierPart(GetToken(res, 1).Value));
+            res = Accept(TokenType.Dot, TokenType.Literal);
+        }
+
+        return new ParseResult<Expression>(identifier);
+    }
+
     private ParseResult<Statement> ParseInterface(List<Core.Token> modifiers)
     {
         Next();
@@ -266,11 +303,14 @@ public class Parser
 
     private ParseResult<Expression> ParseType()
     {
+        if (Peek.Type == TokenType.Literal)
+            return ParseIdentifier();
+
         var token = Next();
         return token.Type switch
         {
             TokenType.Void => new ParseResult<Expression>(new Core.Ast.Void(token.Position)),
-            _ => ErrorExpression("Type parsing not supported yet", new Position()),
+            _ => ErrorExpression("Invalid token in type parsing: " + token, new Position()),
         };
     }
 }

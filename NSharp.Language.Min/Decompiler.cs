@@ -36,6 +36,9 @@ public static class Decompiler
             case FunctionDefinition functionDef:
                 ProcessFunctionDefinition(sb, indent, functionDef);
                 break;
+            case Property property:
+                ProcessProperty(sb, indent, property);
+                break;
             case Space space:
                 ProcessSpace(sb, space);
                 break;
@@ -85,6 +88,13 @@ public static class Decompiler
         ProcessExpression(sb, functionDef.ReturnType);
         sb.AppendLine($" {functionDef.Name.GetLiteral()}()");
         ProcessStatements(sb, indent + 1, functionDef.Statements);
+    }
+
+    private static void ProcessProperty(StringBuilder sb, int indent, Property property)
+    {
+        sb.AppendModifiersIndented(indent, property.Modifiers);
+        ProcessExpression(sb, property.Type);
+        sb.AppendLine($" {property.Name.GetLiteral()}");
     }
 
     private static void ProcessSpace(StringBuilder sb, Space space)

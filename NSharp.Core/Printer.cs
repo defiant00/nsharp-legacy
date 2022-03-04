@@ -79,6 +79,11 @@ public partial class FunctionDefinition
 
 public partial class Identifier
 {
+    public override string ToString() => string.Join(".", Parts);
+}
+
+public partial class IdentifierPart
+{
     public override string ToString() => Value;
 }
 
@@ -105,7 +110,7 @@ public partial class LiteralToken
 
 public partial class Property
 {
-    public override void Print(int indent) => WriteLineIndented(indent, $"Property: {Name}");
+    public override void Print(int indent) => WriteLineIndented(indent, $"Property: {string.Join(" ", Modifiers)} {Type} {Name}");
 }
 
 public partial class Space

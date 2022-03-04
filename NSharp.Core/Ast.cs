@@ -117,9 +117,19 @@ public partial class FunctionDefinition : Statement
 
 public partial class Identifier : Expression
 {
-    public string Value { get; set; }
+    public List<IdentifierPart> Parts { get; set; } = new();
 
     public Identifier(Position position, string value) : base(position)
+    {
+        Parts.Add(new IdentifierPart(value));
+    }
+}
+
+public partial class IdentifierPart
+{
+    public string Value { get; set; }
+
+    public IdentifierPart(string value)
     {
         Value = value;
     }
@@ -149,10 +159,14 @@ public partial class LiteralToken : Expression
 
 public partial class Property : Statement
 {
+    public List<Token> Modifiers { get; set; }
+    public Expression Type { get; set; }
     public string Name { get; set; }
 
-    public Property(Position position, string name) : base(position)
+    public Property(Position position, List<Token> modifiers, Expression type, string name) : base(position)
     {
+        Modifiers = modifiers;
+        Type = type;
         Name = name;
     }
 }

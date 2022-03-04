@@ -45,9 +45,6 @@ public class CStyle
             case FunctionDefinition fd:
                 Process(sb, index, indent, fd);
                 break;
-            case Identifier i:
-                Process(sb, i);
-                break;
             case If i:
                 Process(sb, indent, i);
                 break;
@@ -91,13 +88,6 @@ public class CStyle
 
         sb.AppendLineIndented(indent, $"public static void {fd.Name}()");
         Process(sb, indent, fd.Statements);
-    }
-
-    private static void Process(StringBuilder sb, Identifier id)
-    {
-        if (Helpers.Keywords.Contains(id.Value))
-            sb.Append("`");
-        sb.Append(id.Value);
     }
 
     private static void Process(StringBuilder sb, int indent, If ifSt)
