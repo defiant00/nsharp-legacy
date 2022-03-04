@@ -2,10 +2,10 @@
 
 Feature                 | Min       | CStyle    | PyStyle
 ---                     | ---       | ---       | ---
-Space                   |           |           |
-Comments                | In        |           |
+Space                   | Both      |           |
+Comments                | Both      |           |
 Operators               | In        |           |
-Identifiers             | In        |           |
+Identifiers             | Both      |           |
 Keyword Identifiers     | In        |           |
 Strings                 | In        |           |
 Chars                   | In        |           |
@@ -21,12 +21,12 @@ For                     |           |           |
 While                   |           |           |
 Try/Catch/Finally       |           |           |
 Namespace               |           |           |
-Class Definition        |           |           |
+Class Definition        | Both      |           |
 Interface Definition    |           |           |
 Struct Definition       |           |           |
 Enum Definition         |           |           |
 Function Definition     |           |           |
-Properties              |           |           |
+Properties              | Both      |           |
 Getters and Setters     |           |           |
 Types                   |           |           |
 Using                   |           |           |
