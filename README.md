@@ -1,5 +1,9 @@
 # nsharp
 
+Neutral programming for .NET
+
+## Status
+
 Feature                 | Min       | CStyle    | PyStyle
 ---                     | ---       | ---       | ---
 Space                   | Both      |           |
