@@ -1,5 +1,6 @@
 ; a comment
 
+ns NSharp.Min.Tests
 
 public static class MyClass
     private class InnerClass
@@ -10,6 +11,10 @@ public static class MyClass
     System.String Prop2
 
     public void MyFunction()
-        break
-
         continue
+
+    public string TestFunc(int val)
+        break
+    
+    public int TestFunc2(int a, bool `static)
+        break

@@ -100,11 +100,22 @@ public partial class File : Statement
     }
 }
 
+public partial class For : Statement
+{
+    public Statement? Init { get; set; }
+    public Expression? Condition { get; set; }
+    public Statement? Post { get; set; }
+    public List<Statement> Statements { get; set; } = new();
+
+    public For(Position position) : base(position) { }
+}
+
 public partial class FunctionDefinition : Statement
 {
     public List<Token> Modifiers { get; set; }
     public Expression ReturnType { get; set; }
     public string Name { get; set; }
+    public List<Parameter> Parameters { get; set; } = new();
     public List<Statement> Statements { get; set; } = new();
 
     public FunctionDefinition(Position position, List<Token> modifiers, Expression returnType, string name) : base(position)
@@ -157,13 +168,35 @@ public partial class LiteralToken : Expression
     }
 }
 
+public partial class Namespace : Statement
+{
+    public Identifier Name { get; set; }
+
+    public Namespace(Position position, Identifier name) : base(position)
+    {
+        Name = name;
+    }
+}
+
+public partial class Parameter : Expression
+{
+    public Identifier Type { get; set; }
+    public string Name { get; set; }
+
+    public Parameter(Position position, Identifier type, string name) : base(position)
+    {
+        Type = type;
+        Name = name;
+    }
+}
+
 public partial class Property : Statement
 {
     public List<Token> Modifiers { get; set; }
-    public Expression Type { get; set; }
+    public Identifier Type { get; set; }
     public string Name { get; set; }
 
-    public Property(Position position, List<Token> modifiers, Expression type, string name) : base(position)
+    public Property(Position position, List<Token> modifiers, Identifier type, string name) : base(position)
     {
         Modifiers = modifiers;
         Type = type;
@@ -185,15 +218,4 @@ public partial class Space : Statement
 public partial class Void : Expression
 {
     public Void(Position position) : base(position) { }
-}
-
-public partial class While : Statement
-{
-    public Expression Condition { get; set; }
-    public List<Statement> Statements { get; set; } = new();
-
-    public While(Position position, Expression condition) : base(position)
-    {
-        Condition = condition;
-    }
 }

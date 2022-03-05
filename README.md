@@ -22,14 +22,13 @@ Function Calls          |           |           |
 Generics                |           |           |
 If                      |           |           |
 For                     |           |           |
-While                   |           |           |
 Try/Catch/Finally       |           |           |
-Namespace               |           |           |
+Namespace               | Both      |           |
 Class Definition        | Both      |           |
 Interface Definition    |           |           |
 Struct Definition       |           |           |
 Enum Definition         |           |           |
-Function Definition     |           |           |
+Function Definition     | Both      |           |
 Properties              | Both      |           |
 Getters and Setters     |           |           |
 Types                   |           |           |

@@ -67,11 +67,33 @@ public partial class File
     }
 }
 
+public partial class For
+{
+    public override void Print(int indent)
+    {
+        WriteLineIndented(indent, "For");
+        if (Init != null)
+        {
+            WriteLineIndented(indent, "Init");
+            Init.Print(indent + 1);
+        }
+        if (Condition != null)
+            WriteLineIndented(indent, $"Condition: {Condition}");
+        if (Post != null)
+        {
+            WriteLineIndented(indent, "Post");
+            Post.Print(indent + 1);
+        }
+        foreach (var statement in Statements)
+            statement.Print(indent + 1);
+    }
+}
+
 public partial class FunctionDefinition
 {
     public override void Print(int indent)
     {
-        WriteLineIndented(indent, $"Function: {string.Join(" ", Modifiers)} {ReturnType} {Name}()");
+        WriteLineIndented(indent, $"Function: {string.Join(" ", Modifiers)} {ReturnType} {Name}({string.Join(", ", Parameters)})");
         foreach (var statement in Statements)
             statement.Print(indent + 1);
     }
@@ -108,6 +130,16 @@ public partial class LiteralToken
     public override string ToString() => Token.ToString();
 }
 
+public partial class Namespace
+{
+    public override void Print(int indent) => WriteLineIndented(indent, $"Namespace: {Name}");
+}
+
+public partial class Parameter
+{
+    public override string ToString() => $"{Type} {Name}";
+}
+
 public partial class Property
 {
     public override void Print(int indent) => WriteLineIndented(indent, $"Property: {string.Join(" ", Modifiers)} {Type} {Name}");
@@ -121,14 +153,4 @@ public partial class Space
 public partial class Void
 {
     public override string ToString() => "Void";
-}
-
-public partial class While
-{
-    public override void Print(int indent)
-    {
-        WriteLineIndented(indent, $"While {Condition}");
-        foreach (var statement in Statements)
-            statement.Print(indent + 1);
-    }
 }

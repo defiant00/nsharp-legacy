@@ -36,6 +36,9 @@ public static class Decompiler
             case FunctionDefinition functionDef:
                 ProcessFunctionDefinition(sb, indent, functionDef);
                 break;
+            case Namespace ns:
+                ProcessNamespace(sb, indent, ns);
+                break;
             case Property property:
                 ProcessProperty(sb, indent, property);
                 break;
@@ -86,15 +89,40 @@ public static class Decompiler
     {
         sb.AppendModifiersIndented(indent, functionDef.Modifiers);
         ProcessExpression(sb, functionDef.ReturnType);
-        sb.AppendLine($" {functionDef.Name.GetLiteral()}()");
+        sb.Append($" {functionDef.Name.GetLiteral()}(");
+        if (functionDef.Parameters.Count > 0)
+        {
+            ProcessParameter(sb, functionDef.Parameters[0]);
+            for (int i = 1; i < functionDef.Parameters.Count; i++)
+            {
+                sb.Append(", ");
+                ProcessParameter(sb, functionDef.Parameters[i]);
+            }
+        }
+        sb.AppendLine(")");
         ProcessStatements(sb, indent + 1, functionDef.Statements);
+    }
+
+    private static void ProcessNamespace(StringBuilder sb, int indent, Namespace ns)
+    {
+        sb.AppendIndented(indent, "ns ");
+        ProcessExpression(sb, ns.Name);
+        sb.AppendLine();
+    }
+
+    private static void ProcessParameter(StringBuilder sb, Parameter parameter)
+    {
+        ProcessExpression(sb, parameter.Type);
+        sb.Append(" ");
+        sb.Append(parameter.Name.GetLiteral());
     }
 
     private static void ProcessProperty(StringBuilder sb, int indent, Property property)
     {
         sb.AppendModifiersIndented(indent, property.Modifiers);
         ProcessExpression(sb, property.Type);
-        sb.AppendLine($" {property.Name.GetLiteral()}");
+        sb.Append(" ");
+        sb.AppendLine(property.Name.GetLiteral());
     }
 
     private static void ProcessSpace(StringBuilder sb, Space space)

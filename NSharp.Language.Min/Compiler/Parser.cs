@@ -141,21 +141,38 @@ public class Parser
         if (nameToken.Type != TokenType.Literal)
             return ErrorStatement("Invalid token in class: " + nameToken, nameToken.Position);
 
-        if (Peek.Type == TokenType.EOL)
+        if (Peek.Type == TokenType.EOL && type.Result is Identifier typeIdent)
         {
             Next();
-            return new ParseResult<Statement>(new Property(nameToken.Position, modifiers, type.Result, nameToken.Value));
+            return new ParseResult<Statement>(new Property(nameToken.Position, modifiers, typeIdent, nameToken.Value));
         }
 
-        var res = Accept(TokenType.LeftParenthesis,
-            TokenType.RightParenthesis,
-            TokenType.EOL,
-            TokenType.Indent);
+        var res = Accept(TokenType.LeftParenthesis);
 
         if (res.Failure)
             return InvalidTokenErrorStatement("Invalid token in class", res);
 
         var functionDef = new FunctionDefinition(nameToken.Position, modifiers, type.Result, nameToken.Value);
+
+        while (Peek.Type != TokenType.RightParenthesis)
+        {
+            var paramType = ParseType();
+            if (Peek.Type != TokenType.Literal)
+            {
+                var errorToken = Next();
+                return ErrorStatement($"Invalid token in parameters: {errorToken}", errorToken.Position);
+            }
+            if (!paramType.Error && paramType.Result is Identifier paramIdent)
+                functionDef.Parameters.Add(new Parameter(paramIdent.Position, paramIdent, Next().Value));
+
+            Accept(TokenType.Comma);
+        }
+
+        res = Accept(TokenType.RightParenthesis, TokenType.EOL, TokenType.Indent);
+
+        if (res.Failure)
+            return InvalidTokenErrorStatement("Invalid token in class", res);
+
 
         while (Peek.Type != TokenType.Dedent)
             functionDef.Statements.Add(ParseFunctionStatement().Result);
@@ -234,6 +251,7 @@ public class Parser
                     file.Statements.Add(ParseSpace().Result);
                     break;
                 case TokenType.Namespace:
+                    file.Statements.Add(ParseNamespace().Result);
                     break;
                 case TokenType.Use:
                     break;
@@ -281,6 +299,20 @@ public class Parser
     {
         Next();
         return ErrorStatement("Interface parsing not supported yet", new Position());
+    }
+
+    private ParseResult<Statement> ParseNamespace()
+    {
+        var nsToken = Next();
+        var identifier = ParseIdentifier();
+        var res = Accept(TokenType.EOL);
+        if (res.Failure)
+            return InvalidTokenErrorStatement("Invalid token in namespace", res);
+
+        if (!identifier.Error && identifier.Result is Identifier ident)
+            return new ParseResult<Statement>(new Namespace(nsToken.Position, ident));
+
+        return ErrorStatement("Couldn't parse namespace", nsToken.Position);
     }
 
     private ParseResult<Statement> ParseSpace()
