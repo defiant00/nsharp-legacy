@@ -3,8 +3,10 @@
 ns NSharp.Min.Tests
 
 public static class MyClass
+
     private class InnerClass
         protected void `void()
+
             break
 
     string Prop
