@@ -1,14 +1,22 @@
-; a comment
-
+; namespace
 ns NSharp.Min.Tests
 
 public static class MyClass
 
+    ; nested classes
     private class InnerClass
-        protected void `void()
 
+        ; can be named the same as a keyword if you use `
+        protected void `void()
+            
+            ; some expressions
+            "hello"
+            'a'
+            42
+            this
             break
 
+    ; properties
     string Prop
     System.String Prop2
 

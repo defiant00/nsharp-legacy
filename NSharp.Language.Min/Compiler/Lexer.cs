@@ -144,6 +144,8 @@ public class Lexer
                     break;
                 case ';':
                     Backup();
+                    Discard();
+                    EmitIndent(indent);
                     return LexComment;
                 default:
                     Backup();

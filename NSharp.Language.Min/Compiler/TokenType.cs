@@ -12,6 +12,7 @@ public enum TokenType
     String,
     Number,
     Literal,
+    This,
     Type_Start,
     Void,
     Type_End,

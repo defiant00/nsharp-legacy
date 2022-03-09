@@ -24,6 +24,16 @@ public partial class Break : Statement
     public Break(Position position) : base(position) { }
 }
 
+public partial class Character : Expression
+{
+    public string Value { get; set; }
+
+    public Character(Position position, string value) : base(position)
+    {
+        Value = value;
+    }
+}
+
 public partial class Class : Statement
 {
     public List<Token> Modifiers { get; set; }
@@ -178,6 +188,16 @@ public partial class Namespace : Statement
     }
 }
 
+public partial class Number : Expression
+{
+    public string Value { get; set; }
+
+    public Number(Position position, string value) : base(position)
+    {
+        Value = value;
+    }
+}
+
 public partial class Parameter : Expression
 {
     public Identifier Type { get; set; }
@@ -212,6 +232,16 @@ public partial class Space : Statement
     public Space(Position position, int size) : base(position)
     {
         Size = size;
+    }
+}
+
+public partial class String : Expression
+{
+    public string Value { get; set; }
+
+    public String(Position position, string value) : base(position)
+    {
+        Value = value;
     }
 }
 

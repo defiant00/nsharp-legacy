@@ -30,6 +30,9 @@ public static class Decompiler
             case Continue:
                 ProcessContinue(sb, indent);
                 break;
+            case ExpressionStatement expressionStatement:
+                ProcessExpressionStatement(sb, indent, expressionStatement);
+                break;
             case Core.Ast.File file:
                 ProcessFile(sb, indent, file);
                 break;
@@ -55,11 +58,30 @@ public static class Decompiler
     {
         switch (expression)
         {
+            case Character c:
+                sb.Append("'");
+                sb.Append(c.Value);
+                sb.Append("'");
+                break;
+            case CurrentObjectInstance:
+                sb.Append("this");
+                break;
+            case Identifier identifier:
+                ProcessIdentifier(sb, identifier);
+                break;
+            case Number n:
+                sb.Append(n.Value);
+                break;
+            case Core.Ast.String s:
+                sb.Append('"');
+                sb.Append(s.Value);
+                sb.Append('"');
+                break;
             case Core.Ast.Void:
                 sb.Append("void");
                 break;
             default:
-                sb.Append(expression);
+                sb.Append($"[{expression}]");
                 break;
         }
     }
@@ -79,6 +101,13 @@ public static class Decompiler
     }
 
     private static void ProcessContinue(StringBuilder sb, int indent) => sb.AppendLineIndented(indent, "continue");
+
+    private static void ProcessExpressionStatement(StringBuilder sb, int indent, ExpressionStatement expressionStatement)
+    {
+        sb.Indent(indent);
+        ProcessExpression(sb, expressionStatement.Expression);
+        sb.AppendLine();
+    }
 
     private static void ProcessFile(StringBuilder sb, int indent, Core.Ast.File file)
     {
@@ -101,6 +130,21 @@ public static class Decompiler
         }
         sb.AppendLine(")");
         ProcessStatements(sb, indent + 1, functionDef.Statements);
+    }
+
+    private static void ProcessIdentifier(StringBuilder sb, Identifier identifier)
+    {
+        ProcessIdentifierPart(sb, identifier.Parts[0]);
+        for (int i = 1; i < identifier.Parts.Count; i++)
+        {
+            sb.Append(".");
+            ProcessIdentifierPart(sb, identifier.Parts[i]);
+        }
+    }
+
+    private static void ProcessIdentifierPart(StringBuilder sb, IdentifierPart identifierPart)
+    {
+        sb.Append(identifierPart.Value);
     }
 
     private static void ProcessNamespace(StringBuilder sb, int indent, Namespace ns)

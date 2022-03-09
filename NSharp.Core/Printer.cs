@@ -17,6 +17,11 @@ public partial class Break
     public override void Print(int indent) => WriteLineIndented(indent, "Break");
 }
 
+public partial class Character
+{
+    public override string ToString() => $"'{Value}'";
+}
+
 public partial class Class
 {
     public override void Print(int indent)
@@ -135,6 +140,11 @@ public partial class Namespace
     public override void Print(int indent) => WriteLineIndented(indent, $"Namespace: {Name}");
 }
 
+public partial class Number
+{
+    public override string ToString() => Value;
+}
+
 public partial class Parameter
 {
     public override string ToString() => $"{Type} {Name}";
@@ -148,6 +158,11 @@ public partial class Property
 public partial class Space
 {
     public override void Print(int indent) => WriteLineIndented(indent, $"Space: {Size}");
+}
+
+public partial class String
+{
+    public override string ToString() => $"\"{Value}\"";
 }
 
 public partial class Void

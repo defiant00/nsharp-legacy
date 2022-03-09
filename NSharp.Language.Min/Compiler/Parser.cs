@@ -139,6 +139,9 @@ public class Parser
         if (size > 0)
             return new ParseResult<Statement>(new Space(startToken.Position, size));
 
+        if (Peek.Type == TokenType.Comment)
+            return ParseComment();
+
         var modifiers = new List<Core.Token>();
         while (Peek.Type.IsModifier())
             modifiers.Add(Next().Type.ToCoreToken());
@@ -235,6 +238,31 @@ public class Parser
         return ErrorStatement("Enum parsing not supported yet", new Position());
     }
 
+    private ParseResult<Expression> ParseExpression()
+    {
+        var token = Next();
+        return token.Type switch
+        {
+            TokenType.Character => new ParseResult<Expression>(new Character(token.Position, token.Value)),
+            TokenType.This => new ParseResult<Expression>(new CurrentObjectInstance(token.Position)),
+            TokenType.Number => new ParseResult<Expression>(new Number(token.Position, token.Value)),
+            TokenType.String => new ParseResult<Expression>(new Core.Ast.String(token.Position, token.Value)),
+            _ => ErrorExpression("Invalid token in expression: " + token, token.Position)
+        };
+    }
+
+    private ParseResult<Statement> ParseExpressionStatement()
+    {
+        var token = Peek;
+        var exprStatement = new ExpressionStatement(token.Position, ParseExpression().Result);
+
+        var res = Accept(TokenType.EOL);
+        if (res.Failure)
+            return InvalidTokenErrorStatement("Invalid token in expression statement", res);
+
+        return new ParseResult<Statement>(exprStatement);
+    }
+
     private ParseResult<Statement> ParseFileModifiableStatement()
     {
         var modifiers = new List<Core.Token>();
@@ -300,9 +328,10 @@ public class Parser
         Peek.Type switch
         {
             TokenType.Break => ParseBreak(),
+            TokenType.Comment => ParseComment(),
             TokenType.Continue => ParseContinue(),
             TokenType.EOL => ParseSpace(),
-            _ => ErrorStatement($"Invalid token: {Peek}", Peek.Position),
+            _ => ParseExpressionStatement(),
         };
 
     private ParseResult<Expression> ParseIdentifier()
