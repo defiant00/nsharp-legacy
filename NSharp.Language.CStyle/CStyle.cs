@@ -107,13 +107,13 @@ public class CStyle
     {
         switch (lit.Token)
         {
-            case Token.True:
+            case Literal.True:
                 sb.Append("true");
                 break;
-            case Token.False:
+            case Literal.False:
                 sb.Append("false");
                 break;
-            case Token.Null:
+            case Literal.Null:
                 sb.Append("null");
                 break;
         }

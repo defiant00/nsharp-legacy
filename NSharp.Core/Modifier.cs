@@ -1,10 +1,7 @@
 namespace NSharp.Core;
 
-public enum Token
+public enum Modifier
 {
-    True,
-    False,
-    Null,
     Public,
     Protected,
     Internal,

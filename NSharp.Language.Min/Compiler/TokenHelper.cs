@@ -1,3 +1,5 @@
+using NSharp.Core;
+
 namespace NSharp.Language.Min.Compiler;
 
 public static class TokenHelper
@@ -10,14 +12,14 @@ public static class TokenHelper
     public static bool IsType(this TokenType type) => type > TokenType.Type_Start && type < TokenType.Type_End;
     public static bool IsUnaryOperator(this TokenType type) => type > TokenType.Unary_Operator_Start && type < TokenType.Unary_Operator_End;
 
-    public static Core.Token ToCoreToken(this TokenType type) =>
+    public static Modifier ToModifier(this TokenType type) =>
         type switch
         {
-            TokenType.Public => Core.Token.Public,
-            TokenType.Protected => Core.Token.Protected,
-            TokenType.Internal => Core.Token.Internal,
-            TokenType.Private => Core.Token.Private,
-            TokenType.Static => Core.Token.Static,
-            _ => throw new Exception($"Could not match token type {type} to a core token."),
+            TokenType.Public => Modifier.Public,
+            TokenType.Protected => Modifier.Protected,
+            TokenType.Internal => Modifier.Internal,
+            TokenType.Private => Modifier.Private,
+            TokenType.Static => Modifier.Static,
+            _ => throw new Exception($"Could not match token type {type} to a modifier."),
         };
 }

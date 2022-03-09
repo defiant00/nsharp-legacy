@@ -98,7 +98,7 @@ public partial class FunctionDefinition
 {
     public override void Print(int indent)
     {
-        WriteLineIndented(indent, $"Function: {string.Join(" ", Modifiers)} {ReturnType} {Name}({string.Join(", ", Parameters)})");
+        WriteLineIndented(indent, $"Function: {string.Join(" ", Modifiers)} {ReturnType?.ToString() ?? "void"} {Name}({string.Join(", ", Parameters)})");
         foreach (var statement in Statements)
             statement.Print(indent + 1);
     }
@@ -163,9 +163,4 @@ public partial class Space
 public partial class String
 {
     public override string ToString() => $"\"{Value}\"";
-}
-
-public partial class Void
-{
-    public override string ToString() => "Void";
 }

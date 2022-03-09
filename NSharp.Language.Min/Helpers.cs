@@ -1,4 +1,5 @@
 using System.Text;
+using NSharp.Core;
 using NSharp.Language.Min.Compiler;
 
 namespace NSharp.Language.Min;
@@ -19,7 +20,7 @@ public static class Helpers
         sb.AppendLine(content);
     }
 
-    public static void AppendModifiersIndented(this StringBuilder sb, int indent, List<Core.Token> modifiers)
+    public static void AppendModifiersIndented(this StringBuilder sb, int indent, List<Modifier> modifiers)
     {
         sb.Indent(indent);
         foreach (var mod in modifiers)
@@ -31,15 +32,15 @@ public static class Helpers
 
     public static string GetLiteral(this string val) => KeywordTokens.ContainsKey(val) ? "`" + val : val;
 
-    public static string StringVal(this Core.Token token) =>
-        token switch
+    public static string StringVal(this Modifier modifier) =>
+        modifier switch
         {
-            Core.Token.Public => "public",
-            Core.Token.Protected => "protected",
-            Core.Token.Internal => "internal",
-            Core.Token.Private => "private",
-            Core.Token.Static => "static",
-            _ => $"[{token}]",
+            Modifier.Public => "public",
+            Modifier.Protected => "protected",
+            Modifier.Internal => "internal",
+            Modifier.Private => "private",
+            Modifier.Static => "static",
+            _ => $"[{modifier}]",
         };
 
     public static readonly Dictionary<string, TokenType> KeywordTokens = new()

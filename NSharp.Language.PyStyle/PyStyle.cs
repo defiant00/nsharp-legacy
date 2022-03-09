@@ -107,13 +107,13 @@ public class PyStyle
     {
         switch (lit.Token)
         {
-            case Token.True:
+            case Literal.True:
                 sb.Append("True");
                 break;
-            case Token.False:
+            case Literal.False:
                 sb.Append("False");
                 break;
-            case Token.Null:
+            case Literal.Null:
                 sb.Append("None");
                 break;
         }

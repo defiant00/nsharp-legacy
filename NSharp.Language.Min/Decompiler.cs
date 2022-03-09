@@ -54,10 +54,13 @@ public static class Decompiler
         }
     }
 
-    private static void ProcessExpression(StringBuilder sb, Expression expression)
+    private static void ProcessExpression(StringBuilder sb, Expression? expression)
     {
         switch (expression)
         {
+            case null:
+                sb.Append("void");
+                break;
             case Character c:
                 sb.Append("'");
                 sb.Append(c.Value);
@@ -76,9 +79,6 @@ public static class Decompiler
                 sb.Append('"');
                 sb.Append(s.Value);
                 sb.Append('"');
-                break;
-            case Core.Ast.Void:
-                sb.Append("void");
                 break;
             default:
                 sb.Append($"[{expression}]");

@@ -36,11 +36,11 @@ public partial class Character : Expression
 
 public partial class Class : Statement
 {
-    public List<Token> Modifiers { get; set; }
+    public List<Modifier> Modifiers { get; set; }
     public string Name { get; set; }
     public List<Statement> Statements { get; set; } = new();
 
-    public Class(Position position, List<Token> modifiers, string name) : base(position)
+    public Class(Position position, List<Modifier> modifiers, string name) : base(position)
     {
         Modifiers = modifiers;
         Name = name;
@@ -122,16 +122,15 @@ public partial class For : Statement
 
 public partial class FunctionDefinition : Statement
 {
-    public List<Token> Modifiers { get; set; }
-    public Expression ReturnType { get; set; }
+    public List<Modifier> Modifiers { get; set; }
+    public Expression? ReturnType { get; set; }
     public string Name { get; set; }
     public List<Parameter> Parameters { get; set; } = new();
     public List<Statement> Statements { get; set; } = new();
 
-    public FunctionDefinition(Position position, List<Token> modifiers, Expression returnType, string name) : base(position)
+    public FunctionDefinition(Position position, List<Modifier> modifiers, string name) : base(position)
     {
         Modifiers = modifiers;
-        ReturnType = returnType;
         Name = name;
     }
 }
@@ -170,9 +169,9 @@ public partial class If : Statement
 
 public partial class LiteralToken : Expression
 {
-    public Token Token { get; set; }
+    public Literal Token { get; set; }
 
-    public LiteralToken(Position position, Token token) : base(position)
+    public LiteralToken(Position position, Literal token) : base(position)
     {
         Token = token;
     }
@@ -212,11 +211,11 @@ public partial class Parameter : Expression
 
 public partial class Property : Statement
 {
-    public List<Token> Modifiers { get; set; }
+    public List<Modifier> Modifiers { get; set; }
     public Identifier Type { get; set; }
     public string Name { get; set; }
 
-    public Property(Position position, List<Token> modifiers, Identifier type, string name) : base(position)
+    public Property(Position position, List<Modifier> modifiers, Identifier type, string name) : base(position)
     {
         Modifiers = modifiers;
         Type = type;
@@ -243,9 +242,4 @@ public partial class String : Expression
     {
         Value = value;
     }
-}
-
-public partial class Void : Expression
-{
-    public Void(Position position) : base(position) { }
 }

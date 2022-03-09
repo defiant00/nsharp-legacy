@@ -90,7 +90,7 @@ public class Parser
         return new ParseResult<Statement>(new Break(GetToken(res).Position));
     }
 
-    private ParseResult<Statement> ParseClass(List<Core.Token> modifiers)
+    private ParseResult<Statement> ParseClass(List<Modifier> modifiers)
     {
         var res = Accept(TokenType.Class, TokenType.Literal);
 
@@ -142,22 +142,29 @@ public class Parser
         if (Peek.Type == TokenType.Comment)
             return ParseComment();
 
-        var modifiers = new List<Core.Token>();
+        var modifiers = new List<Modifier>();
         while (Peek.Type.IsModifier())
-            modifiers.Add(Next().Type.ToCoreToken());
+            modifiers.Add(Next().Type.ToModifier());
 
         if (Peek.Type == TokenType.Class)
             return ParseClass(modifiers);
 
-        var type = ParseType();
-        if (type.Error)
-            return ErrorStatement("Invalid type", type.Result.Position);
+        bool returnIsVoid = Peek.Type == TokenType.Void;
+        ParseResult<Expression>? type = null;
+        if (!returnIsVoid)
+        {
+            type = ParseType();
+            if (type.Error)
+                return ErrorStatement("Invalid type", type.Result.Position);
+        }
+        else
+            Next();
 
         var nameToken = Next();
         if (nameToken.Type != TokenType.Literal)
             return ErrorStatement("Invalid token in class: " + nameToken, nameToken.Position);
 
-        if (Peek.Type == TokenType.EOL && type.Result is Identifier typeIdent)
+        if (Peek.Type == TokenType.EOL && type?.Result is Identifier typeIdent)
         {
             Next();
             return new ParseResult<Statement>(new Property(nameToken.Position, modifiers, typeIdent, nameToken.Value));
@@ -168,7 +175,7 @@ public class Parser
         if (res.Failure)
             return InvalidTokenErrorStatement("Invalid token in class", res);
 
-        var functionDef = new FunctionDefinition(nameToken.Position, modifiers, type.Result, nameToken.Value);
+        var functionDef = new FunctionDefinition(nameToken.Position, modifiers, nameToken.Value) { ReturnType = type?.Result };
 
         while (Peek.Type != TokenType.RightParenthesis)
         {
@@ -232,7 +239,7 @@ public class Parser
         return new ParseResult<Statement>(new Continue(GetToken(res).Position));
     }
 
-    private ParseResult<Statement> ParseEnum(List<Core.Token> modifiers)
+    private ParseResult<Statement> ParseEnum(List<Modifier> modifiers)
     {
         Next();
         return ErrorStatement("Enum parsing not supported yet", new Position());
@@ -265,9 +272,9 @@ public class Parser
 
     private ParseResult<Statement> ParseFileModifiableStatement()
     {
-        var modifiers = new List<Core.Token>();
+        var modifiers = new List<Modifier>();
         while (Peek.Type.IsModifier())
-            modifiers.Add(Next().Type.ToCoreToken());
+            modifiers.Add(Next().Type.ToModifier());
 
         return Peek.Type switch
         {
@@ -349,7 +356,7 @@ public class Parser
         return new ParseResult<Expression>(identifier);
     }
 
-    private ParseResult<Statement> ParseInterface(List<Core.Token> modifiers)
+    private ParseResult<Statement> ParseInterface(List<Modifier> modifiers)
     {
         Next();
         return ErrorStatement("Interface parsing not supported yet", new Position());
@@ -381,7 +388,7 @@ public class Parser
         return new ParseResult<Statement>(new Space(position, size));
     }
 
-    private ParseResult<Statement> ParseStruct(List<Core.Token> modifiers)
+    private ParseResult<Statement> ParseStruct(List<Modifier> modifiers)
     {
         Next();
         return ErrorStatement("Struct parsing not supported yet", new Position());
@@ -393,10 +400,6 @@ public class Parser
             return ParseIdentifier();
 
         var token = Next();
-        return token.Type switch
-        {
-            TokenType.Void => new ParseResult<Expression>(new Core.Ast.Void(token.Position)),
-            _ => ErrorExpression("Invalid token in type parsing: " + token, new Position()),
-        };
+        return ErrorExpression("Invalid token in type parsing: " + token, token.Position);
     }
 }
