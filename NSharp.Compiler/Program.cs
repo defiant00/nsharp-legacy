@@ -7,8 +7,8 @@ namespace NSharp.Compiler;
 public static class Program
 {
     private const string EDIT_SETTINGS = ".nsedit";
-
     private const string SAVE_SETTINGS = ".nssave";
+    private const string LANGUAGE_KEY = "language";
 
     public static void Main(string[] args)
     {
@@ -24,9 +24,10 @@ public static class Program
             Console.WriteLine();
             Console.WriteLine("Commands:");
             Console.WriteLine("    build [project paths] - tbd, build projects");
+            Console.WriteLine("    compile [files]       - tbd, compile files");
             Console.WriteLine("    edit [files]          - create a file.ns.edit file per input file for editing per the .nsedit settings");
             Console.WriteLine("    format [files]        - format the specified files per the .nsedit and .nssave settings");
-            Console.WriteLine("    save [files]          - save the specified files per the .nssave settings, deleting the .edit file on success");
+            Console.WriteLine("    save [files]          - save the specified files per the .nssave settings");
             Console.WriteLine("    validate [files]      - validate the specified files' syntax");
             return;
         }
@@ -67,8 +68,11 @@ public static class Program
         if (!file.EndsWith(".ns", StringComparison.OrdinalIgnoreCase))
             throw new Exception($"File '{file}' does not end with .ns");
 
-        ILanguage loadLang = FindSpecifiedLanguage(SAVE_SETTINGS, file);
-        ILanguage saveLang = FindSpecifiedLanguage(EDIT_SETTINGS, file);
+        var saveSettings = LoadSettings(SAVE_SETTINGS, file);
+        var editSettings = LoadSettings(EDIT_SETTINGS, file);
+
+        ILanguage loadLang = GetLanguage(saveSettings);
+        ILanguage saveLang = GetLanguage(editSettings);
 
         LoadResult loadResult = loadLang.Load(file);
         HandleResult(loadResult);
@@ -81,15 +85,16 @@ public static class Program
         if (!File.Exists(file))
             throw new Exception($"File '{file}' does not exist.");
 
-        ILanguage language;
+        Dictionary<string, string> settings;
 
         if (file.EndsWith(".ns", StringComparison.OrdinalIgnoreCase))
-            language = FindSpecifiedLanguage(SAVE_SETTINGS, file);
+            settings = LoadSettings(SAVE_SETTINGS, file);
         else if (file.EndsWith(".ns.edit", StringComparison.OrdinalIgnoreCase))
-            language = FindSpecifiedLanguage(EDIT_SETTINGS, file);
+            settings = LoadSettings(EDIT_SETTINGS, file);
         else
             throw new Exception($"File '{file}' does not end with .ns or .ns.edit");
 
+        var language = GetLanguage(settings);
         LoadResult loadResult = language.Load(file);
         HandleResult(loadResult);
         if (loadResult.Ast != null)
@@ -103,18 +108,16 @@ public static class Program
         if (!file.EndsWith(".ns.edit", StringComparison.OrdinalIgnoreCase))
             throw new Exception($"File '{file}' does not end with .ns.edit");
 
-        ILanguage loadLang = FindSpecifiedLanguage(EDIT_SETTINGS, file);
-        ILanguage saveLang = FindSpecifiedLanguage(SAVE_SETTINGS, file);
+        var saveSettings = LoadSettings(SAVE_SETTINGS, file);
+        var editSettings = LoadSettings(EDIT_SETTINGS, file);
+
+        ILanguage loadLang = GetLanguage(editSettings);
+        ILanguage saveLang = GetLanguage(saveSettings);
 
         LoadResult loadResult = loadLang.Load(file);
         HandleResult(loadResult);
         if (loadResult.Ast != null)
-        {
-            SaveResult saveResult = saveLang.Save(file[..^5], loadResult.Ast);
-            HandleResult(saveResult);
-            // if (saveResult.Success)
-            //     File.Delete(file);
-        }
+            HandleResult(saveLang.Save(file[..^5], loadResult.Ast));
     }
 
     private static void Validate(string file)
@@ -122,15 +125,16 @@ public static class Program
         if (!File.Exists(file))
             throw new Exception($"File '{file}' does not exist.");
 
-        ILanguage language;
+        Dictionary<string, string> settings;
 
         if (file.EndsWith(".ns", StringComparison.OrdinalIgnoreCase))
-            language = FindSpecifiedLanguage(SAVE_SETTINGS, file);
+            settings = LoadSettings(SAVE_SETTINGS, file);
         else if (file.EndsWith(".ns.edit", StringComparison.OrdinalIgnoreCase))
-            language = FindSpecifiedLanguage(EDIT_SETTINGS, file);
+            settings = LoadSettings(EDIT_SETTINGS, file);
         else
             throw new Exception($"File '{file}' does not end with .ns or .ns.edit");
 
+        var language = GetLanguage(settings);
         LoadResult loadResult = language.Load(file);
         HandleResult(loadResult);
     }
@@ -145,28 +149,37 @@ public static class Program
         }
     }
 
-    private static ILanguage DefaultLanguage() => new Min();
+    private static ILanguage DefaultLanguage => new Min();
 
-    private static ILanguage GetLanguage(string settingsPath)
+    private static Dictionary<string, string> DefaultSettings => new();
+
+    private static ILanguage GetLanguage(Dictionary<string, string> settings)
     {
-        //  TODO - load the language and config options from the settings file
-        return DefaultLanguage();
+        if (settings.ContainsKey(LANGUAGE_KEY))
+        {
+            switch (settings[LANGUAGE_KEY])
+            {
+                case "Min":
+                    return new Min();
+            }
+        }
+        return DefaultLanguage;
     }
 
-    private static ILanguage FindSpecifiedLanguage(string settingsFileName, string startingPath)
+    private static Dictionary<string, string> LoadSettings(string settingsFileName, string startingPath)
     {
         string? dirName = Path.GetDirectoryName(startingPath);
         if (dirName == null)
-            return DefaultLanguage();
+            return DefaultSettings;
         DirectoryInfo? dir = new DirectoryInfo(dirName);
         while (dir != null)
         {
             string settingsPath = Path.Combine(dir.FullName, settingsFileName);
             if (File.Exists(settingsPath))
-                return GetLanguage(settingsPath);
+                return Configuration.Load(settingsPath);
             dir = dir.Parent;
         }
-        Console.WriteLine($"'{settingsFileName}' not found, using the default language.");
-        return DefaultLanguage();
+        Console.WriteLine($"'{settingsFileName}' not found, using default settings.");
+        return DefaultSettings;
     }
 }
