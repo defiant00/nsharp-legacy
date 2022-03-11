@@ -61,6 +61,9 @@ public static class Decompiler
             case null:
                 sb.Append("void");
                 break;
+            case BinaryOperator binaryOperator:
+                ProcessBinaryOperator(sb, binaryOperator);
+                break;
             case Character c:
                 sb.Append("'");
                 sb.Append(c.Value);
@@ -84,6 +87,17 @@ public static class Decompiler
                 sb.Append($"[{expression}]");
                 break;
         }
+    }
+
+    private static void ProcessBinaryOperator(StringBuilder sb, BinaryOperator binaryOperator)
+    {
+        sb.Append("(");
+        ProcessExpression(sb, binaryOperator.Left);
+        sb.Append(" ");
+        sb.Append(binaryOperator.Operator.StringVal());
+        sb.Append(" ");
+        ProcessExpression(sb, binaryOperator.Right);
+        sb.Append(")");
     }
 
     private static void ProcessBreak(StringBuilder sb, int indent) => sb.AppendLineIndented(indent, "break");

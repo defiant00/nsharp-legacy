@@ -22,4 +22,41 @@ public static class TokenHelper
             TokenType.Static => Modifier.Static,
             _ => throw new Exception($"Could not match token type {type} to a modifier."),
         };
+
+    public static OperatorType ToOperator(this TokenType type) =>
+        type switch
+        {
+            TokenType.Dot => OperatorType.Dot,
+
+            TokenType.Multiply => OperatorType.Multiply,
+            TokenType.Divide => OperatorType.Divide,
+            TokenType.Modulo => OperatorType.Modulo,
+
+            TokenType.Add => OperatorType.Add,
+            TokenType.Subtract => OperatorType.Subtract,
+
+            TokenType.LeftShift => OperatorType.LeftShift,
+            TokenType.RightShift => OperatorType.RightShift,
+
+            TokenType.BitwiseAnd => OperatorType.BitwiseAnd,
+
+            TokenType.BitwiseOr => OperatorType.BitwiseOr,
+            TokenType.BitwiseXor => OperatorType.BitwiseXor,
+
+            TokenType.LessThan => OperatorType.LessThan,
+            TokenType.GreaterThan => OperatorType.GreaterThan,
+            TokenType.LessThanOrEqual => OperatorType.LessThanOrEqual,
+            TokenType.GreaterThanOrEqual => OperatorType.GreaterThanOrEqual,
+
+            TokenType.Equal => OperatorType.Equal,
+            TokenType.NotEqual => OperatorType.NotEqual,
+
+            TokenType.And => OperatorType.And,
+
+            TokenType.Or => OperatorType.Or,
+
+            _ => OperatorType.None,
+        };
+
+    public static int Precedence(this Token token) => token.Type.ToOperator().Precedence();
 }

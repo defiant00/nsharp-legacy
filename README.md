@@ -8,13 +8,13 @@ Feature                 | Min       | CStyle    | PyStyle
 ---                     | ---       | ---       | ---
 Space                   | Both      |           |
 Comments                | Both      |           |
-Operators               | In        |           |
+Operators               | Both      |           |
 Identifiers             | Both      |           |
-Keyword Identifiers     | In        |           |
-Strings                 | In        |           |
-Chars                   | In        |           |
+Keyword Identifiers     | Both      |           |
+Strings                 | Both      |           |
+Chars                   | Both      |           |
 Unicode                 |           |           |
-Numbers                 | In        |           |
+Numbers                 | Both      |           |
 Hex                     |           |           |
 Binary                  |           |           |
 String Interpolation    |           |           |

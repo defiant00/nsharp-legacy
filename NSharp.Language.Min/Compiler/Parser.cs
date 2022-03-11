@@ -82,6 +82,40 @@ public class Parser
 
     private Token ErrorToken(AcceptResult result) => Tokens[result.StartingIndex + result.Count];
 
+    private ParseResult<Expression> ParseBinaryOperatorRightSide(int leftPrecedence, Expression left)
+    {
+        int previousPrecedence = 0;
+        while (true)
+        {
+            int tokenPrecedence = Peek.Precedence();
+
+            // If this is a binary operator that binds at least as tightly as the
+            // current operator then consume it, otherwise we're done.
+            if (tokenPrecedence < leftPrecedence)
+                return new ParseResult<Expression>(left);
+
+            var op = Next();
+            var right = ParsePrimaryExpression();
+            if (right.Error)
+                return right;
+
+            // If the binary operator binds less tightly with the right than the operator
+            // after the right, let the pending operator take the right as its left.
+            int nextPrecedence = Peek.Precedence();
+            if (tokenPrecedence < nextPrecedence)
+            {
+                right = ParseBinaryOperatorRightSide(tokenPrecedence + 1, right.Result);
+                if (right.Error)
+                    return right;
+            }
+
+            // Merge left and right.
+            left = new BinaryOperator(left.Position, op.Type.ToOperator(), left, right.Result);
+
+            previousPrecedence = tokenPrecedence;
+        }
+    }
+
     private ParseResult<Statement> ParseBreak()
     {
         var res = Accept(TokenType.Break, TokenType.EOL);
@@ -247,15 +281,10 @@ public class Parser
 
     private ParseResult<Expression> ParseExpression()
     {
-        var token = Next();
-        return token.Type switch
-        {
-            TokenType.Character => new ParseResult<Expression>(new Character(token.Position, token.Value)),
-            TokenType.This => new ParseResult<Expression>(new CurrentObjectInstance(token.Position)),
-            TokenType.Number => new ParseResult<Expression>(new Number(token.Position, token.Value)),
-            TokenType.String => new ParseResult<Expression>(new Core.Ast.String(token.Position, token.Value)),
-            _ => ErrorExpression("Invalid token in expression: " + token, token.Position)
-        };
+        var left = ParsePrimaryExpression();
+        if (left.Error)
+            return left;
+        return ParseBinaryOperatorRightSide(0, left.Result);
     }
 
     private ParseResult<Statement> ParseExpressionStatement()
@@ -374,6 +403,33 @@ public class Parser
             return new ParseResult<Statement>(new Namespace(nsToken.Position, ident));
 
         return ErrorStatement("Couldn't parse namespace", nsToken.Position);
+    }
+
+    private ParseResult<Expression> ParseParenthesizedExpression()
+    {
+        // Discard the opening parenthesis
+        Next();
+        var expression = ParseExpression();
+        var res = Accept(TokenType.RightParenthesis);
+        if (res.Failure)
+            return InvalidTokenErrorExpression("Invalid token in parenthesized expression", res);
+        return expression;
+    }
+
+    private ParseResult<Expression> ParsePrimaryExpression()
+    {
+        if (Peek.Type == TokenType.LeftParenthesis)
+            return ParseParenthesizedExpression();
+
+        var token = Next();
+        return token.Type switch
+        {
+            TokenType.Character => new ParseResult<Expression>(new Character(token.Position, token.Value)),
+            TokenType.Number => new ParseResult<Expression>(new Number(token.Position, token.Value)),
+            TokenType.String => new ParseResult<Expression>(new Core.Ast.String(token.Position, token.Value)),
+            TokenType.This => new ParseResult<Expression>(new CurrentObjectInstance(token.Position)),
+            _ => ErrorExpression("Invalid token in expression: " + token, token.Position)
+        };
     }
 
     private ParseResult<Statement> ParseSpace()

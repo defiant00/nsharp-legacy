@@ -43,6 +43,31 @@ public static class Helpers
             _ => $"[{modifier}]",
         };
 
+    public static string StringVal(this OperatorType op) =>
+        op switch
+        {
+            OperatorType.Dot => ".",
+            OperatorType.Add => "+",
+            OperatorType.Subtract => "-",
+            OperatorType.Multiply => "*",
+            OperatorType.Divide => "/",
+            OperatorType.Modulo => "%",
+            OperatorType.Equal => "==",
+            OperatorType.NotEqual => "!=",
+            OperatorType.LessThan => "<",
+            OperatorType.GreaterThan => ">",
+            OperatorType.LessThanOrEqual => "<=",
+            OperatorType.GreaterThanOrEqual => ">=",
+            OperatorType.And => "and",
+            OperatorType.Or => "or",
+            OperatorType.BitwiseAnd => "&",
+            OperatorType.BitwiseOr => "|",
+            OperatorType.BitwiseXor => "^",
+            OperatorType.LeftShift => "<<",
+            OperatorType.RightShift => ">>",
+            _ => $"[{op}]",
+        };
+
     public static readonly Dictionary<string, TokenType> KeywordTokens = new()
     {
         ["ns"] = TokenType.Namespace,
