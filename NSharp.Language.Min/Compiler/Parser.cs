@@ -84,7 +84,6 @@ public class Parser
 
     private ParseResult<Expression> ParseBinaryOperatorRightSide(int leftPrecedence, Expression left)
     {
-        int previousPrecedence = 0;
         while (true)
         {
             int tokenPrecedence = Peek.Precedence();
@@ -101,8 +100,7 @@ public class Parser
 
             // If the binary operator binds less tightly with the right than the operator
             // after the right, let the pending operator take the right as its left.
-            int nextPrecedence = Peek.Precedence();
-            if (tokenPrecedence < nextPrecedence)
+            if (tokenPrecedence < Peek.Precedence())
             {
                 right = ParseBinaryOperatorRightSide(tokenPrecedence + 1, right.Result);
                 if (right.Error)
@@ -111,8 +109,6 @@ public class Parser
 
             // Merge left and right.
             left = new BinaryOperator(left.Position, op.Type.ToOperator(), left, right.Result);
-
-            previousPrecedence = tokenPrecedence;
         }
     }
 
@@ -420,6 +416,8 @@ public class Parser
     {
         if (Peek.Type == TokenType.LeftParenthesis)
             return ParseParenthesizedExpression();
+        else if (Peek.Type == TokenType.Literal)
+            return ParseIdentifier();
 
         var token = Next();
         return token.Type switch

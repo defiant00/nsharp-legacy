@@ -5,10 +5,11 @@ Neutral programming for .NET
 ## Status
 
 Feature                 | Min       | CStyle    | PyStyle
----                     | ---       | ---       | ---
+----------------------- | --------- | --------- | ---------
 Space                   | Both      |           |
 Comments                | Both      |           |
 Operators               | Both      |           |
+Order of Operations     | Both      |           |
 Identifiers             | Both      |           |
 Keyword Identifiers     | Both      |           |
 Strings                 | Both      |           |
@@ -21,7 +22,9 @@ String Interpolation    |           |           |
 Function Calls          |           |           |
 Generics                |           |           |
 If                      |           |           |
+Switch                  |           |           |
 For                     |           |           |
+Foreach                 |           |           |
 Try/Catch/Finally       |           |           |
 Namespace               | Both      |           |
 Class Definition        | Both      |           |

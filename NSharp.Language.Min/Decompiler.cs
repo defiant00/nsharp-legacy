@@ -1,4 +1,5 @@
 using System.Text;
+using NSharp.Core;
 using NSharp.Core.Ast;
 
 namespace NSharp.Language.Min;
@@ -54,7 +55,7 @@ public static class Decompiler
         }
     }
 
-    private static void ProcessExpression(StringBuilder sb, Expression? expression)
+    private static void ProcessExpression(StringBuilder sb, Expression? expression, int parentPrecedence = -1)
     {
         switch (expression)
         {
@@ -62,7 +63,7 @@ public static class Decompiler
                 sb.Append("void");
                 break;
             case BinaryOperator binaryOperator:
-                ProcessBinaryOperator(sb, binaryOperator);
+                ProcessBinaryOperator(sb, binaryOperator, parentPrecedence);
                 break;
             case Character c:
                 sb.Append("'");
@@ -89,15 +90,18 @@ public static class Decompiler
         }
     }
 
-    private static void ProcessBinaryOperator(StringBuilder sb, BinaryOperator binaryOperator)
+    private static void ProcessBinaryOperator(StringBuilder sb, BinaryOperator binaryOperator, int parentPrecedence)
     {
-        sb.Append("(");
-        ProcessExpression(sb, binaryOperator.Left);
+        bool parentheses = binaryOperator.Operator.Precedence() < parentPrecedence;
+        if (parentheses)
+            sb.Append("(");
+        ProcessExpression(sb, binaryOperator.Left, binaryOperator.Operator.Precedence());
         sb.Append(" ");
         sb.Append(binaryOperator.Operator.StringVal());
         sb.Append(" ");
-        ProcessExpression(sb, binaryOperator.Right);
-        sb.Append(")");
+        ProcessExpression(sb, binaryOperator.Right, binaryOperator.Operator.Precedence() + 1);
+        if (parentheses)
+            sb.Append(")");
     }
 
     private static void ProcessBreak(StringBuilder sb, int indent) => sb.AppendLineIndented(indent, "break");
