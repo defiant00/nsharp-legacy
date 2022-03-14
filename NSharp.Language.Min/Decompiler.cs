@@ -40,6 +40,9 @@ public static class Decompiler
             case FunctionDefinition functionDef:
                 ProcessFunctionDefinition(sb, indent, functionDef);
                 break;
+            case If ifStatement:
+                ProcessIf(sb, indent, ifStatement);
+                break;
             case Namespace ns:
                 ProcessNamespace(sb, indent, ns);
                 break;
@@ -163,6 +166,19 @@ public static class Decompiler
     private static void ProcessIdentifierPart(StringBuilder sb, IdentifierPart identifierPart)
     {
         sb.Append(identifierPart.Value);
+    }
+
+    private static void ProcessIf(StringBuilder sb, int indent, If ifStatement)
+    {
+        sb.AppendIndented(indent, "if ");
+        ProcessExpression(sb, ifStatement.Condition);
+        sb.AppendLine();
+        ProcessStatements(sb, indent + 1, ifStatement.Statements);
+        if (ifStatement.Else != null)
+        {
+            sb.AppendLineIndented(indent, "else");
+            ProcessStatements(sb, indent + 1, ifStatement.Else);
+        }
     }
 
     private static void ProcessNamespace(StringBuilder sb, int indent, Namespace ns)

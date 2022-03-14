@@ -2,58 +2,8 @@
 ns NSharp.Min.Tests
 
 public static class MyClass
-    ; order of operations tests
-    public void Test()
-        1 + 2 + 3
-        (1 + 2) + 3
-        1 + (2 + 3)
-
-        1 + 2 * 3
-        (1 + 2) * 3
-        1 + (2 * 3)
-
-        1 * 2 + 3
-        (1 * 2) + 3
-        1 * (2 + 3)
-
-        1 + 2 + 3 + 4
-        (1 + 2) + 3 + 4
-        1 + (2 + 3) + 4
-        1 + 2 + (3 + 4)
-        (1 + 2 + 3) + 4
-        1 + (2 + 3 + 4)
-        ((1 + 2) + 3) + 4
-        (1 + (2 + 3)) + 4
-        1 + ((2 + 3) + 4)
-        1 + (2 + (3 + 4))
-
-        (1 + 2) * (3 + 4)
-
-        first.second
-
-    ; nested classes
-    private class InnerClass
-
-        ; can be named the same as a keyword if you use `
-        protected void `void()
-            
-            ; some expressions
-            "hello"
-            'a'
-            42
-            this
-            ((2 + 3) - (5 * 7))
-            break
-
-    ; properties
-    string Prop
-    System.String Prop2
-
-    public void MyFunction()
-        continue
-
     public string TestFunc(int val)
-        break
-    
-    public int TestFunc2(int a, bool `static)
-        break
+        if val < 7
+            val + 1
+        else
+            val * 2

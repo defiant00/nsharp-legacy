@@ -363,6 +363,7 @@ public class Parser
             TokenType.Comment => ParseComment(),
             TokenType.Continue => ParseContinue(),
             TokenType.EOL => ParseSpace(),
+            TokenType.If => ParseIf(),
             _ => ParseExpressionStatement(),
         };
 
@@ -379,6 +380,49 @@ public class Parser
         }
 
         return new ParseResult<Expression>(identifier);
+    }
+
+    private ParseResult<Statement> ParseIf()
+    {
+        // accept if
+        var start = Next();
+        var condition = ParseExpression();
+        if (condition.Error && condition.Result is ErrorExpression ex)
+            return ErrorStatement(ex.Value, ex.Position);
+
+        var res = Accept(TokenType.EOL, TokenType.Indent);
+        if (res.Failure)
+            return InvalidTokenErrorStatement("Invalid token in if", res);
+
+        var ifStatement = new If(start.Position, condition.Result);
+
+        while (Peek.Type != TokenType.Dedent)
+        {
+            var statement = ParseFunctionStatement();
+            if (statement.Error)
+                return statement;
+            ifStatement.Statements.Add(statement.Result);
+        }
+
+        res = Accept(TokenType.Dedent, TokenType.Else, TokenType.EOL, TokenType.Indent);
+        if (!res.Failure)
+        {
+            ifStatement.Else = new();
+
+            while (Peek.Type != TokenType.Dedent)
+            {
+                var statement = ParseFunctionStatement();
+                if (statement.Error)
+                    return statement;
+                ifStatement.Else.Add(statement.Result);
+            }
+        }
+
+        res = Accept(TokenType.Dedent);
+        if (res.Failure)
+            return InvalidTokenErrorStatement("Invalid token in if", res);
+
+        return new ParseResult<Statement>(ifStatement);
     }
 
     private ParseResult<Statement> ParseInterface(List<Modifier> modifiers)
