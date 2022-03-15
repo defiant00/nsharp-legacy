@@ -20,6 +20,7 @@ Hex                     |           |           |
 Binary                  |           |           |
 String Interpolation    |           |           |
 Function Calls          |           |           |
+Accessors               |           |           |
 Generics                |           |           |
 If                      | Both      | Out       |
 Switch                  |           |           |
