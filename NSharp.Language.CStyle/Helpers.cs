@@ -1,4 +1,6 @@
 using System.Text;
+using NSharp.Core;
+using NSharp.Language.CStyle.Compiler;
 
 namespace NSharp.Language.CStyle;
 
@@ -18,10 +20,124 @@ public static class Helpers
         sb.AppendLine(content);
     }
 
-    public static HashSet<string> Keywords = new HashSet<string> {
-        "true",
-        "false",
-        "null",
-        "this",
+    public static void AppendModifiersIndented(this StringBuilder sb, int indent, List<Modifier> modifiers)
+    {
+        sb.Indent(indent);
+        foreach (var mod in modifiers)
+        {
+            sb.Append(mod.StringVal());
+            sb.Append(" ");
+        }
+    }
+
+    public static string GetLiteral(this string val) => KeywordTokens.ContainsKey(val) ? "`" + val : val;
+
+    public static string StringVal(this Modifier modifier) =>
+        modifier switch
+        {
+            Modifier.Public => "public",
+            Modifier.Protected => "protected",
+            Modifier.Internal => "internal",
+            Modifier.Private => "private",
+            Modifier.Static => "static",
+            _ => $"[{modifier}]",
+        };
+
+    public static string StringVal(this OperatorType op) =>
+        op switch
+        {
+            OperatorType.Dot => ".",
+            OperatorType.Add => "+",
+            OperatorType.Subtract => "-",
+            OperatorType.Multiply => "*",
+            OperatorType.Divide => "/",
+            OperatorType.Modulo => "%",
+            OperatorType.Equal => "==",
+            OperatorType.NotEqual => "!=",
+            OperatorType.LessThan => "<",
+            OperatorType.GreaterThan => ">",
+            OperatorType.LessThanOrEqual => "<=",
+            OperatorType.GreaterThanOrEqual => ">=",
+            OperatorType.And => "&&",
+            OperatorType.Or => "||",
+            OperatorType.BitwiseAnd => "&",
+            OperatorType.BitwiseOr => "|",
+            OperatorType.BitwiseXor => "^",
+            OperatorType.LeftShift => "<<",
+            OperatorType.RightShift => ">>",
+            _ => $"[{op}]",
+        };
+
+    public static readonly Dictionary<string, TokenType> KeywordTokens = new()
+    {
+        ["namespace"] = TokenType.Namespace,
+        ["using"] = TokenType.Using,
+        ["if"] = TokenType.If,
+        ["else"] = TokenType.Else,
+        ["public"] = TokenType.Public,
+        ["protected"] = TokenType.Protected,
+        ["internal"] = TokenType.Internal,
+        ["private"] = TokenType.Private,
+        ["static"] = TokenType.Static,
+        ["this"] = TokenType.This,
+        ["void"] = TokenType.Void,
+        // types
+        ["class"] = TokenType.Class,
+        ["struct"] = TokenType.Struct,
+        ["enum"] = TokenType.Enum,
+        ["interface"] = TokenType.Interface,
+        ["return"] = TokenType.Return,
+        ["try"] = TokenType.Try,
+        ["catch"] = TokenType.Catch,
+        ["finally"] = TokenType.Finally,
+        ["throw"] = TokenType.Throw,
+        ["for"] = TokenType.For,
+        ["break"] = TokenType.Break,
+        ["continue"] = TokenType.Continue,
+        ["true"] = TokenType.True,
+        ["false"] = TokenType.False,
+        ["null"] = TokenType.Null,
+        ["=="] = TokenType.Equal,
+        ["!="] = TokenType.NotEqual,
+        ["<"] = TokenType.LessThan,
+        [">"] = TokenType.GreaterThan,
+        ["<="] = TokenType.LessThanOrEqual,
+        [">="] = TokenType.GreaterThanOrEqual,
+        ["&&"] = TokenType.And,
+        ["||"] = TokenType.Or,
+        ["&"] = TokenType.BitwiseAnd,
+        ["|"] = TokenType.BitwiseOr,
+        ["^"] = TokenType.BitwiseXor,
+        ["<<"] = TokenType.LeftShift,
+        [">>"] = TokenType.RightShift,
+        ["."] = TokenType.Dot,
+        [","] = TokenType.Comma,
+        [":"] = TokenType.Colon,
+        ["("] = TokenType.LeftParenthesis,
+        [")"] = TokenType.RightParenthesis,
+        ["["] = TokenType.LeftBracket,
+        ["]"] = TokenType.RightBracket,
+        ["{"] = TokenType.LeftCurly,
+        ["}"] = TokenType.RightCurly,
+        ["="] = TokenType.Assign,
+        ["+="] = TokenType.AddAssign,
+        ["-="] = TokenType.SubtractAssign,
+        ["*="] = TokenType.MultiplyAssign,
+        ["/="] = TokenType.DivideAssign,
+        ["%="] = TokenType.ModuloAssign,
+        ["&="] = TokenType.BitwiseAndAssign,
+        ["|="] = TokenType.BitwiseOrAssign,
+        ["^="] = TokenType.BitwiseXorAssign,
+        ["<<="] = TokenType.LeftShiftAssign,
+        [">>="] = TokenType.RightShiftAssign,
+        ["*"] = TokenType.Multiply,
+        ["/"] = TokenType.Divide,
+        ["%"] = TokenType.Modulo,
+        ["+"] = TokenType.Add,
+        ["-"] = TokenType.Subtract,
+        ["!"] = TokenType.Not,
+        ["~"] = TokenType.BitwiseNot,
+        ["++"] = TokenType.Increment,
+        ["--"] = TokenType.Decrement,
     };
 }

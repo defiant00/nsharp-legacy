@@ -467,9 +467,12 @@ public class Parser
         return token.Type switch
         {
             TokenType.Character => new ParseResult<Expression>(new Character(token.Position, token.Value)),
+            TokenType.False => new ParseResult<Expression>(new LiteralToken(token.Position, Literal.False)),
+            TokenType.Null => new ParseResult<Expression>(new LiteralToken(token.Position, Literal.Null)),
             TokenType.Number => new ParseResult<Expression>(new Number(token.Position, token.Value)),
             TokenType.String => new ParseResult<Expression>(new Core.Ast.String(token.Position, token.Value)),
             TokenType.This => new ParseResult<Expression>(new CurrentObjectInstance(token.Position)),
+            TokenType.True => new ParseResult<Expression>(new LiteralToken(token.Position, Literal.True)),
             _ => ErrorExpression("Invalid token in expression: " + token, token.Position)
         };
     }

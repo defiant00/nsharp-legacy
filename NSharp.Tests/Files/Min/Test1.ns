@@ -2,8 +2,12 @@
 ns NSharp.Min.Tests
 
 public static class MyClass
+
+    protected string MyName
+
     public string TestFunc(int val)
         if val < 7
             val + 1
         else
             val * 2
+        true or false and null

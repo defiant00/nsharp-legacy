@@ -2,7 +2,7 @@ using System.Text;
 using NSharp.Core;
 using NSharp.Core.Ast;
 
-namespace NSharp.Language.Min;
+namespace NSharp.Language.CStyle;
 
 public static class Decompiler
 {
@@ -116,12 +116,14 @@ public static class Decompiler
     {
         sb.AppendModifiersIndented(indent, cl.Modifiers);
         sb.AppendLine($"class {cl.Name.GetLiteral()}");
+        sb.AppendLineIndented(indent, "{");
         ProcessStatements(sb, indent + 1, cl.Statements);
+        sb.AppendLineIndented(indent, "}");
     }
 
     private static void ProcessComment(StringBuilder sb, int indent, Comment comment)
     {
-        sb.AppendLineIndented(indent, $";{comment.Value}");
+        sb.AppendLineIndented(indent, $"//{comment.Value}");
     }
 
     private static void ProcessContinue(StringBuilder sb, int indent) => sb.AppendLineIndented(indent, "continue");
@@ -130,7 +132,7 @@ public static class Decompiler
     {
         sb.Indent(indent);
         ProcessExpression(sb, expressionStatement.Expression);
-        sb.AppendLine();
+        sb.AppendLine(";");
     }
 
     private static void ProcessFile(StringBuilder sb, int indent, Core.Ast.File file)
@@ -153,7 +155,9 @@ public static class Decompiler
             }
         }
         sb.AppendLine(")");
+        sb.AppendLineIndented(indent, "{");
         ProcessStatements(sb, indent + 1, functionDef.Statements);
+        sb.AppendLineIndented(indent, "}");
     }
 
     private static void ProcessIdentifier(StringBuilder sb, Identifier identifier)
@@ -173,14 +177,18 @@ public static class Decompiler
 
     private static void ProcessIf(StringBuilder sb, int indent, If ifStatement)
     {
-        sb.AppendIndented(indent, "if ");
+        sb.AppendIndented(indent, "if (");
         ProcessExpression(sb, ifStatement.Condition);
-        sb.AppendLine();
+        sb.AppendLine(")");
+        sb.AppendLineIndented(indent, "{");
         ProcessStatements(sb, indent + 1, ifStatement.Statements);
+        sb.AppendLineIndented(indent, "}");
         if (ifStatement.Else != null)
         {
             sb.AppendLineIndented(indent, "else");
+            sb.AppendLineIndented(indent, "{");
             ProcessStatements(sb, indent + 1, ifStatement.Else);
+            sb.AppendLineIndented(indent, "}");
         }
     }
 
@@ -197,9 +205,9 @@ public static class Decompiler
 
     private static void ProcessNamespace(StringBuilder sb, int indent, Namespace ns)
     {
-        sb.AppendIndented(indent, "ns ");
+        sb.AppendIndented(indent, "namespace ");
         ProcessExpression(sb, ns.Name);
-        sb.AppendLine();
+        sb.AppendLine(";");
     }
 
     private static void ProcessParameter(StringBuilder sb, Parameter parameter)
@@ -214,7 +222,8 @@ public static class Decompiler
         sb.AppendModifiersIndented(indent, property.Modifiers);
         ProcessExpression(sb, property.Type);
         sb.Append(" ");
-        sb.AppendLine(property.Name.GetLiteral());
+        sb.Append(property.Name.GetLiteral());
+        sb.AppendLine(";");
     }
 
     private static void ProcessSpace(StringBuilder sb, Space space)
