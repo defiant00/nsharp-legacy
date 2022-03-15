@@ -251,8 +251,16 @@ public class Parser
 
     private ParseResult<Statement> ParseComment()
     {
-        var commentResult = new ParseResult<Statement>(new Comment(Peek.Position, Peek.Value));
+        var comment = new Comment(Peek.Position, Peek.Value);
         Next();
+
+        if (comment.Value.StartsWith(";"))
+        {
+            comment.Value = comment.Value[1..];
+            comment.IsDocumentation = true;
+        }
+
+        var commentResult = new ParseResult<Statement>(comment);
 
         var res = Accept(TokenType.EOL);
         if (res.Failure)

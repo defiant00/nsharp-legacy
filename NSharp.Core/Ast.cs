@@ -64,6 +64,8 @@ public partial class Class : Statement
 public partial class Comment : Statement
 {
     public string Value { get; set; }
+    public bool IsDocumentation { get; set; }
+
     public override bool IsCode => false;
 
     public Comment(Position position, string value) : base(position)

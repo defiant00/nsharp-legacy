@@ -39,7 +39,7 @@ public partial class Class
 
 public partial class Comment
 {
-    public override void Print(int indent) => WriteLineIndented(indent, $"Comment: {Value}");
+    public override void Print(int indent) => WriteLineIndented(indent, $"Comment{(IsDocumentation ? " (doc)" : "")}: {Value}");
 }
 
 public partial class Continue

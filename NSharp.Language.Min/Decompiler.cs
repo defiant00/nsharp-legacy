@@ -121,7 +121,10 @@ public static class Decompiler
 
     private static void ProcessComment(StringBuilder sb, int indent, Comment comment)
     {
-        sb.AppendLineIndented(indent, $";{comment.Value}");
+        sb.AppendIndented(indent, ";");
+        if (comment.IsDocumentation)
+            sb.Append(";");
+        sb.AppendLine(comment.Value);
     }
 
     private static void ProcessContinue(StringBuilder sb, int indent) => sb.AppendLineIndented(indent, "continue");

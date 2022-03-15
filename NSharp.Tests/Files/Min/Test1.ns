@@ -1,6 +1,7 @@
 ; namespace
 ns NSharp.Min.Tests
 
+;; MyClass does stuff
 public static class MyClass
 
     protected string MyName
