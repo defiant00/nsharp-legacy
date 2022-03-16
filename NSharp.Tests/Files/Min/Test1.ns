@@ -9,6 +9,15 @@ public static class MyClass
     public string TestFunc(int val)
         if val < 7
             val + 1
-        else
+        else if val > 12
             val * 2
+        else if a
+            a
+        else if b
+            if b1
+                b1
+            else if b2
+                b2
+        else
+            c
         true or false and null

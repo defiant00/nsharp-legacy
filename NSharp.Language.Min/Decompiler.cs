@@ -174,16 +174,27 @@ public static class Decompiler
         sb.Append(identifierPart.Value);
     }
 
-    private static void ProcessIf(StringBuilder sb, int indent, If ifStatement)
+    private static void ProcessIf(StringBuilder sb, int indent, If ifStatement, bool indentFirstLine = true)
     {
-        sb.AppendIndented(indent, "if ");
+        if (indentFirstLine)
+            sb.Indent(indent);
+        sb.Append("if ");
         ProcessExpression(sb, ifStatement.Condition);
         sb.AppendLine();
         ProcessStatements(sb, indent + 1, ifStatement.Statements);
         if (ifStatement.Else != null)
         {
-            sb.AppendLineIndented(indent, "else");
-            ProcessStatements(sb, indent + 1, ifStatement.Else);
+            sb.AppendIndented(indent, "else");
+            if (ifStatement.Else.Count == 1 && ifStatement.Else[0] is If ifSt)
+            {
+                sb.Append(" ");
+                ProcessIf(sb, indent, ifSt, false);
+            }
+            else
+            {
+                sb.AppendLine();
+                ProcessStatements(sb, indent + 1, ifStatement.Else);
+            }
         }
     }
 

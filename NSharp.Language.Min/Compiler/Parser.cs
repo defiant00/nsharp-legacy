@@ -390,7 +390,7 @@ public class Parser
         return new ParseResult<Expression>(identifier);
     }
 
-    private ParseResult<Statement> ParseIf()
+    private ParseResult<Statement> ParseIf(bool inElseIf = false)
     {
         // accept if
         var start = Next();
@@ -412,23 +412,40 @@ public class Parser
             ifStatement.Statements.Add(statement.Result);
         }
 
-        res = Accept(TokenType.Dedent, TokenType.Else, TokenType.EOL, TokenType.Indent);
+        res = Accept(TokenType.Dedent, TokenType.Else);
         if (!res.Failure)
         {
             ifStatement.Else = new();
 
-            while (Peek.Type != TokenType.Dedent)
+            if (Peek.Type == TokenType.If)
             {
-                var statement = ParseFunctionStatement();
-                if (statement.Error)
-                    return statement;
-                ifStatement.Else.Add(statement.Result);
+                var elseIf = ParseIf(true);
+                if (elseIf.Error)
+                    return elseIf;
+                ifStatement.Else.Add(elseIf.Result);
+            }
+            else
+            {
+                res = Accept(TokenType.EOL, TokenType.Indent);
+                if (res.Failure)
+                    return InvalidTokenErrorStatement("Invalid token in if", res);
+
+                while (Peek.Type != TokenType.Dedent)
+                {
+                    var statement = ParseFunctionStatement();
+                    if (statement.Error)
+                        return statement;
+                    ifStatement.Else.Add(statement.Result);
+                }
             }
         }
 
-        res = Accept(TokenType.Dedent);
-        if (res.Failure)
-            return InvalidTokenErrorStatement("Invalid token in if", res);
+        if (!inElseIf)
+        {
+            res = Accept(TokenType.Dedent);
+            if (res.Failure)
+                return InvalidTokenErrorStatement("Invalid token in if", res);
+        }
 
         return new ParseResult<Statement>(ifStatement);
     }

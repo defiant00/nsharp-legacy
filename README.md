@@ -6,34 +6,34 @@ Neutral programming for .NET
 
 Feature                 | Min       | CStyle    | PyStyle
 ----------------------- | --------- | --------- | ---------
-Space                   | Both      | Out       |
-Comments                | Both      | Out       |
-Operators               | Both      | Out       |
-Order of Operations     | Both      | Out       |
-Identifiers             | Both      | Out       |
-Keyword Identifiers     | Both      | Out       |
-Strings                 | Both      | Out       |
-Chars                   | Both      | Out       |
+Space                   | Both      |           |
+Comments                | Both      |           |
+Operators               | Both      |           |
+Order of Operations     | Both      |           |
+Identifiers             | Both      |           |
+Keyword Identifiers     | Both      |           |
+Strings                 | Both      |           |
+Chars                   | Both      |           |
 Unicode                 |           |           |
-Numbers                 | Both      | Out       |
+Numbers                 | Both      |           |
 Hex                     |           |           |
 Binary                  |           |           |
 String Interpolation    |           |           |
 Function Calls          |           |           |
 Accessors               |           |           |
 Generics                |           |           |
-If                      | Both      | Out       |
+If                      | Both      |           |
 Switch                  |           |           |
 For                     |           |           |
 Foreach                 |           |           |
 Try/Catch/Finally       |           |           |
-Namespace               | Both      | Out       |
-Class Definition        | Both      | Out       |
+Namespace               | Both      |           |
+Class Definition        | Both      |           |
 Interface Definition    |           |           |
 Struct Definition       |           |           |
 Enum Definition         |           |           |
-Function Definition     | Both      | Out       |
-Properties              | Both      | Out       |
+Function Definition     | Both      |           |
+Properties              | Both      |           |
 Getters and Setters     |           |           |
 Types                   |           |           |
 Using                   |           |           |
