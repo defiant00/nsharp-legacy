@@ -12,5 +12,13 @@ public class MyClass
     public List:List:string NestedStrings
     public List:(List:(string)) MoreNested
 
-    void Test()
+    void Test(int first, List:string second)
         "hello"
+
+        "hello" ..
+        "world"
+
+        "part"..
+            "two"
+        
+        1 + 2 + 3

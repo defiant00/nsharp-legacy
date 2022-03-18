@@ -5,6 +5,10 @@ namespace NSharp.Language.CStyle;
 
 public class CStyle : ILanguage
 {
+    public CStyle(Dictionary<string, string> settings)
+    {
+    }
+
     public LoadResult Load(string fileName)
     {
         var result = new LoadResult

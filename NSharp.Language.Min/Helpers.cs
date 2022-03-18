@@ -6,26 +6,30 @@ namespace NSharp.Language.Min;
 
 public static class Helpers
 {
-    public static void Indent(this StringBuilder sb, int indent) => sb.Append(' ', indent * 4);
-
-    public static void AppendIndented(this StringBuilder sb, int indent, string content)
+    public static void Indent(this StringBuilder sb, string indentStr, int indent)
     {
-        sb.Indent(indent);
+        for (int i = 0; i < indent; i++)
+            sb.Append(indentStr);
+    }
+
+    public static void AppendIndented(this StringBuilder sb, string indentStr, int indent, string content)
+    {
+        sb.Indent(indentStr, indent);
         sb.Append(content);
     }
 
-    public static void AppendLineIndented(this StringBuilder sb, int indent, string content)
+    public static void AppendLineIndented(this StringBuilder sb, string indentStr, int indent, string content)
     {
-        sb.Indent(indent);
+        sb.Indent(indentStr, indent);
         sb.AppendLine(content);
     }
 
-    public static void AppendModifiersIndented(this StringBuilder sb, int indent, List<Modifier> modifiers)
+    public static void AppendModifiersIndented(this StringBuilder sb, string indentStr, int indent, List<Modifier> modifiers)
     {
-        sb.Indent(indent);
-        foreach (var mod in modifiers)
+        sb.Indent(indentStr, indent);
+        foreach (var modifier in modifiers)
         {
-            sb.Append(mod.StringVal());
+            sb.Append(modifier.StringVal());
             sb.Append(" ");
         }
     }

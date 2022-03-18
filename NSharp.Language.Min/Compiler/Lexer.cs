@@ -5,7 +5,7 @@ namespace NSharp.Language.Min.Compiler;
 public class Lexer
 {
     const char EOL = '\0';
-    const string OPERATOR_CHARACTERS = "()[]<>!=+-*/%,.:&|^~";
+    const string OPERATOR_CHARACTERS = "()[]{}<>!=+-*/%,.:&|^~";
     const char LITERAL_INDICATOR = '`';
 
     private delegate StateFunction? StateFunction();
@@ -16,6 +16,9 @@ public class Lexer
     private int LineCurrentIndex { get; set; }
     private StateFunction? State { get; set; }
     private Stack<int> IndentationLevels { get; set; }
+    private Stack<TokenType> Brackets { get; set; }
+    private bool LastEmittedWasMultilineOperator { get; set; }
+    private bool InExpression => LastEmittedWasMultilineOperator || Brackets.Count > 0;
 
     public List<Token> Tokens { get; set; }
 
@@ -26,6 +29,8 @@ public class Lexer
         Tokens = new List<Token>();
         Line = string.Empty;
         LineNumber = 0;
+        Brackets = new Stack<TokenType>();
+        LastEmittedWasMultilineOperator = false;
     }
 
     public void Lex(string line)
@@ -42,6 +47,8 @@ public class Lexer
 
     public void EndOfFile()
     {
+        while (Brackets.Count > 0)
+            Error($"Missing '{Brackets.Pop()}'");
         EmitIndent(0);
         Emit(TokenType.EOF);
     }
@@ -97,12 +104,28 @@ public class Lexer
 
     private void Emit(TokenType token)
     {
+        // operators
+        LastEmittedWasMultilineOperator = token.IsMultilineOperator();
+
+        // brackets
+        if (token == TokenType.LeftParenthesis)
+            Brackets.Push(TokenType.RightParenthesis);
+        else if (token == TokenType.LeftBracket)
+            Brackets.Push(TokenType.RightBracket);
+        else if (token == TokenType.LeftCurly)
+            Brackets.Push(TokenType.RightCurly);
+        else if (Brackets.Count > 0 && Brackets.Peek() == token)
+            Brackets.Pop();
+
         Tokens.Add(new Token(token, CurrentPosition, CurrentValue));
         LineStartIndex = LineCurrentIndex;
     }
 
     private void EmitIndent(int indent)
     {
+        if (InExpression)
+            return;
+
         int currentIndent = IndentationLevels.Peek();
         if (indent > currentIndent)
         {
@@ -134,7 +157,8 @@ public class Lexer
                 case '\n':
                     Backup();
                     Discard();
-                    Emit(TokenType.EOL);
+                    if (!InExpression)
+                        Emit(TokenType.EOL);
                     return null;
                 case ' ':
                     indent++;
@@ -171,7 +195,8 @@ public class Lexer
                 case '\r':
                 case '\n':
                     Discard();
-                    Emit(TokenType.EOL);
+                    if (!InExpression)
+                        Emit(TokenType.EOL);
                     return null;
                 case ';':
                     return Error("Comments must be on their own line");

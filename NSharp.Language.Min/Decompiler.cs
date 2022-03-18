@@ -4,225 +4,258 @@ using NSharp.Core.Ast;
 
 namespace NSharp.Language.Min;
 
-public static class Decompiler
+public class Decompiler
 {
-    public static string Decompile(AstItem ast)
+    private Settings Settings { get; set; }
+    private StringBuilder Buffer { get; set; }
+
+    public Decompiler(Settings settings)
     {
-        var sb = new StringBuilder();
-        Process(sb, 0, ast, null);
-        return sb.ToString();
+        Settings = settings;
+        Buffer = new StringBuilder();
     }
 
-    private static void Process(StringBuilder sb, int indent, AstItem? currentItem, AstItem? priorItem)
+    public string Decompile(AstItem ast)
+    {
+        Buffer.Clear();
+        Process(0, ast, null);
+        return Buffer.ToString();
+    }
+
+    private void Indent(int indent) => Buffer.Indent(Settings.Indentation, indent);
+    private void AppendIndented(int indent, string content) => Buffer.AppendIndented(Settings.Indentation, indent, content);
+    private void AppendLineIndented(int indent, string content) => Buffer.AppendLineIndented(Settings.Indentation, indent, content);
+    private void AppendModifiersIndented(int indent, List<Modifier> modifiers) => Buffer.AppendModifiersIndented(Settings.Indentation, indent, modifiers);
+
+    private void Process(int indent, AstItem? currentItem, AstItem? priorItem)
     {
         switch (currentItem)
         {
             case null:
                 return;
             case Break:
-                ProcessBreak(sb, indent);
+                ProcessBreak(indent);
                 break;
             case Class cl:
-                ProcessClass(sb, indent, cl);
+                ProcessClass(indent, cl);
                 break;
             case Comment comment:
-                ProcessComment(sb, indent, comment);
+                ProcessComment(indent, comment);
                 break;
             case Continue:
-                ProcessContinue(sb, indent);
+                ProcessContinue(indent);
                 break;
             case ExpressionStatement expressionStatement:
-                ProcessExpressionStatement(sb, indent, expressionStatement);
+                ProcessExpressionStatement(indent, expressionStatement);
                 break;
             case Core.Ast.File file:
-                ProcessFile(sb, indent, file);
+                ProcessFile(indent, file);
                 break;
             case FunctionDefinition functionDef:
-                ProcessFunctionDefinition(sb, indent, functionDef);
+                ProcessFunctionDefinition(indent, functionDef);
                 break;
             case If ifStatement:
-                ProcessIf(sb, indent, ifStatement);
+                ProcessIf(indent, ifStatement);
                 break;
             case Import import:
-                ProcessImport(sb, indent, import);
+                ProcessImport(indent, import);
                 break;
             case Namespace ns:
-                ProcessNamespace(sb, indent, ns);
+                ProcessNamespace(indent, ns);
                 break;
             case Property property:
-                ProcessProperty(sb, indent, property);
+                ProcessProperty(indent, property);
                 break;
             case Space space:
-                ProcessSpace(sb, space);
+                ProcessSpace(space);
                 break;
             default:
-                sb.AppendLineIndented(indent, $"[{currentItem}]");
+                AppendLineIndented(indent, $"[{currentItem}]");
                 break;
         }
     }
 
-    private static void ProcessExpression(StringBuilder sb, int indent, Expression? expression, int parentPrecedence = -1)
+    private void ProcessExpression(int indent, Expression? expression, int parentPrecedence = -1)
     {
         switch (expression)
         {
             case null:
-                sb.Append("void");
+                Buffer.Append("void");
                 break;
             case BinaryOperator binaryOperator:
-                ProcessBinaryOperator(sb, indent, binaryOperator, parentPrecedence);
+                ProcessBinaryOperator(indent, binaryOperator, parentPrecedence);
                 break;
             case Character c:
-                sb.Append("'");
-                sb.Append(c.Value);
-                sb.Append("'");
+                Buffer.Append("'");
+                Buffer.Append(c.Value);
+                Buffer.Append("'");
                 break;
             case CurrentObjectInstance:
-                sb.Append("this");
+                Buffer.Append("this");
                 break;
             case Identifier identifier:
-                ProcessIdentifier(sb, identifier);
+                ProcessIdentifier(identifier);
                 break;
             case LiteralToken literalToken:
-                ProcessLiteralToken(sb, literalToken);
+                ProcessLiteralToken(literalToken);
                 break;
             case Number n:
-                sb.Append(n.Value);
+                Buffer.Append(n.Value);
                 break;
             case Core.Ast.String str:
-                ProcessString(sb, indent, str);
+                ProcessString(indent, str);
                 break;
             default:
-                sb.Append($"[{expression}]");
+                Buffer.Append($"[{expression}]");
                 break;
         }
     }
 
-    private static void ProcessBinaryOperator(StringBuilder sb, int indent, BinaryOperator binaryOperator, int parentPrecedence)
+    private void ProcessBinaryOperator(int indent, BinaryOperator binaryOperator, int parentPrecedence)
     {
-        bool parentheses = binaryOperator.Operator.Precedence() < parentPrecedence;
+        bool parentheses = Settings.AllParens || binaryOperator.Operator.Precedence() < parentPrecedence;
         if (parentheses)
-            sb.Append("(");
-        ProcessExpression(sb, indent, binaryOperator.Left, binaryOperator.Operator.Precedence());
-        sb.Append(" ");
-        sb.Append(binaryOperator.Operator.StringVal());
-        sb.Append(" ");
-        ProcessExpression(sb, indent, binaryOperator.Right, binaryOperator.Operator.Precedence() + 1);
+            Buffer.Append("(");
+        ProcessExpression(indent, binaryOperator.Left, binaryOperator.Operator.Precedence());
+        Buffer.Append(" ");
+        Buffer.Append(binaryOperator.Operator.StringVal());
+        Buffer.Append(" ");
+        ProcessExpression(indent, binaryOperator.Right, binaryOperator.Operator.Precedence() + 1);
         if (parentheses)
-            sb.Append(")");
+            Buffer.Append(")");
     }
 
-    private static void ProcessBreak(StringBuilder sb, int indent) => sb.AppendLineIndented(indent, "break");
+    private void ProcessBreak(int indent) => AppendLineIndented(indent, "break");
 
-    private static void ProcessClass(StringBuilder sb, int indent, Class cl)
+    private void ProcessClass(int indent, Class cl)
     {
-        sb.AppendModifiersIndented(indent, cl.Modifiers);
-        sb.AppendLine($"class {cl.Name.GetLiteral()}");
-        ProcessStatements(sb, indent + 1, cl.Statements);
+        AppendModifiersIndented(indent, cl.Modifiers);
+        Buffer.Append($"class ");
+        Buffer.AppendLine(cl.Name.GetLiteral());
+        ProcessStatements(indent + 1, cl.Statements);
     }
 
-    private static void ProcessComment(StringBuilder sb, int indent, Comment comment)
+    private void ProcessComment(int indent, Comment comment)
     {
-        sb.AppendIndented(indent, ";");
+        AppendIndented(indent, ";");
         if (comment.IsDocumentation)
-            sb.Append(";");
-        sb.AppendLine(comment.Value);
+            Buffer.Append(";");
+        Buffer.AppendLine(comment.Value);
     }
 
-    private static void ProcessContinue(StringBuilder sb, int indent) => sb.AppendLineIndented(indent, "continue");
+    private void ProcessContinue(int indent) => AppendLineIndented(indent, "continue");
 
-    private static void ProcessExpressionStatement(StringBuilder sb, int indent, ExpressionStatement expressionStatement)
+    private void ProcessExpressionStatement(int indent, ExpressionStatement expressionStatement)
     {
-        sb.Indent(indent);
-        ProcessExpression(sb, indent, expressionStatement.Expression);
-        sb.AppendLine();
+        Indent(indent);
+        ProcessExpression(indent, expressionStatement.Expression);
+        Buffer.AppendLine();
     }
 
-    private static void ProcessFile(StringBuilder sb, int indent, Core.Ast.File file)
-    {
-        ProcessStatements(sb, indent, file.Statements);
-    }
+    private void ProcessFile(int indent, Core.Ast.File file) => ProcessStatements(indent, file.Statements);
 
-    private static void ProcessFunctionDefinition(StringBuilder sb, int indent, FunctionDefinition functionDef)
+    private void ProcessFunctionDefinition(int indent, FunctionDefinition functionDef)
     {
-        sb.AppendModifiersIndented(indent, functionDef.Modifiers);
-        ProcessExpression(sb, indent, functionDef.ReturnType);
-        sb.Append($" {functionDef.Name.GetLiteral()}(");
+        AppendModifiersIndented(indent, functionDef.Modifiers);
+        ProcessExpression(indent, functionDef.ReturnType);
+        Buffer.Append(" ");
+        Buffer.Append(functionDef.Name.GetLiteral());
+        Buffer.Append("(");
+        bool paramMultiline = Settings.ParamMultiline && functionDef.Parameters.Count > 1;
+        if (paramMultiline)
+        {
+            Buffer.AppendLine();
+            Indent(indent + 1);
+        }
         if (functionDef.Parameters.Count > 0)
         {
-            ProcessParameter(sb, indent, functionDef.Parameters[0]);
+            ProcessParameter(indent, functionDef.Parameters[0]);
             for (int i = 1; i < functionDef.Parameters.Count; i++)
             {
-                sb.Append(", ");
-                ProcessParameter(sb, indent, functionDef.Parameters[i]);
+                Buffer.Append(",");
+                if (paramMultiline)
+                {
+                    Buffer.AppendLine();
+                    Indent(indent + 1);
+                }
+                else
+                    Buffer.Append(" ");
+                ProcessParameter(indent, functionDef.Parameters[i]);
             }
         }
-        sb.AppendLine(")");
-        ProcessStatements(sb, indent + 1, functionDef.Statements);
+        if (paramMultiline)
+        {
+            Buffer.AppendLine();
+            Indent(indent);
+        }
+        Buffer.AppendLine(")");
+        ProcessStatements(indent + 1, functionDef.Statements);
     }
 
-    private static void ProcessIdentifier(StringBuilder sb, Identifier identifier)
+    private void ProcessIdentifier(Identifier identifier)
     {
-        ProcessIdentifierPart(sb, identifier.Parts[0]);
+        ProcessIdentifierPart(identifier.Parts[0]);
         for (int i = 1; i < identifier.Parts.Count; i++)
         {
-            sb.Append(".");
-            ProcessIdentifierPart(sb, identifier.Parts[i]);
+            Buffer.Append(".");
+            ProcessIdentifierPart(identifier.Parts[i]);
         }
     }
 
-    private static void ProcessIdentifierPart(StringBuilder sb, IdentifierPart identifierPart)
+    private void ProcessIdentifierPart(IdentifierPart identifierPart)
     {
-        sb.Append(identifierPart.Value);
+        Buffer.Append(identifierPart.Value);
         if (identifierPart.Types != null && identifierPart.Types.Count > 0)
         {
-            sb.Append(":");
-            if (identifierPart.Types.Count > 1)
-                sb.Append("(");
-            ProcessIdentifier(sb, identifierPart.Types[0]);
+            Buffer.Append(":");
+            bool parens = Settings.AllParenGenerics || identifierPart.Types.Count > 1;
+            if (parens)
+                Buffer.Append("(");
+            ProcessIdentifier(identifierPart.Types[0]);
             for (int i = 1; i < identifierPart.Types.Count; i++)
             {
-                sb.Append(", ");
-                ProcessIdentifier(sb, identifierPart.Types[i]);
+                Buffer.Append(", ");
+                ProcessIdentifier(identifierPart.Types[i]);
             }
-            if (identifierPart.Types.Count > 1)
-                sb.Append(")");
+            if (parens)
+                Buffer.Append(")");
         }
     }
 
-    private static void ProcessIf(StringBuilder sb, int indent, If ifStatement, bool indentFirstLine = true)
+    private void ProcessIf(int indent, If ifStatement, bool indentFirstLine = true)
     {
         if (indentFirstLine)
-            sb.Indent(indent);
-        sb.Append("if ");
-        ProcessExpression(sb, indent, ifStatement.Condition);
-        sb.AppendLine();
-        ProcessStatements(sb, indent + 1, ifStatement.Statements);
+            Indent(indent);
+        Buffer.Append("if ");
+        ProcessExpression(indent, ifStatement.Condition);
+        Buffer.AppendLine();
+        ProcessStatements(indent + 1, ifStatement.Statements);
         if (ifStatement.Else != null)
         {
-            sb.AppendIndented(indent, "else");
+            AppendIndented(indent, "else");
             if (ifStatement.Else.Count == 1 && ifStatement.Else[0] is If ifSt)
             {
-                sb.Append(" ");
-                ProcessIf(sb, indent, ifSt, false);
+                Buffer.Append(" ");
+                ProcessIf(indent, ifSt, false);
             }
             else
             {
-                sb.AppendLine();
-                ProcessStatements(sb, indent + 1, ifStatement.Else);
+                Buffer.AppendLine();
+                ProcessStatements(indent + 1, ifStatement.Else);
             }
         }
     }
 
-    private static void ProcessImport(StringBuilder sb, int indent, Import import)
+    private void ProcessImport(int indent, Import import)
     {
-        sb.AppendIndented(indent, "use ");
-        ProcessExpression(sb, indent, import.Value);
-        sb.AppendLine();
+        AppendIndented(indent, "use ");
+        ProcessExpression(indent, import.Value);
+        Buffer.AppendLine();
     }
 
-    private static void ProcessLiteralToken(StringBuilder sb, LiteralToken literalToken)
+    private void ProcessLiteralToken(LiteralToken literalToken)
     {
-        sb.Append(literalToken.Token switch
+        Buffer.Append(literalToken.Token switch
         {
             Literal.False => "false",
             Literal.Null => "null",
@@ -231,55 +264,55 @@ public static class Decompiler
         });
     }
 
-    private static void ProcessNamespace(StringBuilder sb, int indent, Namespace ns)
+    private void ProcessNamespace(int indent, Namespace ns)
     {
-        sb.AppendIndented(indent, "ns ");
-        ProcessExpression(sb, indent, ns.Name);
-        sb.AppendLine();
+        AppendIndented(indent, "ns ");
+        ProcessExpression(indent, ns.Name);
+        Buffer.AppendLine();
     }
 
-    private static void ProcessParameter(StringBuilder sb, int indent, Parameter parameter)
+    private void ProcessParameter(int indent, Parameter parameter)
     {
-        ProcessExpression(sb, indent, parameter.Type);
-        sb.Append(" ");
-        sb.Append(parameter.Name.GetLiteral());
+        ProcessExpression(indent, parameter.Type);
+        Buffer.Append(" ");
+        Buffer.Append(parameter.Name.GetLiteral());
     }
 
-    private static void ProcessProperty(StringBuilder sb, int indent, Property property)
+    private void ProcessProperty(int indent, Property property)
     {
-        sb.AppendModifiersIndented(indent, property.Modifiers);
-        ProcessExpression(sb, indent, property.Type);
-        sb.Append(" ");
-        sb.AppendLine(property.Name.GetLiteral());
+        AppendModifiersIndented(indent, property.Modifiers);
+        ProcessExpression(indent, property.Type);
+        Buffer.Append(" ");
+        Buffer.AppendLine(property.Name.GetLiteral());
     }
 
-    private static void ProcessSpace(StringBuilder sb, Space space)
+    private void ProcessSpace(Space space)
     {
         for (int i = 0; i < space.Size; i++)
-            sb.AppendLine();
+            Buffer.AppendLine();
     }
 
-    private static void ProcessStatements(StringBuilder sb, int indent, List<Statement> statements)
+    private void ProcessStatements(int indent, List<Statement> statements)
     {
         AstItem? priorStatement = null;
         foreach (var statement in statements)
         {
-            Process(sb, indent, statement, priorStatement);
+            Process(indent, statement, priorStatement);
             priorStatement = statement;
         }
     }
 
-    private static void ProcessString(StringBuilder sb, int indent, Core.Ast.String str)
+    private void ProcessString(int indent, Core.Ast.String str)
     {
-        sb.Append("\"");
-        sb.Append(str.Lines[0]);
-        sb.Append("\"");
+        Buffer.Append("\"");
+        Buffer.Append(str.Lines[0]);
+        Buffer.Append("\"");
         for (int i = 1; i < str.Lines.Count; i++)
         {
-            sb.AppendLine(" ..");
-            sb.AppendIndented(indent + 1, "\"");
-            sb.Append(str.Lines[i]);
-            sb.Append("\"");
+            Buffer.AppendLine(" ..");
+            AppendIndented(Settings.NoIndentMultiline ? indent : indent + 1, "\"");
+            Buffer.Append(str.Lines[i]);
+            Buffer.Append("\"");
         }
     }
 }

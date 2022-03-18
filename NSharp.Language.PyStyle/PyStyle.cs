@@ -5,6 +5,10 @@ namespace NSharp.Language.PyStyle;
 
 public class PyStyle : ILanguage
 {
+    public PyStyle(Dictionary<string, string> settings)
+    {
+    }
+
     public LoadResult Load(string fileName)
     {
         var result = new LoadResult

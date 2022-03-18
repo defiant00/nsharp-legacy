@@ -589,35 +589,12 @@ public class Parser
         var stringResult = new Core.Ast.String(Peek.Position, Peek.Value);
         Next();
 
-        // "hello" ..
-        // "world"
-
-        // or
-
-        // "hello" ..
-        //     "world" ..
-        //     "continued"
-
-        // AcceptResult res;
-        // if (Accept(TokenType.DoubleDot, TokenType.EOL).Success)
-        // {
-        //     bool indented = Accept(TokenType.Indent).Success;
-
-        //     do
-        //     {
-        //         res = Accept(TokenType.String);
-        //         if (res.Failure)
-        //             return InvalidTokenErrorExpression("Invalid token in string", res);
-        //         stringResult.Lines.Add(GetToken(res).Value);
-        //     } while (Accept(TokenType.DoubleDot, TokenType.EOL).Success);
-
-        //     if (indented)
-        //     {
-        //         res = Accept(TokenType.EOL, TokenType.Dedent);
-        //         if (res.Failure)
-        //             return InvalidTokenErrorExpression("Invalid token in string", res);
-        //     }
-        // }
+        var res = Accept(TokenType.DoubleDot, TokenType.String);
+        while (res.Success)
+        {
+            stringResult.Lines.Add(GetToken(res, 1).Value);
+            res = Accept(TokenType.DoubleDot, TokenType.String);
+        }
 
         return new ParseResult<Expression>(stringResult);
     }

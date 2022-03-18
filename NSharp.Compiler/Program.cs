@@ -39,6 +39,9 @@ public static class Program
             case "build":
                 Console.WriteLine("Build not yet supported");
                 break;
+            case "compile":
+                Console.WriteLine("Compile not yet supported");
+                break;
             case "edit":
                 for (int i = 1; i < args.Length; i++)
                     Edit(args[i]);
@@ -70,11 +73,8 @@ public static class Program
         if (!file.EndsWith(".ns", StringComparison.OrdinalIgnoreCase))
             throw new Exception($"File '{file}' does not end with .ns");
 
-        var saveSettings = LoadSettings(SAVE_SETTINGS, file);
-        var editSettings = LoadSettings(EDIT_SETTINGS, file);
-
-        ILanguage loadLang = GetLanguage(saveSettings);
-        ILanguage saveLang = GetLanguage(editSettings);
+        ILanguage loadLang = GetLanguage(SAVE_SETTINGS, file);
+        ILanguage saveLang = GetLanguage(EDIT_SETTINGS, file);
 
         LoadResult loadResult = loadLang.Load(file);
         HandleResult(loadResult);
@@ -87,16 +87,15 @@ public static class Program
         if (!File.Exists(file))
             throw new Exception($"File '{file}' does not exist.");
 
-        Dictionary<string, string> settings;
+        ILanguage language;
 
         if (file.EndsWith(".ns", StringComparison.OrdinalIgnoreCase))
-            settings = LoadSettings(SAVE_SETTINGS, file);
+            language = GetLanguage(SAVE_SETTINGS, file);
         else if (file.EndsWith(".ns.edit", StringComparison.OrdinalIgnoreCase))
-            settings = LoadSettings(EDIT_SETTINGS, file);
+            language = GetLanguage(EDIT_SETTINGS, file);
         else
             throw new Exception($"File '{file}' does not end with .ns or .ns.edit");
 
-        var language = GetLanguage(settings);
         LoadResult loadResult = language.Load(file);
         HandleResult(loadResult);
         if (loadResult.Ast != null)
@@ -110,11 +109,8 @@ public static class Program
         if (!file.EndsWith(".ns.edit", StringComparison.OrdinalIgnoreCase))
             throw new Exception($"File '{file}' does not end with .ns.edit");
 
-        var saveSettings = LoadSettings(SAVE_SETTINGS, file);
-        var editSettings = LoadSettings(EDIT_SETTINGS, file);
-
-        ILanguage loadLang = GetLanguage(editSettings);
-        ILanguage saveLang = GetLanguage(saveSettings);
+        ILanguage loadLang = GetLanguage(EDIT_SETTINGS, file);
+        ILanguage saveLang = GetLanguage(SAVE_SETTINGS, file);
 
         LoadResult loadResult = loadLang.Load(file);
         HandleResult(loadResult);
@@ -127,16 +123,15 @@ public static class Program
         if (!File.Exists(file))
             throw new Exception($"File '{file}' does not exist.");
 
-        Dictionary<string, string> settings;
+        ILanguage language;
 
         if (file.EndsWith(".ns", StringComparison.OrdinalIgnoreCase))
-            settings = LoadSettings(SAVE_SETTINGS, file);
+            language = GetLanguage(SAVE_SETTINGS, file);
         else if (file.EndsWith(".ns.edit", StringComparison.OrdinalIgnoreCase))
-            settings = LoadSettings(EDIT_SETTINGS, file);
+            language = GetLanguage(EDIT_SETTINGS, file);
         else
             throw new Exception($"File '{file}' does not end with .ns or .ns.edit");
 
-        var language = GetLanguage(settings);
         LoadResult loadResult = language.Load(file);
         HandleResult(loadResult);
     }
@@ -151,41 +146,48 @@ public static class Program
         }
     }
 
-    private static ILanguage DefaultLanguage => new Min();
-
-    private static Dictionary<string, string> DefaultSettings => new();
-
-    private static ILanguage GetLanguage(Dictionary<string, string> settings)
+    private static ILanguage GetLanguage(string settingsFileName, string startingPath)
     {
+        Dictionary<string, string>? settings = null;
+
+        string? dirName = Path.GetDirectoryName(startingPath);
+        if (dirName != null)
+        {
+            DirectoryInfo? dir = new DirectoryInfo(dirName);
+            while (settings == null && dir != null)
+            {
+                string settingsPath = Path.Combine(dir.FullName, settingsFileName);
+                if (File.Exists(settingsPath))
+                    settings = Configuration.Load(settingsPath);
+                dir = dir.Parent;
+            }
+        }
+
+        if (settings == null)
+        {
+            Console.WriteLine($"'{settingsFileName}' not found, using default settings.");
+            settings = new();
+        }
+
+        ILanguage? lang = null;
         if (settings.ContainsKey(LANGUAGE_KEY))
         {
             switch (settings[LANGUAGE_KEY])
             {
                 case "CStyle":
-                    return new CStyle();
+                    lang = new CStyle(settings);
+                    break;
                 case "Min":
-                    return new Min();
+                    lang = new Min(settings);
+                    break;
                 case "PyStyle":
-                    return new PyStyle();
+                    lang = new PyStyle(settings);
+                    break;
             }
         }
-        return DefaultLanguage;
-    }
+        if (lang == null)
+            lang = new Min(settings);
 
-    private static Dictionary<string, string> LoadSettings(string settingsFileName, string startingPath)
-    {
-        string? dirName = Path.GetDirectoryName(startingPath);
-        if (dirName == null)
-            return DefaultSettings;
-        DirectoryInfo? dir = new DirectoryInfo(dirName);
-        while (dir != null)
-        {
-            string settingsPath = Path.Combine(dir.FullName, settingsFileName);
-            if (File.Exists(settingsPath))
-                return Configuration.Load(settingsPath);
-            dir = dir.Parent;
-        }
-        Console.WriteLine($"'{settingsFileName}' not found, using default settings.");
-        return DefaultSettings;
+        return lang;
     }
 }

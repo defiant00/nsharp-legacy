@@ -6,6 +6,13 @@ namespace NSharp.Language.Min;
 
 public class Min : ILanguage
 {
+    private Settings Settings { get; set; }
+
+    public Min(Dictionary<string, string> settings)
+    {
+        Settings = new Settings(settings);
+    }
+
     public LoadResult Load(string fileName)
     {
         var result = new LoadResult
@@ -26,7 +33,7 @@ public class Min : ILanguage
             FileName = fileName,
             Success = true,
         };
-        string code = Decompiler.Decompile(ast);
+        string code = new Decompiler(Settings).Decompile(ast);
         System.IO.File.WriteAllText(fileName, code);
         return result;
     }
