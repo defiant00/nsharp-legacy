@@ -116,7 +116,7 @@ public partial class Identifier
 
 public partial class IdentifierPart
 {
-    public override string ToString() => Value;
+    public override string ToString() => (Types != null && Types.Count > 0) ? $"{Value}<{string.Join(", ", Types)}>" : Value;
 }
 
 public partial class If

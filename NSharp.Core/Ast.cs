@@ -155,17 +155,18 @@ public partial class Identifier : Expression
 {
     public List<IdentifierPart> Parts { get; set; } = new();
 
-    public Identifier(Position position, string value) : base(position)
+    public Identifier(Position position, IdentifierPart firstPart) : base(position)
     {
-        Parts.Add(new IdentifierPart(value));
+        Parts.Add(firstPart);
     }
 }
 
-public partial class IdentifierPart
+public partial class IdentifierPart : Expression
 {
     public string Value { get; set; }
+    public List<Identifier>? Types { get; set; }
 
-    public IdentifierPart(string value)
+    public IdentifierPart(Position position, string value) : base(position)
     {
         Value = value;
     }

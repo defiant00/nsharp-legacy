@@ -172,6 +172,20 @@ public static class Decompiler
     private static void ProcessIdentifierPart(StringBuilder sb, IdentifierPart identifierPart)
     {
         sb.Append(identifierPart.Value);
+        if (identifierPart.Types != null && identifierPart.Types.Count > 0)
+        {
+            sb.Append(":");
+            if (identifierPart.Types.Count > 1)
+                sb.Append("(");
+            ProcessIdentifier(sb, identifierPart.Types[0]);
+            for (int i = 1; i < identifierPart.Types.Count; i++)
+            {
+                sb.Append(", ");
+                ProcessIdentifier(sb, identifierPart.Types[i]);
+            }
+            if (identifierPart.Types.Count > 1)
+                sb.Append(")");
+        }
     }
 
     private static void ProcessIf(StringBuilder sb, int indent, If ifStatement, bool indentFirstLine = true)

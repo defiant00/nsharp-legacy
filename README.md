@@ -21,7 +21,7 @@ Binary                  |           |           |
 String Interpolation    |           |           |
 Function Calls          |           |           |
 Accessors               |           |           |
-Generics                |           |           |
+Generics                | Both      |           |
 If                      | Both      |           |
 Switch                  |           |           |
 For                     |           |           |

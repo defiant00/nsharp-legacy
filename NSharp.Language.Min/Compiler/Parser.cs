@@ -377,17 +377,71 @@ public class Parser
 
     private ParseResult<Expression> ParseIdentifier()
     {
-        var identifier = new Identifier(Peek.Position, Peek.Value);
-        Next();
+        var start = Peek.Position;
 
-        var res = Accept(TokenType.Dot, TokenType.Literal);
-        while (!res.Failure)
+        var firstPartResult = ParseIdentifierPart();
+
+        if (!firstPartResult.Error && firstPartResult.Result is IdentifierPart firstPart)
         {
-            identifier.Parts.Add(new IdentifierPart(GetToken(res, 1).Value));
-            res = Accept(TokenType.Dot, TokenType.Literal);
+            var identifier = new Identifier(start, firstPart);
+
+            var res = Accept(TokenType.Dot);
+            while (!res.Failure)
+            {
+                var nextPartResult = ParseIdentifierPart();
+                if (!nextPartResult.Error && nextPartResult.Result is IdentifierPart nextPart)
+                {
+                    identifier.Parts.Add(nextPart);
+                    res = Accept(TokenType.Dot);
+                }
+                else
+                    return nextPartResult;
+            }
+
+            return new ParseResult<Expression>(identifier);
+        }
+        return firstPartResult;
+    }
+
+    private ParseResult<Expression> ParseIdentifierPart()
+    {
+        var res = Accept(TokenType.Literal);
+        if (res.Failure)
+            return InvalidTokenErrorExpression("Invalid token in identifier", res);
+        var identifierPart = new IdentifierPart(GetToken(res).Position, GetToken(res).Value);
+
+        // generics
+        if (!Accept(TokenType.Colon).Failure)
+        {
+            bool parens = !Accept(TokenType.LeftParenthesis).Failure;
+            var typeIdentRes = ParseIdentifier();
+            if (!typeIdentRes.Error && typeIdentRes.Result is Identifier typeIdentifier)
+            {
+                identifierPart.Types = new();
+                identifierPart.Types.Add(typeIdentifier);
+
+                // check for multiple types and get right parenthesis if the left one is present
+                if (parens)
+                {
+                    while (!Accept(TokenType.Comma).Failure)
+                    {
+                        typeIdentRes = ParseIdentifier();
+                        if (!typeIdentRes.Error && typeIdentRes.Result is Identifier nextTypeIdent)
+                            identifierPart.Types.Add(nextTypeIdent);
+                        else
+                            return typeIdentRes;
+                    }
+
+                    res = Accept(TokenType.RightParenthesis);
+                    if (res.Failure)
+                        return InvalidTokenErrorExpression("Invalid token in identifier", res);
+                }
+            }
+            else
+                return typeIdentRes;
         }
 
-        return new ParseResult<Expression>(identifier);
+        return new ParseResult<Expression>(identifierPart);
     }
 
     private ParseResult<Statement> ParseIf(bool inElseIf = false)
