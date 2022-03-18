@@ -37,5 +37,6 @@ Properties              | Both      |           |
 Getters and Setters     |           |           |
 Types                   |           |           |
 Using                   |           |           |
+Import                  | Both      |           |
 Attributes              |           |           |
 Tuples                  |           |           |

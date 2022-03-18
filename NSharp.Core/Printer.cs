@@ -135,6 +135,11 @@ public partial class If
     }
 }
 
+public partial class Import
+{
+    public override void Print(int indent) => WriteLineIndented(indent, $"Import: {Value}");
+}
+
 public partial class LiteralToken
 {
     public override string ToString() => Token.ToString();

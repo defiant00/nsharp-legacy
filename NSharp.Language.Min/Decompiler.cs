@@ -43,6 +43,9 @@ public static class Decompiler
             case If ifStatement:
                 ProcessIf(sb, indent, ifStatement);
                 break;
+            case Import import:
+                ProcessImport(sb, indent, import);
+                break;
             case Namespace ns:
                 ProcessNamespace(sb, indent, ns);
                 break;
@@ -210,6 +213,13 @@ public static class Decompiler
                 ProcessStatements(sb, indent + 1, ifStatement.Else);
             }
         }
+    }
+
+    private static void ProcessImport(StringBuilder sb, int indent, Import import)
+    {
+        sb.AppendIndented(indent, "use ");
+        ProcessExpression(sb, import.Value);
+        sb.AppendLine();
     }
 
     private static void ProcessLiteralToken(StringBuilder sb, LiteralToken literalToken)

@@ -347,6 +347,7 @@ public class Parser
                     file.Statements.Add(ParseNamespace().Result);
                     break;
                 case TokenType.Use:
+                    file.Statements.Add(ParseImport().Result);
                     break;
                 default:
                     if (Peek.Type.IsModifier())
@@ -502,6 +503,20 @@ public class Parser
         }
 
         return new ParseResult<Statement>(ifStatement);
+    }
+
+    private ParseResult<Statement> ParseImport()
+    {
+        var useToken = Next();
+        var identifier = ParseIdentifier();
+        var res = Accept(TokenType.EOL);
+        if (res.Failure)
+            return InvalidTokenErrorStatement("Invalid token in use", res);
+
+        if (!identifier.Error && identifier.Result is Identifier ident)
+            return new ParseResult<Statement>(new Import(useToken.Position, ident));
+
+        return ErrorStatement("Couldn't parse use", useToken.Position);
     }
 
     private ParseResult<Statement> ParseInterface(List<Modifier> modifiers)

@@ -184,6 +184,16 @@ public partial class If : Statement
     }
 }
 
+public partial class Import : Statement
+{
+    public Identifier Value { get; set; }
+
+    public Import(Position position, Identifier value) : base(position)
+    {
+        Value = value;
+    }
+}
+
 public partial class LiteralToken : Expression
 {
     public Literal Token { get; set; }

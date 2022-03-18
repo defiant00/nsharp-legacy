@@ -1,4 +1,6 @@
-; namespace
+use System
+use System.Collections.Generic
+
 ns NSharp.Min.Tests
 
 ;; MyClass does stuff
