@@ -61,7 +61,7 @@ public static class Decompiler
         }
     }
 
-    private static void ProcessExpression(StringBuilder sb, Expression? expression, int parentPrecedence = -1)
+    private static void ProcessExpression(StringBuilder sb, int indent, Expression? expression, int parentPrecedence = -1)
     {
         switch (expression)
         {
@@ -69,7 +69,7 @@ public static class Decompiler
                 sb.Append("void");
                 break;
             case BinaryOperator binaryOperator:
-                ProcessBinaryOperator(sb, binaryOperator, parentPrecedence);
+                ProcessBinaryOperator(sb, indent, binaryOperator, parentPrecedence);
                 break;
             case Character c:
                 sb.Append("'");
@@ -88,10 +88,8 @@ public static class Decompiler
             case Number n:
                 sb.Append(n.Value);
                 break;
-            case Core.Ast.String s:
-                sb.Append('"');
-                sb.Append(s.Value);
-                sb.Append('"');
+            case Core.Ast.String str:
+                ProcessString(sb, indent, str);
                 break;
             default:
                 sb.Append($"[{expression}]");
@@ -99,16 +97,16 @@ public static class Decompiler
         }
     }
 
-    private static void ProcessBinaryOperator(StringBuilder sb, BinaryOperator binaryOperator, int parentPrecedence)
+    private static void ProcessBinaryOperator(StringBuilder sb, int indent, BinaryOperator binaryOperator, int parentPrecedence)
     {
         bool parentheses = binaryOperator.Operator.Precedence() < parentPrecedence;
         if (parentheses)
             sb.Append("(");
-        ProcessExpression(sb, binaryOperator.Left, binaryOperator.Operator.Precedence());
+        ProcessExpression(sb, indent, binaryOperator.Left, binaryOperator.Operator.Precedence());
         sb.Append(" ");
         sb.Append(binaryOperator.Operator.StringVal());
         sb.Append(" ");
-        ProcessExpression(sb, binaryOperator.Right, binaryOperator.Operator.Precedence() + 1);
+        ProcessExpression(sb, indent, binaryOperator.Right, binaryOperator.Operator.Precedence() + 1);
         if (parentheses)
             sb.Append(")");
     }
@@ -135,7 +133,7 @@ public static class Decompiler
     private static void ProcessExpressionStatement(StringBuilder sb, int indent, ExpressionStatement expressionStatement)
     {
         sb.Indent(indent);
-        ProcessExpression(sb, expressionStatement.Expression);
+        ProcessExpression(sb, indent, expressionStatement.Expression);
         sb.AppendLine();
     }
 
@@ -147,15 +145,15 @@ public static class Decompiler
     private static void ProcessFunctionDefinition(StringBuilder sb, int indent, FunctionDefinition functionDef)
     {
         sb.AppendModifiersIndented(indent, functionDef.Modifiers);
-        ProcessExpression(sb, functionDef.ReturnType);
+        ProcessExpression(sb, indent, functionDef.ReturnType);
         sb.Append($" {functionDef.Name.GetLiteral()}(");
         if (functionDef.Parameters.Count > 0)
         {
-            ProcessParameter(sb, functionDef.Parameters[0]);
+            ProcessParameter(sb, indent, functionDef.Parameters[0]);
             for (int i = 1; i < functionDef.Parameters.Count; i++)
             {
                 sb.Append(", ");
-                ProcessParameter(sb, functionDef.Parameters[i]);
+                ProcessParameter(sb, indent, functionDef.Parameters[i]);
             }
         }
         sb.AppendLine(")");
@@ -196,7 +194,7 @@ public static class Decompiler
         if (indentFirstLine)
             sb.Indent(indent);
         sb.Append("if ");
-        ProcessExpression(sb, ifStatement.Condition);
+        ProcessExpression(sb, indent, ifStatement.Condition);
         sb.AppendLine();
         ProcessStatements(sb, indent + 1, ifStatement.Statements);
         if (ifStatement.Else != null)
@@ -218,7 +216,7 @@ public static class Decompiler
     private static void ProcessImport(StringBuilder sb, int indent, Import import)
     {
         sb.AppendIndented(indent, "use ");
-        ProcessExpression(sb, import.Value);
+        ProcessExpression(sb, indent, import.Value);
         sb.AppendLine();
     }
 
@@ -236,13 +234,13 @@ public static class Decompiler
     private static void ProcessNamespace(StringBuilder sb, int indent, Namespace ns)
     {
         sb.AppendIndented(indent, "ns ");
-        ProcessExpression(sb, ns.Name);
+        ProcessExpression(sb, indent, ns.Name);
         sb.AppendLine();
     }
 
-    private static void ProcessParameter(StringBuilder sb, Parameter parameter)
+    private static void ProcessParameter(StringBuilder sb, int indent, Parameter parameter)
     {
-        ProcessExpression(sb, parameter.Type);
+        ProcessExpression(sb, indent, parameter.Type);
         sb.Append(" ");
         sb.Append(parameter.Name.GetLiteral());
     }
@@ -250,7 +248,7 @@ public static class Decompiler
     private static void ProcessProperty(StringBuilder sb, int indent, Property property)
     {
         sb.AppendModifiersIndented(indent, property.Modifiers);
-        ProcessExpression(sb, property.Type);
+        ProcessExpression(sb, indent, property.Type);
         sb.Append(" ");
         sb.AppendLine(property.Name.GetLiteral());
     }
@@ -268,6 +266,20 @@ public static class Decompiler
         {
             Process(sb, indent, statement, priorStatement);
             priorStatement = statement;
+        }
+    }
+
+    private static void ProcessString(StringBuilder sb, int indent, Core.Ast.String str)
+    {
+        sb.Append("\"");
+        sb.Append(str.Lines[0]);
+        sb.Append("\"");
+        for (int i = 1; i < str.Lines.Count; i++)
+        {
+            sb.AppendLine(" ..");
+            sb.AppendIndented(indent + 1, "\"");
+            sb.Append(str.Lines[i]);
+            sb.Append("\"");
         }
     }
 }

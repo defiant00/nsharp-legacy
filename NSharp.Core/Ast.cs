@@ -263,10 +263,10 @@ public partial class Space : Statement
 
 public partial class String : Expression
 {
-    public string Value { get; set; }
+    public List<string> Lines { get; set; } = new();
 
     public String(Position position, string value) : base(position)
     {
-        Value = value;
+        Lines.Add(value);
     }
 }

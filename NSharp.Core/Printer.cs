@@ -172,5 +172,5 @@ public partial class Space
 
 public partial class String
 {
-    public override string ToString() => $"\"{Value}\"";
+    public override string ToString() => $"\"{string.Join(Environment.NewLine, Lines)}\"";
 }

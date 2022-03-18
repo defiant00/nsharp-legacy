@@ -64,6 +64,7 @@ public enum TokenType
     LeftShift,
     RightShift,
     Dot,
+    DoubleDot,
     Comma,
     Colon,
     LeftParenthesis,

@@ -11,3 +11,6 @@ public class MyClass
     public Dictionary:(string, int) Vals
     public List:List:string NestedStrings
     public List:(List:(string)) MoreNested
+
+    void Test()
+        "hello"

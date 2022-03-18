@@ -70,7 +70,7 @@ public class Parser
             if (current.Type != token)
             {
                 CurrentIndex = result.StartingIndex;
-                result.Failure = true;
+                result.Success = false;
                 return result;
             }
             result.Count++;
@@ -387,7 +387,7 @@ public class Parser
             var identifier = new Identifier(start, firstPart);
 
             var res = Accept(TokenType.Dot);
-            while (!res.Failure)
+            while (res.Success)
             {
                 var nextPartResult = ParseIdentifierPart();
                 if (!nextPartResult.Error && nextPartResult.Result is IdentifierPart nextPart)
@@ -412,9 +412,9 @@ public class Parser
         var identifierPart = new IdentifierPart(GetToken(res).Position, GetToken(res).Value);
 
         // generics
-        if (!Accept(TokenType.Colon).Failure)
+        if (Accept(TokenType.Colon).Success)
         {
-            bool parens = !Accept(TokenType.LeftParenthesis).Failure;
+            bool parens = Accept(TokenType.LeftParenthesis).Success;
             var typeIdentRes = ParseIdentifier();
             if (!typeIdentRes.Error && typeIdentRes.Result is Identifier typeIdentifier)
             {
@@ -424,7 +424,7 @@ public class Parser
                 // check for multiple types and get right parenthesis if the left one is present
                 if (parens)
                 {
-                    while (!Accept(TokenType.Comma).Failure)
+                    while (Accept(TokenType.Comma).Success)
                     {
                         typeIdentRes = ParseIdentifier();
                         if (!typeIdentRes.Error && typeIdentRes.Result is Identifier nextTypeIdent)
@@ -556,6 +556,8 @@ public class Parser
             return ParseParenthesizedExpression();
         else if (Peek.Type == TokenType.Literal)
             return ParseIdentifier();
+        else if (Peek.Type == TokenType.String)
+            return ParseString();
 
         var token = Next();
         return token.Type switch
@@ -564,7 +566,6 @@ public class Parser
             TokenType.False => new ParseResult<Expression>(new LiteralToken(token.Position, Literal.False)),
             TokenType.Null => new ParseResult<Expression>(new LiteralToken(token.Position, Literal.Null)),
             TokenType.Number => new ParseResult<Expression>(new Number(token.Position, token.Value)),
-            TokenType.String => new ParseResult<Expression>(new Core.Ast.String(token.Position, token.Value)),
             TokenType.This => new ParseResult<Expression>(new CurrentObjectInstance(token.Position)),
             TokenType.True => new ParseResult<Expression>(new LiteralToken(token.Position, Literal.True)),
             _ => ErrorExpression("Invalid token in expression: " + token, token.Position)
@@ -581,6 +582,44 @@ public class Parser
             size++;
         }
         return new ParseResult<Statement>(new Space(position, size));
+    }
+
+    private ParseResult<Expression> ParseString()
+    {
+        var stringResult = new Core.Ast.String(Peek.Position, Peek.Value);
+        Next();
+
+        // "hello" ..
+        // "world"
+
+        // or
+
+        // "hello" ..
+        //     "world" ..
+        //     "continued"
+
+        // AcceptResult res;
+        // if (Accept(TokenType.DoubleDot, TokenType.EOL).Success)
+        // {
+        //     bool indented = Accept(TokenType.Indent).Success;
+
+        //     do
+        //     {
+        //         res = Accept(TokenType.String);
+        //         if (res.Failure)
+        //             return InvalidTokenErrorExpression("Invalid token in string", res);
+        //         stringResult.Lines.Add(GetToken(res).Value);
+        //     } while (Accept(TokenType.DoubleDot, TokenType.EOL).Success);
+
+        //     if (indented)
+        //     {
+        //         res = Accept(TokenType.EOL, TokenType.Dedent);
+        //         if (res.Failure)
+        //             return InvalidTokenErrorExpression("Invalid token in string", res);
+        //     }
+        // }
+
+        return new ParseResult<Expression>(stringResult);
     }
 
     private ParseResult<Statement> ParseStruct(List<Modifier> modifiers)

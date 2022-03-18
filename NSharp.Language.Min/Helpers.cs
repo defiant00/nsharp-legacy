@@ -111,6 +111,7 @@ public static class Helpers
         ["<<"] = TokenType.LeftShift,
         [">>"] = TokenType.RightShift,
         ["."] = TokenType.Dot,
+        [".."] = TokenType.DoubleDot,
         [","] = TokenType.Comma,
         [":"] = TokenType.Colon,
         ["("] = TokenType.LeftParenthesis,

@@ -87,7 +87,7 @@ public static class Decompiler
                 break;
             case Core.Ast.String s:
                 sb.Append('"');
-                sb.Append(s.Value);
+                sb.Append(string.Join(Environment.NewLine, s.Lines));
                 sb.Append('"');
                 break;
             default:
