@@ -129,23 +129,9 @@ public class Parser
 
         var classResult = new Class(GetToken(res, 1).Position, modifiers, GetToken(res, 1).Value);
 
-        res = Accept(TokenType.EOL);
+        res = Accept(TokenType.EOL, TokenType.Indent);
         if (res.Failure)
             return InvalidTokenErrorStatement("Invalid token in class", res);
-
-        int size = 0;
-        while (Peek.Type == TokenType.EOL)
-        {
-            Next();
-            size++;
-        }
-
-        res = Accept(TokenType.Indent);
-        if (res.Failure)
-            return InvalidTokenErrorStatement("Invalid token in class", res);
-
-        if (size > 0)
-            classResult.Statements.Add(new Space(new Position(), size));
 
         while (Peek.Type != TokenType.Dedent)
             classResult.Statements.Add(ParseClassStatement().Result);
@@ -221,23 +207,9 @@ public class Parser
             Accept(TokenType.Comma);
         }
 
-        res = Accept(TokenType.RightParenthesis, TokenType.EOL);
+        res = Accept(TokenType.RightParenthesis, TokenType.EOL, TokenType.Indent);
         if (res.Failure)
             return InvalidTokenErrorStatement("Invalid token in class", res);
-
-        size = 0;
-        while (Peek.Type == TokenType.EOL)
-        {
-            Next();
-            size++;
-        }
-
-        res = Accept(TokenType.Indent);
-        if (res.Failure)
-            return InvalidTokenErrorStatement("Invalid token in class", res);
-
-        if (size > 0)
-            functionDef.Statements.Add(new Space(new Position(), size));
 
         while (Peek.Type != TokenType.Dedent)
             functionDef.Statements.Add(ParseFunctionStatement().Result);

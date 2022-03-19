@@ -19,6 +19,8 @@ public class Lexer
     private Stack<TokenType> Brackets { get; set; }
     private bool LastEmittedWasMultilineOperator { get; set; }
     private bool InExpression => LastEmittedWasMultilineOperator || Brackets.Count > 0;
+    private bool LastEmittedWasEol { get; set; }
+    private List<Token> EolTokens { get; set; }
 
     public List<Token> Tokens { get; set; }
 
@@ -31,6 +33,8 @@ public class Lexer
         LineNumber = 0;
         Brackets = new Stack<TokenType>();
         LastEmittedWasMultilineOperator = false;
+        LastEmittedWasEol = false;
+        EolTokens = new List<Token>();
     }
 
     public void Lex(string line)
@@ -117,7 +121,28 @@ public class Lexer
         else if (Brackets.Count > 0 && Brackets.Peek() == token)
             Brackets.Pop();
 
-        Tokens.Add(new Token(token, CurrentPosition, CurrentValue));
+        var emitToken = new Token(token, CurrentPosition, CurrentValue);
+        if (token == TokenType.EOL)
+        {
+            if (LastEmittedWasEol)
+                EolTokens.Add(emitToken);
+            else
+                Tokens.Add(emitToken);
+
+            LastEmittedWasEol = true;
+        }
+        else
+        {
+            if (token != TokenType.Indent && token != TokenType.Dedent && EolTokens.Count > 0)
+            {
+                Tokens.AddRange(EolTokens);
+                EolTokens.Clear();
+            }
+            Tokens.Add(emitToken);
+
+            LastEmittedWasEol = false;
+        }
+
         LineStartIndex = LineCurrentIndex;
     }
 
