@@ -105,6 +105,9 @@ public class Decompiler
             case Core.Ast.String str:
                 ProcessString(indent, str);
                 break;
+            case StringLiteral stringLiteral:
+                Buffer.Append(stringLiteral.Value);
+                break;
             default:
                 Buffer.Append($"[{expression}]");
                 break;
@@ -304,15 +307,27 @@ public class Decompiler
 
     private void ProcessString(int indent, Core.Ast.String str)
     {
-        Buffer.Append("\"");
-        Buffer.Append(str.Lines[0]);
-        Buffer.Append("\"");
+        ProcessStringLine(indent, str.Lines[0]);
         for (int i = 1; i < str.Lines.Count; i++)
         {
             Buffer.AppendLine(" ..");
-            AppendIndented(Settings.NoIndentMultiline ? indent : indent + 1, "\"");
-            Buffer.Append(str.Lines[i]);
-            Buffer.Append("\"");
+            Indent(Settings.NoIndentMultiline ? indent : indent + 1);
+            ProcessStringLine(indent, str.Lines[i]);
         }
+    }
+
+    private void ProcessStringLine(int indent, List<Expression> line)
+    {
+        Buffer.Append("\"");
+        foreach (var expr in line)
+        {
+            bool curlies = !(expr is StringLiteral);
+            if (curlies)
+                Buffer.Append("{");
+            ProcessExpression(indent, expr);
+            if (curlies)
+                Buffer.Append("}");
+        }
+        Buffer.Append("\"");
     }
 }

@@ -51,7 +51,13 @@ public class Parser
         Tokens = lexer.Tokens;
 
         foreach (var token in lexer.Tokens)
-            Console.WriteLine(token);
+        {
+            Console.Write(token);
+            if (token.Type == TokenType.EOL || token.Type == TokenType.EOF)
+                Console.WriteLine();
+            else
+                Console.Write(" | ");
+        }
         Console.WriteLine();
 
         var file = ParseFileStatement(fileName);
@@ -528,7 +534,7 @@ public class Parser
             return ParseParenthesizedExpression();
         else if (Peek.Type == TokenType.Literal)
             return ParseIdentifier();
-        else if (Peek.Type == TokenType.String)
+        else if (Peek.Type == TokenType.StringStart)
             return ParseString();
 
         var token = Next();
@@ -558,15 +564,42 @@ public class Parser
 
     private ParseResult<Expression> ParseString()
     {
-        var stringResult = new Core.Ast.String(Peek.Position, Peek.Value);
-        Next();
+        var stringResult = new Core.Ast.String(Peek.Position);
+        AcceptResult res;
 
-        var res = Accept(TokenType.DoubleDot, TokenType.String);
-        while (res.Success)
+        do
         {
-            stringResult.Lines.Add(GetToken(res, 1).Value);
-            res = Accept(TokenType.DoubleDot, TokenType.String);
-        }
+            var currentLine = new List<Expression>();
+            stringResult.Lines.Add(currentLine);
+
+            res = Accept(TokenType.StringStart);
+            if (res.Failure)
+                return InvalidTokenErrorExpression("Invalid token in string", res);
+
+            while (Peek.Type != TokenType.StringEnd)
+            {
+                if (Peek.Type == TokenType.String)
+                {
+                    currentLine.Add(new StringLiteral(Peek.Position, Peek.Value));
+                    Next();
+                }
+                else if (Accept(TokenType.LeftCurly).Success)
+                {
+                    var nestedExpression = ParseExpression();
+                    if (nestedExpression.Error)
+                        return nestedExpression;
+                    currentLine.Add(nestedExpression.Result);
+                    res = Accept(TokenType.RightCurly);
+                    if (res.Failure)
+                        return InvalidTokenErrorExpression("Invalid token in string", res);
+                }
+                else
+                    return ErrorExpression("Invalid token in string parsing: " + Peek, Peek.Position);
+            }
+            res = Accept(TokenType.StringEnd);
+            if (res.Failure)
+                return InvalidTokenErrorExpression("Invalid token in string", res);
+        } while (Accept(TokenType.DoubleDot).Success);
 
         return new ParseResult<Expression>(stringResult);
     }

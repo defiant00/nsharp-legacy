@@ -13,12 +13,12 @@ public class MyClass
     public List:(List:(string)) MoreNested
 
     void Test(int first, List:string second)
-        "hello"
+        "hello {name}"
 
         "hello" ..
         "world"
 
-        "part"..
+        "part" ..
             "two"
         
         1 + 2 + 3

@@ -18,7 +18,7 @@ Unicode                 |           |           |
 Numbers                 | Both      |           |
 Hex                     |           |           |
 Binary                  |           |           |
-String Interpolation    |           |           |
+String Interpolation    | Both      |           |
 Function Calls          |           |           |
 Accessors               |           |           |
 Generics                | Both      |           |

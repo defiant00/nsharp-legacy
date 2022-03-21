@@ -21,6 +21,7 @@ public class Lexer
     private bool InExpression => LastEmittedWasMultilineOperator || Brackets.Count > 0;
     private bool LastEmittedWasEol { get; set; }
     private List<Token> EolTokens { get; set; }
+    private Stack<TokenType> StringTerminators { get; set; }
 
     public List<Token> Tokens { get; set; }
 
@@ -35,6 +36,7 @@ public class Lexer
         LastEmittedWasMultilineOperator = false;
         LastEmittedWasEol = false;
         EolTokens = new List<Token>();
+        StringTerminators = new Stack<TokenType>();
     }
 
     public void Lex(string line)
@@ -68,6 +70,8 @@ public class Lexer
     private Position CurrentPosition => new Position { Line = LineNumber, Column = LineStartIndex + 1 };
 
     private string CurrentValue => Line[LineStartIndex..LineCurrentIndex];
+
+    private int CurrentLength => LineCurrentIndex - LineStartIndex;
 
     private char Next()
     {
@@ -111,15 +115,24 @@ public class Lexer
         // operators
         LastEmittedWasMultilineOperator = token.IsMultilineOperator();
 
-        // brackets
+        // brackets and strings
         if (token == TokenType.LeftParenthesis)
             Brackets.Push(TokenType.RightParenthesis);
         else if (token == TokenType.LeftBracket)
             Brackets.Push(TokenType.RightBracket);
         else if (token == TokenType.LeftCurly)
+        {
             Brackets.Push(TokenType.RightCurly);
-        else if (Brackets.Count > 0 && Brackets.Peek() == token)
+            StringTerminators.Push(TokenType.RightCurly);
+        }
+        else if (token == TokenType.StringStart)
+            StringTerminators.Push(TokenType.StringEnd);
+
+        if (Brackets.Count > 0 && Brackets.Peek() == token)
             Brackets.Pop();
+
+        if (StringTerminators.Count > 0 && StringTerminators.Peek() == token)
+            StringTerminators.Pop();
 
         var emitToken = new Token(token, CurrentPosition, CurrentValue);
         if (token == TokenType.EOL)
@@ -230,7 +243,9 @@ public class Lexer
                 case '"':
                     return LexString;
                 default:
-                    if (IsValidLiteralStart(peekVal))
+                    if (peekVal == '}' && StringTerminators.Count > 0 && StringTerminators.Peek() == TokenType.RightCurly)
+                        return LexString;
+                    else if (IsValidLiteralStart(peekVal))
                         return LexLiteral;
                     else if (char.IsDigit(peekVal))
                         return LexNumber;
@@ -293,7 +308,7 @@ public class Lexer
         for (char c = Peek; IsValidLiteral(c); c = Peek)
             Next();
 
-        if (CurrentValue.Length == 0)
+        if (CurrentLength == 0)
             Error("A literal must have a value");
         else if (isLiteral)
             Emit(TokenType.Literal);
@@ -345,16 +360,29 @@ public class Lexer
 
     private StateFunction? LexString()
     {
-        // discard the "
-        Discard(1);
+        // accept the " or }
+        char start = Next();
+        if (start == '"')
+            Emit(TokenType.StringStart);
+        else
+            Emit(TokenType.RightCurly);
 
-        while (true)
+        while (StringTerminators.Count > 0 && StringTerminators.Peek() == TokenType.StringEnd)
         {
             char c = Peek;
             if (c == '"')
             {
-                Emit(TokenType.String);
-                Discard(1);
+                if (CurrentLength > 0)
+                    Emit(TokenType.String);
+                // accept the "
+                Next();
+                Emit(TokenType.StringEnd);
+                break;
+            }
+            else if (c == '{')
+            {
+                if (CurrentLength > 0)
+                    Emit(TokenType.String);
                 break;
             }
             else if (c == '\\')

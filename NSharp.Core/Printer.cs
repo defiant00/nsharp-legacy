@@ -172,5 +172,13 @@ public partial class Space
 
 public partial class String
 {
-    public override string ToString() => $"\"{string.Join(Environment.NewLine, Lines)}\"";
+    public override string ToString() => "\"" +
+        string.Join(Environment.NewLine, Lines.Select(line =>
+            string.Join("", line.Select(item =>
+                item is StringLiteral ? item.ToString() : "{" + item + "}")))) + "\"";
+}
+
+public partial class StringLiteral
+{
+    public override string ToString() => Value;
 }
