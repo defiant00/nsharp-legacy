@@ -88,6 +88,15 @@ public class Parser
 
     private Token ErrorToken(AcceptResult result) => Tokens[result.StartingIndex + result.Count];
 
+    private ParseResult<Expression> ParseAssignment(Expression left)
+    {
+        var op = Next().Type.ToAssignmentOperator();
+        var right = ParseExpression();
+        if (right.Error)
+            return right;
+        return new ParseResult<Expression>(new Assignment(left.Position, op, left, right.Result));
+    }
+
     private ParseResult<Expression> ParseBinaryOperatorRightSide(int leftPrecedence, Expression left)
     {
         while (true)
@@ -266,6 +275,8 @@ public class Parser
         var left = ParsePrimaryExpression();
         if (left.Error)
             return left;
+        if (Peek.Type.IsAssignment())
+            return ParseAssignment(left.Result);
         return ParseBinaryOperatorRightSide(0, left.Result);
     }
 

@@ -60,4 +60,21 @@ public static class TokenHelper
         };
 
     public static int Precedence(this Token token) => token.Type.ToOperator().Precedence();
+
+    public static AssignmentOperator ToAssignmentOperator(this TokenType type) =>
+        type switch
+        {
+            TokenType.Assign => AssignmentOperator.Assign,
+            TokenType.AddAssign => AssignmentOperator.Add,
+            TokenType.SubtractAssign => AssignmentOperator.Subtract,
+            TokenType.MultiplyAssign => AssignmentOperator.Multiply,
+            TokenType.DivideAssign => AssignmentOperator.Divide,
+            TokenType.ModuloAssign => AssignmentOperator.Modulo,
+            TokenType.BitwiseAndAssign => AssignmentOperator.BitwiseAnd,
+            TokenType.BitwiseOrAssign => AssignmentOperator.BitwiseOr,
+            TokenType.BitwiseXorAssign => AssignmentOperator.BitwiseXor,
+            TokenType.LeftShiftAssign => AssignmentOperator.LeftShift,
+            TokenType.RightShiftAssign => AssignmentOperator.RightShift,
+            _ => AssignmentOperator.None,
+        };
 }

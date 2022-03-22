@@ -82,6 +82,9 @@ public class Decompiler
             case null:
                 Buffer.Append("void");
                 break;
+            case Assignment assignment:
+                ProcessAssignment(indent, assignment);
+                break;
             case BinaryOperator binaryOperator:
                 ProcessBinaryOperator(indent, binaryOperator, parentPrecedence);
                 break;
@@ -112,6 +115,15 @@ public class Decompiler
                 Buffer.Append($"[{expression}]");
                 break;
         }
+    }
+
+    private void ProcessAssignment(int indent, Assignment assignment)
+    {
+        ProcessExpression(indent, assignment.Left);
+        Buffer.Append(" ");
+        Buffer.Append(assignment.Operator.StringVal());
+        Buffer.Append(" ");
+        ProcessExpression(indent, assignment.Right);
     }
 
     private void ProcessBinaryOperator(int indent, BinaryOperator binaryOperator, int parentPrecedence)

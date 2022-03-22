@@ -10,6 +10,7 @@ Space                   | Both      |           |
 Comments                | Both      |           |
 Operators               | Both      |           |
 Order of Operations     | Both      |           |
+Assignment              | Both      |           |
 Identifiers             | Both      |           |
 Keyword Identifiers     | Both      |           |
 Strings                 | Both      |           |

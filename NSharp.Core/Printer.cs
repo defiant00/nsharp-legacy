@@ -12,6 +12,11 @@ public abstract partial class AstItem
     public virtual void Print(int indent) => WriteLineIndented(indent, $"[{this}]");
 }
 
+public partial class Assignment
+{
+    public override string ToString() => $"({Left} Assign.{Operator} {Right})";
+}
+
 public partial class BinaryOperator
 {
     public override string ToString() => $"({Left} {Operator} {Right})";

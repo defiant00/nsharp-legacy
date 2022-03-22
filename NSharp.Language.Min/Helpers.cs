@@ -72,6 +72,23 @@ public static class Helpers
             _ => $"[{op}]",
         };
 
+    public static string StringVal(this AssignmentOperator op) =>
+        op switch
+        {
+            AssignmentOperator.Assign => "=",
+            AssignmentOperator.Add => "+=",
+            AssignmentOperator.Subtract => "-=",
+            AssignmentOperator.Multiply => "*=",
+            AssignmentOperator.Divide => "/=",
+            AssignmentOperator.Modulo => "%=",
+            AssignmentOperator.BitwiseAnd => "&=",
+            AssignmentOperator.BitwiseOr => "|=",
+            AssignmentOperator.BitwiseXor => "^=",
+            AssignmentOperator.LeftShift => "<<=",
+            AssignmentOperator.RightShift => ">>=",
+            _ => $"[{op}]",
+        };
+
     public static readonly Dictionary<string, TokenType> KeywordTokens = new()
     {
         ["ns"] = TokenType.Namespace,

@@ -19,6 +19,20 @@ public abstract class Statement : AstItem
     public Statement(Position position) : base(position) { }
 }
 
+public partial class Assignment : Expression
+{
+    public AssignmentOperator Operator { get; set; }
+    public Expression Left { get; set; }
+    public Expression Right { get; set; }
+
+    public Assignment(Position position, AssignmentOperator op, Expression left, Expression right) : base(position)
+    {
+        Operator = op;
+        Left = left;
+        Right = right;
+    }
+}
+
 public partial class BinaryOperator : Expression
 {
     public OperatorType Operator { get; set; }

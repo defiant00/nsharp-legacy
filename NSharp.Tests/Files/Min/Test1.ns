@@ -1,24 +1,7 @@
-use System
-use System.Collections.Generic
-
-ns NSharp.Min.Tests
-
 ;; MyClass does stuff
 public class MyClass
-    string first
-    string.thing second
-    public List:string MyList
-    public Dictionary:(string, int) Vals
-    public List:List:string NestedStrings
-    public List:(List:(string)) MoreNested
-
     void Test(int first, List:string second)
-        "hello {name}"
-
-        "hello" ..
-        "world"
-
-        "part" ..
-            "two"
-        
-        1 + 2 + 3
+        first = 3
+        test.thing = "hello"
+        first += 1
+        a = b = 3
