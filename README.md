@@ -1,6 +1,6 @@
 # nsharp
 
-Neutral programming for .NET
+[Neutral programming](Docs/neutral_programming.md) for .NET
 
 ## Status
 
