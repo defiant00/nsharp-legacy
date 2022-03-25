@@ -96,6 +96,9 @@ public class Decompiler
             case CurrentObjectInstance:
                 Buffer.Append("this");
                 break;
+            case FunctionCall functionCall:
+                ProcessFunctionCall(indent, functionCall);
+                break;
             case Identifier identifier:
                 ProcessIdentifier(identifier);
                 break;
@@ -129,12 +132,15 @@ public class Decompiler
     private void ProcessBinaryOperator(int indent, BinaryOperator binaryOperator, int parentPrecedence)
     {
         bool parentheses = Settings.AllParens || binaryOperator.Operator.Precedence() < parentPrecedence;
+        bool space = binaryOperator.Operator != OperatorType.Dot;
         if (parentheses)
             Buffer.Append("(");
         ProcessExpression(indent, binaryOperator.Left, binaryOperator.Operator.Precedence());
-        Buffer.Append(" ");
+        if (space)
+            Buffer.Append(" ");
         Buffer.Append(binaryOperator.Operator.StringVal());
-        Buffer.Append(" ");
+        if (space)
+            Buffer.Append(" ");
         ProcessExpression(indent, binaryOperator.Right, binaryOperator.Operator.Precedence() + 1);
         if (parentheses)
             Buffer.Append(")");
@@ -168,6 +174,22 @@ public class Decompiler
     }
 
     private void ProcessFile(int indent, Core.Ast.File file) => ProcessStatements(indent, file.Statements);
+
+    private void ProcessFunctionCall(int indent, FunctionCall functionCall)
+    {
+        ProcessExpression(indent, functionCall.Target);
+        Buffer.Append("(");
+        if (functionCall.Parameters.Count > 0)
+        {
+            ProcessExpression(indent, functionCall.Parameters[0]);
+            for (int i = 1; i < functionCall.Parameters.Count; i++)
+            {
+                Buffer.Append(", ");
+                ProcessExpression(indent, functionCall.Parameters[i]);
+            }
+        }
+        Buffer.Append(")");
+    }
 
     private void ProcessFunctionDefinition(int indent, FunctionDefinition functionDef)
     {

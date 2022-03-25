@@ -150,6 +150,17 @@ public partial class For : Statement
     public For(Position position) : base(position) { }
 }
 
+public partial class FunctionCall : Expression
+{
+    public Expression Target { get; set; }
+    public List<Expression> Parameters { get; set; } = new();
+
+    public FunctionCall(Position position, Expression target) : base(position)
+    {
+        Target = target;
+    }
+}
+
 public partial class FunctionDefinition : Statement
 {
     public List<Modifier> Modifiers { get; set; }

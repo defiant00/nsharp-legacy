@@ -354,6 +354,35 @@ public class Parser
         return new ParseResult<Statement>(file, error);
     }
 
+    private ParseResult<Expression> ParseFunctionCall(Expression target)
+    {
+        var functionCall = new FunctionCall(target.Position, target);
+        var res = Accept(TokenType.LeftParenthesis);
+        if (res.Failure)
+            return InvalidTokenErrorExpression("Invalid token in function call", res);
+
+        if (Peek.Type != TokenType.RightParenthesis)
+        {
+            var paramExpr = ParseExpression();
+            if (paramExpr.Error)
+                return paramExpr;
+            functionCall.Parameters.Add(paramExpr.Result);
+            while (Accept(TokenType.Comma).Success)
+            {
+                paramExpr = ParseExpression();
+                if (paramExpr.Error)
+                    return paramExpr;
+                functionCall.Parameters.Add(paramExpr.Result);
+            }
+        }
+
+        res = Accept(TokenType.RightParenthesis);
+        if (res.Failure)
+            return InvalidTokenErrorExpression("Invalid token in function call", res);
+
+        return new ParseResult<Expression>(functionCall);
+    }
+
     private ParseResult<Statement> ParseFunctionStatement() =>
         Peek.Type switch
         {
@@ -541,24 +570,34 @@ public class Parser
 
     private ParseResult<Expression> ParsePrimaryExpression()
     {
+        ParseResult<Expression> leftResult;
         if (Peek.Type == TokenType.LeftParenthesis)
-            return ParseParenthesizedExpression();
+            leftResult = ParseParenthesizedExpression();
         else if (Peek.Type == TokenType.Literal)
-            return ParseIdentifier();
+            leftResult = ParseIdentifier();
         else if (Peek.Type == TokenType.StringStart)
-            return ParseString();
-
-        var token = Next();
-        return token.Type switch
+            leftResult = ParseString();
+        else
         {
-            TokenType.Character => new ParseResult<Expression>(new Character(token.Position, token.Value)),
-            TokenType.False => new ParseResult<Expression>(new LiteralToken(token.Position, Literal.False)),
-            TokenType.Null => new ParseResult<Expression>(new LiteralToken(token.Position, Literal.Null)),
-            TokenType.Number => new ParseResult<Expression>(new Number(token.Position, token.Value)),
-            TokenType.This => new ParseResult<Expression>(new CurrentObjectInstance(token.Position)),
-            TokenType.True => new ParseResult<Expression>(new LiteralToken(token.Position, Literal.True)),
-            _ => ErrorExpression("Invalid token in expression: " + token, token.Position)
-        };
+            var token = Next();
+            leftResult = token.Type switch
+            {
+                TokenType.Character => new ParseResult<Expression>(new Character(token.Position, token.Value)),
+                TokenType.False => new ParseResult<Expression>(new LiteralToken(token.Position, Literal.False)),
+                TokenType.Null => new ParseResult<Expression>(new LiteralToken(token.Position, Literal.Null)),
+                TokenType.Number => new ParseResult<Expression>(new Number(token.Position, token.Value)),
+                TokenType.This => new ParseResult<Expression>(new CurrentObjectInstance(token.Position)),
+                TokenType.True => new ParseResult<Expression>(new LiteralToken(token.Position, Literal.True)),
+                _ => ErrorExpression("Invalid token in expression: " + token, token.Position)
+            };
+        }
+        if (leftResult.Error)
+            return leftResult;
+
+        if (Peek.Type == TokenType.LeftParenthesis)
+            leftResult = ParseFunctionCall(leftResult.Result);
+
+        return leftResult;
     }
 
     private ParseResult<Statement> ParseSpace()

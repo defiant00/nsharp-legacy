@@ -20,7 +20,7 @@ Numbers                 | Both      |           |
 Hex                     |           |           |
 Binary                  |           |           |
 String Interpolation    | Both      |           |
-Function Calls          |           |           |
+Function Calls          | Both      |           |
 Accessors               |           |           |
 Generics                | Both      |           |
 If                      | Both      |           |
