@@ -1,7 +1,8 @@
 ;; MyClass does stuff
 public class MyClass
     void Test(int first, List:string second)
-        first = 3
-        test.thing = "hello"
-        first += 1
-        a = b = 3
+        DoSomething()
+        Test.Print(1)
+        SomethingElse(1, first, "hello")
+        "cool".Thing()
+        this.Greet(12 + 23, "Hello {Gordon}", nested.test())

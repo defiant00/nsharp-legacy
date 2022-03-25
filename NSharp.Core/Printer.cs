@@ -104,6 +104,11 @@ public partial class For
     }
 }
 
+public partial class FunctionCall
+{
+    public override string ToString() => $"{Target}({string.Join(", ", Parameters)})";
+}
+
 public partial class FunctionDefinition
 {
     public override void Print(int indent)
