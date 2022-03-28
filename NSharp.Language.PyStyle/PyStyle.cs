@@ -11,10 +11,7 @@ public class PyStyle : ILanguage
 
     public LoadResult Load(string fileName)
     {
-        var result = new LoadResult
-        {
-            FileName = fileName,
-        };
+        var result = new LoadResult(fileName);
 
         // var parser = new Parser();
         // result.Ast = parser.Parse(fileName).Result;
@@ -24,11 +21,7 @@ public class PyStyle : ILanguage
 
     public SaveResult Save(string fileName, AstItem ast)
     {
-        var result = new SaveResult
-        {
-            FileName = fileName,
-            Success = true,
-        };
+        var result = new SaveResult(fileName);
         // string code = Decompiler.Decompile(ast);
         // System.IO.File.WriteAllText(fileName, code);
         return result;

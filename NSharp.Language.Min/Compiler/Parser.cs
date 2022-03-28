@@ -216,8 +216,8 @@ public class Parser
                 var errorToken = Next();
                 return ErrorStatement($"Invalid token in parameters: {errorToken}", errorToken.Position);
             }
-            if (!paramType.Error && paramType.Result is Identifier paramIdent)
-                functionDef.Parameters.Add(new Parameter(paramIdent.Position, paramIdent, Next().Value));
+            if (!paramType.Error)
+                functionDef.Parameters.Add(new Parameter(paramType.Result.Position, paramType.Result, Next().Value));
 
             Accept(TokenType.Comma);
         }
@@ -663,7 +663,17 @@ public class Parser
     private ParseResult<Expression> ParseType()
     {
         if (Peek.Type == TokenType.Literal)
-            return ParseIdentifier();
+        {
+            var typeResult = ParseIdentifier();
+            if (typeResult.Error)
+                return typeResult;
+
+            var type = typeResult.Result;
+            while (Accept(TokenType.LeftBracket, TokenType.RightBracket).Success)
+                type = new Core.Ast.Array(type.Position, type);
+
+            return new ParseResult<Expression>(type);
+        }
 
         var token = Next();
         return ErrorExpression("Invalid token in type parsing: " + token, token.Position);

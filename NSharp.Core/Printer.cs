@@ -12,6 +12,11 @@ public abstract partial class AstItem
     public virtual void Print(int indent) => WriteLineIndented(indent, $"[{this}]");
 }
 
+public partial class Array
+{
+    public override string ToString() => $"{Type}[]";
+}
+
 public partial class Assignment
 {
     public override string ToString() => $"({Left} Assign.{Operator} {Right})";
@@ -121,6 +126,8 @@ public partial class FunctionDefinition
 
 public partial class Identifier
 {
+    public string ToDottedString() => string.Join(".", Parts.Select(p => p.Value));
+
     public override string ToString() => string.Join(".", Parts);
 }
 

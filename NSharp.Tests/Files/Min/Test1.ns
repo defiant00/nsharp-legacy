@@ -1,8 +1,12 @@
+ns NSharp.Test
+
 ;; MyClass does stuff
 public class MyClass
-    void Test(int first, List:string second)
-        DoSomething()
-        Test.Print(1)
-        SomethingElse(1, first, "hello")
-        "cool".Thing()
-        this.Greet(12 + 23, "Hello {Gordon}", nested.test())
+    public static void Main()
+        System.Console.WriteLine("Hello World!")
+    public void Another()
+        ; empty
+
+public class SecondClass
+    public void Test()
+        ; empty

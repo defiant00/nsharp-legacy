@@ -15,24 +15,17 @@ public class Min : ILanguage
 
     public LoadResult Load(string fileName)
     {
-        var result = new LoadResult
-        {
-            FileName = fileName,
-        };
+        var result = new LoadResult(fileName);
 
         var parser = new Parser();
-        result.Ast = parser.Parse(fileName).Result;
+        result.Ast = parser.Parse(fileName).Result as Core.Ast.File;
 
         return result;
     }
 
     public SaveResult Save(string fileName, AstItem ast)
     {
-        var result = new SaveResult
-        {
-            FileName = fileName,
-            Success = true,
-        };
+        var result = new SaveResult(fileName);
         string code = new Decompiler(Settings).Decompile(ast);
         System.IO.File.WriteAllText(fileName, code);
         return result;

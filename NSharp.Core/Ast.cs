@@ -19,6 +19,16 @@ public abstract class Statement : AstItem
     public Statement(Position position) : base(position) { }
 }
 
+public partial class Array : Expression
+{
+    public Expression Type { get; set; }
+
+    public Array(Position position, Expression type) : base(position)
+    {
+        Type = type;
+    }
+}
+
 public partial class Assignment : Expression
 {
     public AssignmentOperator Operator { get; set; }
@@ -251,10 +261,10 @@ public partial class Number : Expression
 
 public partial class Parameter : Expression
 {
-    public Identifier Type { get; set; }
+    public Expression Type { get; set; }
     public string Name { get; set; }
 
-    public Parameter(Position position, Identifier type, string name) : base(position)
+    public Parameter(Position position, Expression type, string name) : base(position)
     {
         Type = type;
         Name = name;

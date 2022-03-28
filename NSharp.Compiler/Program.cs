@@ -40,7 +40,7 @@ public static class Program
                 Console.WriteLine("Build not yet supported");
                 break;
             case "compile":
-                Console.WriteLine("Compile not yet supported");
+                Compile(args.Skip(1));
                 break;
             case "edit":
                 for (int i = 1; i < args.Length; i++)
@@ -64,6 +64,32 @@ public static class Program
         }
 
         Console.WriteLine($"Elapsed: {stopwatch.Elapsed}");
+    }
+
+    private static void Compile(IEnumerable<string> files)
+    {
+        var compiler = new Compiler();
+        foreach (string file in files)
+        {
+            if (!File.Exists(file))
+                throw new Exception($"File '{file}' does not exist.");
+
+            ILanguage language;
+
+            if (file.EndsWith(".ns", StringComparison.OrdinalIgnoreCase))
+                language = GetLanguage(SAVE_SETTINGS, file);
+            else if (file.EndsWith(".ns.edit", StringComparison.OrdinalIgnoreCase))
+                language = GetLanguage(EDIT_SETTINGS, file);
+            else
+                throw new Exception($"File '{file}' does not end with .ns or .ns.edit");
+
+            LoadResult loadResult = language.Load(file);
+            HandleResult(loadResult);
+            if (loadResult.Ast != null)
+                compiler.Add(loadResult.Ast);
+        }
+        HandleCompileResult(compiler.Compile());
+        compiler.Save();
     }
 
     private static void Edit(string file)
@@ -144,6 +170,14 @@ public static class Program
             foreach (var diagnostic in result.Diagnostics)
                 Console.WriteLine($"  {diagnostic.Severity}: {diagnostic.Message}");
         }
+    }
+
+    private static void HandleCompileResult(List<Diagnostic> diagnostics)
+    {
+        foreach (var diagnostic in diagnostics)
+            Console.WriteLine($"{diagnostic.Severity}: {diagnostic.Message}");
+        if (diagnostics.All(d => d.Severity != Severity.Error))
+            Console.WriteLine("Compile successful");
     }
 
     private static ILanguage GetLanguage(string settingsFileName, string startingPath)

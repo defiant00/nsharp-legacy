@@ -4,17 +4,25 @@ namespace NSharp.Core;
 
 public abstract class Result
 {
-    public string FileName { get; set; } = string.Empty;
-
+    public string FileName { get; set; }
     public List<Diagnostic> Diagnostics = new();
+
+    public Result(string fileName)
+    {
+        FileName = fileName;
+    }
 }
 
 public class LoadResult : Result
 {
-    public AstItem? Ast { get; set; }
+    public Ast.File? Ast { get; set; }
+
+    public LoadResult(string fileName) : base(fileName) { }
 }
 
 public class SaveResult : Result
 {
-    public bool Success { get; set; }
+    public bool Success { get; set; } = true;
+
+    public SaveResult(string fileName) : base(fileName) { }
 }

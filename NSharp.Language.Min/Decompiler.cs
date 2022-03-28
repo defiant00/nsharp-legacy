@@ -82,6 +82,9 @@ public class Decompiler
             case null:
                 Buffer.Append("void");
                 break;
+            case Core.Ast.Array array:
+                ProcessArray(indent, array);
+                break;
             case Assignment assignment:
                 ProcessAssignment(indent, assignment);
                 break;
@@ -118,6 +121,12 @@ public class Decompiler
                 Buffer.Append($"[{expression}]");
                 break;
         }
+    }
+
+    private void ProcessArray(int indent, Core.Ast.Array array)
+    {
+        ProcessExpression(indent, array.Type);
+        Buffer.Append("[]");
     }
 
     private void ProcessAssignment(int indent, Assignment assignment)
