@@ -30,7 +30,7 @@ public static class Helpers
         }
     }
 
-    public static string GetLiteral(this string val) => KeywordTokens.ContainsKey(val) ? "`" + val : val;
+    public static string GetLiteral(this string val) => KeywordTokens.ContainsKey(val) ? "@" + val : val;
 
     public static string StringVal(this Modifier modifier) =>
         modifier switch

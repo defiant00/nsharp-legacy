@@ -6,7 +6,7 @@ public class Lexer
 {
     const char EOL = '\0';
     const string OPERATOR_CHARACTERS = "()[]{}<>!=+-*/%,.:&|^~";
-    const char LITERAL_INDICATOR = '`';
+    const char LITERAL_INDICATOR = '@';
 
     private delegate StateFunction? StateFunction();
 
@@ -59,7 +59,7 @@ public class Lexer
         Emit(TokenType.EOF);
     }
 
-    // Literals can start with a letter, _, or ` to indicate an identifier that matches a keyword
+    // Literals can start with a letter, _, or @ to indicate an identifier that matches a keyword
     private bool IsValidLiteralStart(char c) => char.IsLetter(c) || c == '_' || c == LITERAL_INDICATOR;
 
     // Literals can contain letters, numbers, and _
@@ -301,7 +301,7 @@ public class Lexer
     {
         // accept the starting literal character
         bool isLiteral = Next() == LITERAL_INDICATOR;
-        // if it starts with `, discard it
+        // if it starts with @, discard it
         if (isLiteral)
             Discard();
 
