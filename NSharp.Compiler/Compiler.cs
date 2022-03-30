@@ -66,18 +66,24 @@ public class Compiler
             MetadataBuilder.GetOrAddString("Console"));
 
         // build types
+        var state = new CompilerState();
         foreach (var file in Files)
-            BuildTypeSignatures(file);
+            BuildTypeSignatures(state, file);
 
         // add interfaces and inheritance
+        state = new CompilerState();
         foreach (var file in Files)
-            CompleteTypeSignatures(file);
+            CompleteTypeSignatures(state, file);
+
         // build method signatures
+        state = new CompilerState();
         foreach (var file in Files)
-            BuildMethodSignatures(file);
+            BuildMethodSignatures(state, file);
+
         // build method bodies
+        state = new CompilerState();
         foreach (var file in Files)
-            BuildMethodBodies(file);
+            BuildMethodBodies(state, file);
 
         return Diagnostics;
     }
@@ -99,60 +105,24 @@ public class Compiler
         peBlob.WriteContentTo(peStream);
     }
 
-    private void BuildTypeSignatures(Core.Ast.File file)
+    private void BuildTypeSignatures(CompilerState state, Core.Ast.File file)
     {
-        string currentNamespace = string.Empty;
         foreach (var statement in file.Statements)
         {
             switch (statement)
             {
                 case Class cl:
-                    BuildClassSignature(cl, currentNamespace);
+                    BuildClassSignature(state, cl);
                     break;
                 case Namespace ns:
-                    currentNamespace = ns.Name.ToDottedString();
+                    state.Namespace = ns.Name.ToDottedString();
                     break;
             }
         }
     }
 
-    private void CompleteTypeSignatures(Core.Ast.File file)
+    private void CompleteTypeSignatures(CompilerState state, Core.Ast.File file)
     {
-        string currentNamespace = string.Empty;
-        foreach (var statement in file.Statements)
-        {
-            switch (statement)
-            {
-                case Class cl:
-
-                    break;
-                case Namespace ns:
-                    currentNamespace = ns.Name.ToDottedString();
-                    break;
-            }
-        }
-    }
-
-    private void BuildMethodSignatures(Core.Ast.File file)
-    {
-        string currentNamespace = string.Empty;
-        foreach (var statement in file.Statements)
-        {
-            switch (statement)
-            {
-                case Class cl:
-                    BuildClassMethodSignatures(cl, currentNamespace);
-                    break;
-                case Namespace ns:
-                    currentNamespace = ns.Name.ToDottedString();
-                    break;
-            }
-        }
-    }
-
-    private void BuildMethodBodies(Core.Ast.File file)
-    {
-        string currentNamespace = string.Empty;
         foreach (var statement in file.Statements)
         {
             switch (statement)
@@ -161,17 +131,47 @@ public class Compiler
 
                     break;
                 case Namespace ns:
-                    currentNamespace = ns.Name.ToDottedString();
+                    state.Namespace = ns.Name.ToDottedString();
                     break;
             }
         }
     }
 
-    private int Handle = 2;
-
-    private void BuildClassSignature(Class cl, string currentNamespace)
+    private void BuildMethodSignatures(CompilerState state, Core.Ast.File file)
     {
-        string name = currentNamespace + "." + cl.Name;
+        foreach (var statement in file.Statements)
+        {
+            switch (statement)
+            {
+                case Class cl:
+                    BuildClassMethodSignatures(state, cl);
+                    break;
+                case Namespace ns:
+                    state.Namespace = ns.Name.ToDottedString();
+                    break;
+            }
+        }
+    }
+
+    private void BuildMethodBodies(CompilerState state, Core.Ast.File file)
+    {
+        foreach (var statement in file.Statements)
+        {
+            switch (statement)
+            {
+                case Class cl:
+
+                    break;
+                case Namespace ns:
+                    state.Namespace = ns.Name.ToDottedString();
+                    break;
+            }
+        }
+    }
+
+    private void BuildClassSignature(CompilerState state, Class cl)
+    {
+        string name = state.Namespace + "." + cl.Name;
 
         var attrs = TypeAttributes.Class | TypeAttributes.AutoLayout | TypeAttributes.BeforeFieldInit;
         if (cl.Modifiers.Contains(Modifier.Public))
@@ -179,56 +179,64 @@ public class Compiler
 
         TypeDefinitions[name] = MetadataBuilder.AddTypeDefinition(
             attrs,
-            MetadataBuilder.GetOrAddString(currentNamespace),
+            MetadataBuilder.GetOrAddString(state.Namespace),
             MetadataBuilder.GetOrAddString(cl.Name),
             Types["System.Object"],
-            MetadataTokens.FieldDefinitionHandle(Handle),
-            MetadataTokens.MethodDefinitionHandle(Handle));
-        
-        Handle += 1;
-    }
+            MetadataTokens.FieldDefinitionHandle(state.FieldDefinitionRow),
+            MetadataTokens.MethodDefinitionHandle(state.MethodDefinitionRow));
 
-    private void BuildClassMethodSignatures(Class cl, string currentNamespace)
-    {
-        string name = currentNamespace + "." + cl.Name;
-        var classDefinition = TypeDefinitions[name];
+        // Count fields and methods.
         foreach (var statement in cl.Statements)
         {
             switch (statement)
             {
-                case FunctionDefinition functionDefinition:
-                    BuildMethodSignature(classDefinition, functionDefinition);
+                case Core.Ast.MethodDefinition:
+                    state.MethodDefinitionRow++;
                     break;
             }
         }
     }
 
-    private void BuildMethodSignature(TypeDefinitionHandle cl, FunctionDefinition functionDefinition)
+    private void BuildClassMethodSignatures(CompilerState state, Class cl)
     {
-        MetadataBuilder.AddFieldDefinition(
-                FieldAttributes.Assembly,
-                MetadataBuilder.GetOrAddString("_count"),
-                MetadataBuilder.GetOrAddBlob(BuildSignature(e => e.FieldSignature().Int32())));
+        string name = state.Namespace + "." + cl.Name;
+        var classDefinition = TypeDefinitions[name];
+        foreach (var statement in cl.Statements)
+        {
+            switch (statement)
+            {
+                case Core.Ast.MethodDefinition methodDefinition:
+                    BuildMethodSignature(classDefinition, methodDefinition);
+                    break;
+            }
+        }
+    }
 
+    private void BuildMethodSignature(TypeDefinitionHandle cl, Core.Ast.MethodDefinition methodDefinition)
+    {
         var signature = new BlobBuilder();
+
+        Action<ReturnTypeEncoder> returnType = (r) => r.Void();
 
         new BlobEncoder(signature)
             .MethodSignature()
-            .Parameters(0, returnType => returnType.Void(), parameters => { });
+            .Parameters(0, returnType, parameters => { });
+
+        var attrs = MethodAttributes.HideBySig;
+        if (methodDefinition.Modifiers.Contains(Modifier.Static))
+            attrs |= MethodAttributes.Static;
+
+        if (methodDefinition.Modifiers.Contains(Modifier.Public))
+            attrs |= MethodAttributes.Public;
+        else if (methodDefinition.Modifiers.Contains(Modifier.Private))
+            attrs |= MethodAttributes.Private;
 
         MethodDefinitionHandle mainMethodDef = MetadataBuilder.AddMethodDefinition(
-            MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
+            attrs,
             MethodImplAttributes.IL,
-            MetadataBuilder.GetOrAddString(functionDefinition.Name),
+            MetadataBuilder.GetOrAddString(methodDefinition.Name),
             MetadataBuilder.GetOrAddBlob(signature),
             -1,
             default(ParameterHandle));
-    }
-
-    private static BlobBuilder BuildSignature(Action<BlobEncoder> action)
-    {
-        var builder = new BlobBuilder();
-        action(new BlobEncoder(builder));
-        return builder;
     }
 }
