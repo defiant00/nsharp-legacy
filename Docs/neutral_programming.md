@@ -1,6 +1,6 @@
 # Neutral Programming
 
-Neutral programming is a simple concept - as a developer I care about programming constructs: things like loops, classes, and functions. What I _don't_ care about is how others create those things. It shouldn't matter to me how you format your code, or even what language you use. And by the same token, I should be able to see and edit the code as I prefer, without affecting my ability to collaborate with others.
+Neutral programming is a simple concept - as a developer I care about programming constructs: things like loops, classes, and methods. What I _don't_ care about is how others create those things. It shouldn't matter to me how you format your code, or even what language you use. And by the same token, I should be able to see and edit the code as I prefer, without affecting my ability to collaborate with others.
 
 We achieve this with two main steps. First is a syntax tree that keeps comments and  basic formatting information. This way we can store programming constructs in a language-independent way. The second piece is a few simple requirements that all language processors must comply with:
 

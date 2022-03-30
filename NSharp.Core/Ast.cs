@@ -160,32 +160,6 @@ public partial class For : Statement
     public For(Position position) : base(position) { }
 }
 
-public partial class FunctionCall : Expression
-{
-    public Expression Target { get; set; }
-    public List<Expression> Parameters { get; set; } = new();
-
-    public FunctionCall(Position position, Expression target) : base(position)
-    {
-        Target = target;
-    }
-}
-
-public partial class FunctionDefinition : Statement
-{
-    public List<Modifier> Modifiers { get; set; }
-    public Expression? ReturnType { get; set; }
-    public string Name { get; set; }
-    public List<Parameter> Parameters { get; set; } = new();
-    public List<Statement> Statements { get; set; } = new();
-
-    public FunctionDefinition(Position position, List<Modifier> modifiers, string name) : base(position)
-    {
-        Modifiers = modifiers;
-        Name = name;
-    }
-}
-
 public partial class Identifier : Expression
 {
     public List<IdentifierPart> Parts { get; set; } = new();
@@ -236,6 +210,32 @@ public partial class LiteralToken : Expression
     public LiteralToken(Position position, Literal token) : base(position)
     {
         Token = token;
+    }
+}
+
+public partial class MethodCall : Expression
+{
+    public Expression Target { get; set; }
+    public List<Expression> Parameters { get; set; } = new();
+
+    public MethodCall(Position position, Expression target) : base(position)
+    {
+        Target = target;
+    }
+}
+
+public partial class MethodDefinition : Statement
+{
+    public List<Modifier> Modifiers { get; set; }
+    public Expression? ReturnType { get; set; }
+    public string Name { get; set; }
+    public List<Parameter> Parameters { get; set; } = new();
+    public List<Statement> Statements { get; set; } = new();
+
+    public MethodDefinition(Position position, List<Modifier> modifiers, string name) : base(position)
+    {
+        Modifiers = modifiers;
+        Name = name;
     }
 }
 

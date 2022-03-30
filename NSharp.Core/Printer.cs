@@ -109,21 +109,6 @@ public partial class For
     }
 }
 
-public partial class FunctionCall
-{
-    public override string ToString() => $"{Target}({string.Join(", ", Parameters)})";
-}
-
-public partial class FunctionDefinition
-{
-    public override void Print(int indent)
-    {
-        WriteLineIndented(indent, $"Function: {string.Join(" ", Modifiers)} {ReturnType?.ToString() ?? "void"} {Name}({string.Join(", ", Parameters)})");
-        foreach (var statement in Statements)
-            statement.Print(indent + 1);
-    }
-}
-
 public partial class Identifier
 {
     public string ToDottedString() => string.Join(".", Parts.Select(p => p.Value));
@@ -160,6 +145,21 @@ public partial class Import
 public partial class LiteralToken
 {
     public override string ToString() => Token.ToString();
+}
+
+public partial class MethodCall
+{
+    public override string ToString() => $"{Target}({string.Join(", ", Parameters)})";
+}
+
+public partial class MethodDefinition
+{
+    public override void Print(int indent)
+    {
+        WriteLineIndented(indent, $"Method: {string.Join(" ", Modifiers)} {ReturnType?.ToString() ?? "void"} {Name}({string.Join(", ", Parameters)})");
+        foreach (var statement in Statements)
+            statement.Print(indent + 1);
+    }
 }
 
 public partial class Namespace

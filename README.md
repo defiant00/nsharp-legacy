@@ -20,7 +20,8 @@ Numbers                 | Both |        |         |
 Hex                     |      |        |         |
 Binary                  |      |        |         |
 String Interpolation    | Both |        |         |
-Function Calls          | Both |        |         |
+Method Definitions      | Both |        |         |
+Method Calls            | Both |        |         |
 Accessors               |      |        |         |
 Generics                | Both |        |         |
 If                      | Both |        |         |
@@ -33,7 +34,6 @@ Class Definition        | Both |        |         |
 Interface Definition    |      |        |         |
 Struct Definition       |      |        |         |
 Enum Definition         |      |        |         |
-Function Definition     | Both |        |         |
 Properties              | Both |        |         |
 Getters and Setters     |      |        |         |
 Types                   |      |        |         |

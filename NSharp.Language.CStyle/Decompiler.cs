@@ -37,11 +37,11 @@ public static class Decompiler
             case Core.Ast.File file:
                 ProcessFile(sb, indent, file);
                 break;
-            case FunctionDefinition functionDef:
-                ProcessFunctionDefinition(sb, indent, functionDef);
-                break;
             case If ifStatement:
                 ProcessIf(sb, indent, ifStatement);
+                break;
+            case MethodDefinition methodDef:
+                ProcessMethodDefinition(sb, indent, methodDef);
                 break;
             case Namespace ns:
                 ProcessNamespace(sb, indent, ns);
@@ -140,26 +140,6 @@ public static class Decompiler
         ProcessStatements(sb, indent, file.Statements);
     }
 
-    private static void ProcessFunctionDefinition(StringBuilder sb, int indent, FunctionDefinition functionDef)
-    {
-        sb.AppendModifiersIndented(indent, functionDef.Modifiers);
-        ProcessExpression(sb, functionDef.ReturnType);
-        sb.Append($" {functionDef.Name.GetLiteral()}(");
-        if (functionDef.Parameters.Count > 0)
-        {
-            ProcessParameter(sb, functionDef.Parameters[0]);
-            for (int i = 1; i < functionDef.Parameters.Count; i++)
-            {
-                sb.Append(", ");
-                ProcessParameter(sb, functionDef.Parameters[i]);
-            }
-        }
-        sb.AppendLine(")");
-        sb.AppendLineIndented(indent, "{");
-        ProcessStatements(sb, indent + 1, functionDef.Statements);
-        sb.AppendLineIndented(indent, "}");
-    }
-
     private static void ProcessIdentifier(StringBuilder sb, Identifier identifier)
     {
         ProcessIdentifierPart(sb, identifier.Parts[0]);
@@ -201,6 +181,26 @@ public static class Decompiler
             Literal.True => "true",
             _ => $"[{literalToken.Token}]",
         });
+    }
+
+    private static void ProcessMethodDefinition(StringBuilder sb, int indent, MethodDefinition methodDef)
+    {
+        sb.AppendModifiersIndented(indent, methodDef.Modifiers);
+        ProcessExpression(sb, methodDef.ReturnType);
+        sb.Append($" {methodDef.Name.GetLiteral()}(");
+        if (methodDef.Parameters.Count > 0)
+        {
+            ProcessParameter(sb, methodDef.Parameters[0]);
+            for (int i = 1; i < methodDef.Parameters.Count; i++)
+            {
+                sb.Append(", ");
+                ProcessParameter(sb, methodDef.Parameters[i]);
+            }
+        }
+        sb.AppendLine(")");
+        sb.AppendLineIndented(indent, "{");
+        ProcessStatements(sb, indent + 1, methodDef.Statements);
+        sb.AppendLineIndented(indent, "}");
     }
 
     private static void ProcessNamespace(StringBuilder sb, int indent, Namespace ns)

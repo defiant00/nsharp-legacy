@@ -153,7 +153,7 @@ public class Parser
 
         res = Accept(TokenType.Dedent);
         if (res.Failure)
-            return InvalidTokenErrorStatement($"Invalid token in function {classResult.Name}", res);
+            return InvalidTokenErrorStatement($"Invalid token in method {classResult.Name}", res);
 
         return new ParseResult<Statement>(classResult);
     }
@@ -206,7 +206,7 @@ public class Parser
         if (res.Failure)
             return InvalidTokenErrorStatement("Invalid token in class", res);
 
-        var functionDef = new FunctionDefinition(nameToken.Position, modifiers, nameToken.Value) { ReturnType = type?.Result };
+        var methodDef = new MethodDefinition(nameToken.Position, modifiers, nameToken.Value) { ReturnType = type?.Result };
 
         while (Peek.Type != TokenType.RightParenthesis)
         {
@@ -217,7 +217,7 @@ public class Parser
                 return ErrorStatement($"Invalid token in parameters: {errorToken}", errorToken.Position);
             }
             if (!paramType.Error)
-                functionDef.Parameters.Add(new Parameter(paramType.Result.Position, paramType.Result, Next().Value));
+                methodDef.Parameters.Add(new Parameter(paramType.Result.Position, paramType.Result, Next().Value));
 
             Accept(TokenType.Comma);
         }
@@ -227,13 +227,13 @@ public class Parser
             return InvalidTokenErrorStatement("Invalid token in class", res);
 
         while (Peek.Type != TokenType.Dedent)
-            functionDef.Statements.Add(ParseFunctionStatement().Result);
+            methodDef.Statements.Add(ParseMethodStatement().Result);
 
         res = Accept(TokenType.Dedent);
         if (res.Failure)
-            return InvalidTokenErrorStatement($"Invalid token in function {functionDef.Name}", res);
+            return InvalidTokenErrorStatement($"Invalid token in method {methodDef.Name}", res);
 
-        return new ParseResult<Statement>(functionDef);
+        return new ParseResult<Statement>(methodDef);
     }
 
     private ParseResult<Statement> ParseComment()
@@ -354,46 +354,6 @@ public class Parser
         return new ParseResult<Statement>(file, error);
     }
 
-    private ParseResult<Expression> ParseFunctionCall(Expression target)
-    {
-        var functionCall = new FunctionCall(target.Position, target);
-        var res = Accept(TokenType.LeftParenthesis);
-        if (res.Failure)
-            return InvalidTokenErrorExpression("Invalid token in function call", res);
-
-        if (Peek.Type != TokenType.RightParenthesis)
-        {
-            var paramExpr = ParseExpression();
-            if (paramExpr.Error)
-                return paramExpr;
-            functionCall.Parameters.Add(paramExpr.Result);
-            while (Accept(TokenType.Comma).Success)
-            {
-                paramExpr = ParseExpression();
-                if (paramExpr.Error)
-                    return paramExpr;
-                functionCall.Parameters.Add(paramExpr.Result);
-            }
-        }
-
-        res = Accept(TokenType.RightParenthesis);
-        if (res.Failure)
-            return InvalidTokenErrorExpression("Invalid token in function call", res);
-
-        return new ParseResult<Expression>(functionCall);
-    }
-
-    private ParseResult<Statement> ParseFunctionStatement() =>
-        Peek.Type switch
-        {
-            TokenType.Break => ParseBreak(),
-            TokenType.Comment => ParseComment(),
-            TokenType.Continue => ParseContinue(),
-            TokenType.EOL => ParseSpace(),
-            TokenType.If => ParseIf(),
-            _ => ParseExpressionStatement(),
-        };
-
     private ParseResult<Expression> ParseIdentifier()
     {
         var start = Peek.Position;
@@ -479,7 +439,7 @@ public class Parser
 
         while (Peek.Type != TokenType.Dedent)
         {
-            var statement = ParseFunctionStatement();
+            var statement = ParseMethodStatement();
             if (statement.Error)
                 return statement;
             ifStatement.Statements.Add(statement.Result);
@@ -505,7 +465,7 @@ public class Parser
 
                 while (Peek.Type != TokenType.Dedent)
                 {
-                    var statement = ParseFunctionStatement();
+                    var statement = ParseMethodStatement();
                     if (statement.Error)
                         return statement;
                     ifStatement.Else.Add(statement.Result);
@@ -542,6 +502,46 @@ public class Parser
         Next();
         return ErrorStatement("Interface parsing not supported yet", new Position());
     }
+
+    private ParseResult<Expression> ParseMethodCall(Expression target)
+    {
+        var methodCall = new MethodCall(target.Position, target);
+        var res = Accept(TokenType.LeftParenthesis);
+        if (res.Failure)
+            return InvalidTokenErrorExpression("Invalid token in method call", res);
+
+        if (Peek.Type != TokenType.RightParenthesis)
+        {
+            var paramExpr = ParseExpression();
+            if (paramExpr.Error)
+                return paramExpr;
+            methodCall.Parameters.Add(paramExpr.Result);
+            while (Accept(TokenType.Comma).Success)
+            {
+                paramExpr = ParseExpression();
+                if (paramExpr.Error)
+                    return paramExpr;
+                methodCall.Parameters.Add(paramExpr.Result);
+            }
+        }
+
+        res = Accept(TokenType.RightParenthesis);
+        if (res.Failure)
+            return InvalidTokenErrorExpression("Invalid token in method call", res);
+
+        return new ParseResult<Expression>(methodCall);
+    }
+
+    private ParseResult<Statement> ParseMethodStatement() =>
+        Peek.Type switch
+        {
+            TokenType.Break => ParseBreak(),
+            TokenType.Comment => ParseComment(),
+            TokenType.Continue => ParseContinue(),
+            TokenType.EOL => ParseSpace(),
+            TokenType.If => ParseIf(),
+            _ => ParseExpressionStatement(),
+        };
 
     private ParseResult<Statement> ParseNamespace()
     {
@@ -595,7 +595,7 @@ public class Parser
             return leftResult;
 
         if (Peek.Type == TokenType.LeftParenthesis)
-            leftResult = ParseFunctionCall(leftResult.Result);
+            leftResult = ParseMethodCall(leftResult.Result);
 
         return leftResult;
     }

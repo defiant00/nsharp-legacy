@@ -51,14 +51,14 @@ public class Decompiler
             case Core.Ast.File file:
                 ProcessFile(indent, file);
                 break;
-            case FunctionDefinition functionDef:
-                ProcessFunctionDefinition(indent, functionDef);
-                break;
             case If ifStatement:
                 ProcessIf(indent, ifStatement);
                 break;
             case Import import:
                 ProcessImport(indent, import);
+                break;
+            case MethodDefinition methodDef:
+                ProcessMethodDefinition(indent, methodDef);
                 break;
             case Namespace ns:
                 ProcessNamespace(indent, ns);
@@ -99,14 +99,14 @@ public class Decompiler
             case CurrentObjectInstance:
                 Buffer.Append("this");
                 break;
-            case FunctionCall functionCall:
-                ProcessFunctionCall(indent, functionCall);
-                break;
             case Identifier identifier:
                 ProcessIdentifier(identifier);
                 break;
             case LiteralToken literalToken:
                 ProcessLiteralToken(literalToken);
+                break;
+            case MethodCall methodCall:
+                ProcessMethodCall(indent, methodCall);
                 break;
             case Number n:
                 Buffer.Append(n.Value);
@@ -184,60 +184,6 @@ public class Decompiler
 
     private void ProcessFile(int indent, Core.Ast.File file) => ProcessStatements(indent, file.Statements);
 
-    private void ProcessFunctionCall(int indent, FunctionCall functionCall)
-    {
-        ProcessExpression(indent, functionCall.Target);
-        Buffer.Append("(");
-        if (functionCall.Parameters.Count > 0)
-        {
-            ProcessExpression(indent, functionCall.Parameters[0]);
-            for (int i = 1; i < functionCall.Parameters.Count; i++)
-            {
-                Buffer.Append(", ");
-                ProcessExpression(indent, functionCall.Parameters[i]);
-            }
-        }
-        Buffer.Append(")");
-    }
-
-    private void ProcessFunctionDefinition(int indent, FunctionDefinition functionDef)
-    {
-        AppendModifiersIndented(indent, functionDef.Modifiers);
-        ProcessExpression(indent, functionDef.ReturnType);
-        Buffer.Append(" ");
-        Buffer.Append(functionDef.Name.GetLiteral());
-        Buffer.Append("(");
-        bool paramMultiline = Settings.ParamMultiline && functionDef.Parameters.Count > 1;
-        if (paramMultiline)
-        {
-            Buffer.AppendLine();
-            Indent(indent + 1);
-        }
-        if (functionDef.Parameters.Count > 0)
-        {
-            ProcessParameter(indent, functionDef.Parameters[0]);
-            for (int i = 1; i < functionDef.Parameters.Count; i++)
-            {
-                Buffer.Append(",");
-                if (paramMultiline)
-                {
-                    Buffer.AppendLine();
-                    Indent(indent + 1);
-                }
-                else
-                    Buffer.Append(" ");
-                ProcessParameter(indent, functionDef.Parameters[i]);
-            }
-        }
-        if (paramMultiline)
-        {
-            Buffer.AppendLine();
-            Indent(indent);
-        }
-        Buffer.AppendLine(")");
-        ProcessStatements(indent + 1, functionDef.Statements);
-    }
-
     private void ProcessIdentifier(Identifier identifier)
     {
         ProcessIdentifierPart(identifier.Parts[0]);
@@ -308,6 +254,60 @@ public class Decompiler
             Literal.True => "true",
             _ => $"[{literalToken.Token}]",
         });
+    }
+
+    private void ProcessMethodCall(int indent, MethodCall methodCall)
+    {
+        ProcessExpression(indent, methodCall.Target);
+        Buffer.Append("(");
+        if (methodCall.Parameters.Count > 0)
+        {
+            ProcessExpression(indent, methodCall.Parameters[0]);
+            for (int i = 1; i < methodCall.Parameters.Count; i++)
+            {
+                Buffer.Append(", ");
+                ProcessExpression(indent, methodCall.Parameters[i]);
+            }
+        }
+        Buffer.Append(")");
+    }
+
+    private void ProcessMethodDefinition(int indent, MethodDefinition methodDef)
+    {
+        AppendModifiersIndented(indent, methodDef.Modifiers);
+        ProcessExpression(indent, methodDef.ReturnType);
+        Buffer.Append(" ");
+        Buffer.Append(methodDef.Name.GetLiteral());
+        Buffer.Append("(");
+        bool paramMultiline = Settings.ParamMultiline && methodDef.Parameters.Count > 1;
+        if (paramMultiline)
+        {
+            Buffer.AppendLine();
+            Indent(indent + 1);
+        }
+        if (methodDef.Parameters.Count > 0)
+        {
+            ProcessParameter(indent, methodDef.Parameters[0]);
+            for (int i = 1; i < methodDef.Parameters.Count; i++)
+            {
+                Buffer.Append(",");
+                if (paramMultiline)
+                {
+                    Buffer.AppendLine();
+                    Indent(indent + 1);
+                }
+                else
+                    Buffer.Append(" ");
+                ProcessParameter(indent, methodDef.Parameters[i]);
+            }
+        }
+        if (paramMultiline)
+        {
+            Buffer.AppendLine();
+            Indent(indent);
+        }
+        Buffer.AppendLine(")");
+        ProcessStatements(indent + 1, methodDef.Statements);
     }
 
     private void ProcessNamespace(int indent, Namespace ns)
