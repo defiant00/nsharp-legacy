@@ -2,9 +2,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\NSharp.Core\NSharp.Core.csproj" />
-    <ProjectReference Include="..\NSharp.Language.CStyle\NSharp.Language.CStyle.csproj" />
     <ProjectReference Include="..\NSharp.Language.Min\NSharp.Language.Min.csproj" />
-    <ProjectReference Include="..\NSharp.Language.PyStyle\NSharp.Language.PyStyle.csproj" />
   </ItemGroup>
 
   <PropertyGroup>

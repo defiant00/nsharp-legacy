@@ -1,8 +1,6 @@
 ﻿using System.Diagnostics;
 using NSharp.Core;
-using NSharp.Language.CStyle;
 using NSharp.Language.Min;
-using NSharp.Language.PyStyle;
 
 namespace NSharp.Compiler;
 
@@ -208,14 +206,8 @@ public static class Program
         {
             switch (settings[LANGUAGE_KEY])
             {
-                case "CStyle":
-                    lang = new CStyle(settings);
-                    break;
                 case "Min":
                     lang = new Min(settings);
-                    break;
-                case "PyStyle":
-                    lang = new PyStyle(settings);
                     break;
             }
         }
