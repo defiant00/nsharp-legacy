@@ -22,6 +22,7 @@ public class Compiler
     private InstructionEncoder IlEncoder { get; set; }
     private Dictionary<string, TypeReferenceHandle> Types { get; set; } = new();
     private Dictionary<string, TypeDefinitionHandle> TypeDefinitions { get; set; } = new();
+    private Dictionary<string, MemberReferenceHandle> Methods { get; set; } = new();
 
     private static readonly Guid AssemblyGuid = new Guid("87D4DBE1-1143-4FAD-AAB3-1001F92068E6");
     private static readonly BlobContentId AssemblyContentId = new BlobContentId(AssemblyGuid, 0x04030201);
@@ -76,12 +77,20 @@ public class Compiler
             default,
             default,
             MetadataBuilder.GetOrAddString("<Module>"),
-            default(EntityHandle),
+            default,
             MetadataTokens.FieldDefinitionHandle(1),
             MetadataTokens.MethodDefinitionHandle(1));
 
         var runtimeAssemblyRef = MetadataBuilder.AddAssemblyReference(
             MetadataBuilder.GetOrAddString("System.Runtime"),
+            new Version(6, 0, 0, 0),
+            default,
+            MetadataBuilder.GetOrAddBlob(new byte[] { 0xB0, 0x3F, 0x5F, 0x7F, 0x11, 0xD5, 0x0A, 0x3A }),
+            default,
+            default);
+
+        var consoleAssemblyRef = MetadataBuilder.AddAssemblyReference(
+            MetadataBuilder.GetOrAddString("System.Console"),
             new Version(6, 0, 0, 0),
             default,
             MetadataBuilder.GetOrAddBlob(new byte[] { 0xB0, 0x3F, 0x5F, 0x7F, 0x11, 0xD5, 0x0A, 0x3A }),
@@ -94,9 +103,17 @@ public class Compiler
             MetadataBuilder.GetOrAddString("Object"));
 
         Types["System.Console"] = MetadataBuilder.AddTypeReference(
-            runtimeAssemblyRef,
+            consoleAssemblyRef,
             MetadataBuilder.GetOrAddString("System"),
             MetadataBuilder.GetOrAddString("Console"));
+
+        var consoleWriteLineSig = new BlobBuilder();
+        new BlobEncoder(consoleWriteLineSig)
+            .MethodSignature()
+            .Parameters(1, r => r.Void(), p => p.AddParameter().Type().String());
+        Methods["System.Console.WriteLine"] = MetadataBuilder.AddMemberReference(Types["System.Console"],
+            MetadataBuilder.GetOrAddString("WriteLine"),
+            MetadataBuilder.GetOrAddBlob(consoleWriteLineSig));
 
         var targetFrameworkTypeRef = MetadataBuilder.AddTypeReference(
             runtimeAssemblyRef,
@@ -136,13 +153,9 @@ public class Compiler
 
     public void Save()
     {
-        using var peStream = new FileStream("test.dll", FileMode.OpenOrCreate, FileAccess.ReadWrite);
+        using var peStream = new FileStream("c:\\test\\test.dll", FileMode.Create, FileAccess.ReadWrite);
 
-        var peHeaderBuilder = new PEHeaderBuilder(
-            imageCharacteristics:
-                Characteristics.Dll |
-                Characteristics.ExecutableImage |
-                Characteristics.LargeAddressAware);
+        var peHeaderBuilder = new PEHeaderBuilder(imageCharacteristics: Characteristics.Dll | Characteristics.ExecutableImage | Characteristics.LargeAddressAware);
 
         var peBuilder = new ManagedPEBuilder(
             peHeaderBuilder,
@@ -195,7 +208,19 @@ public class Compiler
         else if (methodDefinition.Modifiers.Contains(Modifier.Private))
             attrs |= MethodAttributes.Private;
 
-        IlEncoder.OpCode(ILOpCode.Nop);
+
+        foreach (var statement in methodDefinition.Statements)
+        {
+            switch (statement)
+            {
+                case ExpressionStatement expressionStatement:
+                    Emit(expressionStatement.Expression);
+                    break;
+            }
+        }
+
+        IlEncoder.OpCode(ILOpCode.Ret);
+
         int bodyOffset = MethodBodyStream.AddMethodBody(IlEncoder);
         IlEncoder.CodeBuilder.Clear();
 
@@ -206,5 +231,22 @@ public class Compiler
             MetadataBuilder.GetOrAddBlob(signature),
             bodyOffset,
             default);
+    }
+
+    private void Emit(Expression expression)
+    {
+        switch (expression)
+        {
+            case MethodCall methodCall:
+                foreach (var param in methodCall.Parameters)
+                    Emit(param);
+                string key = methodCall.Target.ToString() ?? "";
+                if (Methods.ContainsKey(key))
+                    IlEncoder.Call(Methods[key]);
+                break;
+            case Core.Ast.String str:
+                IlEncoder.LoadString(MetadataBuilder.GetOrAddUserString(str.ToString()));
+                break;
+        }
     }
 }
