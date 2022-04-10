@@ -4,9 +4,5 @@ ns NSharp.Test
 public class MyClass
     public static void Main()
         System.Console.WriteLine("Hello World!")
-    private void Another()
-        ; empty
-
-public class SecondClass
-    protected void Test()
-        ; empty
+        System.Console.WriteLine("{1} first")
+        System.Console.WriteLine("second {3} third {4} fourth")

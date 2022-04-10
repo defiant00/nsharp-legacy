@@ -2,6 +2,7 @@ using System.Reflection;
 using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
 using System.Reflection.PortableExecutable;
+using System.Text;
 using NSharp.Core;
 using NSharp.Core.Ast;
 
@@ -20,9 +21,9 @@ public class Compiler
     private MetadataBuilder MetadataBuilder { get; set; }
     private MethodBodyStreamEncoder MethodBodyStream { get; set; }
     private InstructionEncoder IlEncoder { get; set; }
-    private Dictionary<string, TypeReferenceHandle> Types { get; set; } = new();
-    private Dictionary<string, TypeDefinitionHandle> TypeDefinitions { get; set; } = new();
-    private Dictionary<string, MemberReferenceHandle> Methods { get; set; } = new();
+    private MethodDefinitionHandle? EntryPoint { get; set; }
+    private Dictionary<string, EntityHandle> Types { get; set; } = new();
+    private Dictionary<string, EntityHandle> Methods { get; set; } = new();
 
     private static readonly Guid AssemblyGuid = new Guid("87D4DBE1-1143-4FAD-AAB3-1001F92068E6");
     private static readonly BlobContentId AssemblyContentId = new BlobContentId(AssemblyGuid, 0x04030201);
@@ -115,6 +116,61 @@ public class Compiler
             MetadataBuilder.GetOrAddString("WriteLine"),
             MetadataBuilder.GetOrAddBlob(consoleWriteLineSig));
 
+        var defaultInterpolatedStringHandlerTypeRef = MetadataBuilder.AddTypeReference(
+            runtimeAssemblyRef,
+            MetadataBuilder.GetOrAddString("System.Runtime.CompilerServices"),
+            MetadataBuilder.GetOrAddString("DefaultInterpolatedStringHandler"));
+        Types["System.Runtime.CompilerServices.DefaultInterpolatedStringHandler"] = defaultInterpolatedStringHandlerTypeRef;
+
+        var fnSig = new BlobBuilder();
+        new BlobEncoder(fnSig)
+            .MethodSignature(isInstanceMethod: true)
+            .Parameters(2, r => r.Void(), p =>
+                {
+                    p.AddParameter().Type().Int32();
+                    p.AddParameter().Type().Int32();
+                });
+        Methods["System.Runtime.CompilerServices.DefaultInterpolatedStringHandler..ctor"] = MetadataBuilder.AddMemberReference(
+            defaultInterpolatedStringHandlerTypeRef,
+            MetadataBuilder.GetOrAddString(".ctor"),
+            MetadataBuilder.GetOrAddBlob(fnSig));
+
+        fnSig = new BlobBuilder();
+        new BlobEncoder(fnSig)
+            .MethodSignature(genericParameterCount: 1, isInstanceMethod: true)
+            .Parameters(1, r => r.Void(), p =>
+            {
+                p.AddParameter().Type().GenericMethodTypeParameter(0);
+            });
+
+        Methods["System.Runtime.CompilerServices.DefaultInterpolatedStringHandler.AppendFormatted{T}"] = MetadataBuilder.AddMemberReference(
+            defaultInterpolatedStringHandlerTypeRef,
+            MetadataBuilder.GetOrAddString("AppendFormatted"),
+            MetadataBuilder.GetOrAddBlob(fnSig));
+        fnSig = new BlobBuilder();
+        new BlobEncoder(fnSig).MethodSpecificationSignature(1).AddArgument().Int32();
+        Methods["System.Runtime.CompilerServices.DefaultInterpolatedStringHandler.AppendFormatted{Int32}"] = MetadataBuilder.AddMethodSpecification(
+            Methods["System.Runtime.CompilerServices.DefaultInterpolatedStringHandler.AppendFormatted{T}"],
+            MetadataBuilder.GetOrAddBlob(fnSig));
+
+        fnSig = new BlobBuilder();
+        new BlobEncoder(fnSig)
+            .MethodSignature(isInstanceMethod: true)
+            .Parameters(1, r => r.Void(), p => p.AddParameter().Type().String());
+        Methods["System.Runtime.CompilerServices.DefaultInterpolatedStringHandler.AppendLiteral"] = MetadataBuilder.AddMemberReference(
+            defaultInterpolatedStringHandlerTypeRef,
+            MetadataBuilder.GetOrAddString("AppendLiteral"),
+            MetadataBuilder.GetOrAddBlob(fnSig));
+
+        fnSig = new BlobBuilder();
+        new BlobEncoder(fnSig)
+            .MethodSignature(isInstanceMethod: true)
+            .Parameters(0, r => r.Type().String(), p => { });
+        Methods["System.Runtime.CompilerServices.DefaultInterpolatedStringHandler.ToStringAndClear"] = MetadataBuilder.AddMemberReference(
+            defaultInterpolatedStringHandlerTypeRef,
+            MetadataBuilder.GetOrAddString("ToStringAndClear"),
+            MetadataBuilder.GetOrAddBlob(fnSig));
+
         var targetFrameworkTypeRef = MetadataBuilder.AddTypeReference(
             runtimeAssemblyRef,
             MetadataBuilder.GetOrAddString("System.Runtime.Versioning"),
@@ -161,11 +217,22 @@ public class Compiler
             peHeaderBuilder,
             new MetadataRootBuilder(MetadataBuilder),
             IlBuilder,
+            entryPoint: EntryPoint ?? default,
             deterministicIdProvider: content => AssemblyContentId);
 
         var peBlob = new BlobBuilder();
         var contentId = peBuilder.Serialize(peBlob);
         peBlob.WriteContentTo(peStream);
+
+        System.IO.File.WriteAllText("c:\\test\\test.runtimeconfig.json", @"{
+  ""runtimeOptions"": {
+    ""tfm"": ""net6.0"",
+    ""framework"": {
+      ""name"": ""Microsoft.NETCore.App"",
+      ""version"": ""6.0.0""
+    }
+  }
+}");
     }
 
     private void CompileClass(CompilerState state, Class cl)
@@ -175,7 +242,7 @@ public class Compiler
         if (cl.Modifiers.Contains(Modifier.Public))
             attrs |= TypeAttributes.Public;
 
-        TypeDefinitions[fullName] = MetadataBuilder.AddTypeDefinition(
+        Types[fullName] = MetadataBuilder.AddTypeDefinition(
             attrs,
             MetadataBuilder.GetOrAddString(cl.Namespace),
             MetadataBuilder.GetOrAddString(cl.Name),
@@ -192,6 +259,8 @@ public class Compiler
 
     private void CompileMethod(Core.Ast.MethodDefinition methodDefinition)
     {
+        bool isEntryPoint = false;
+
         Action<ReturnTypeEncoder> returnType = (r) => r.Void();
 
         var signature = new BlobBuilder();
@@ -201,13 +270,15 @@ public class Compiler
 
         var attrs = MethodAttributes.HideBySig;
         if (methodDefinition.Modifiers.Contains(Modifier.Static))
+        {
             attrs |= MethodAttributes.Static;
+            isEntryPoint = methodDefinition.Name == "Main";
+        }
 
         if (methodDefinition.Modifiers.Contains(Modifier.Public))
             attrs |= MethodAttributes.Public;
         else if (methodDefinition.Modifiers.Contains(Modifier.Private))
             attrs |= MethodAttributes.Private;
-
 
         foreach (var statement in methodDefinition.Statements)
         {
@@ -221,16 +292,25 @@ public class Compiler
 
         IlEncoder.OpCode(ILOpCode.Ret);
 
-        int bodyOffset = MethodBodyStream.AddMethodBody(IlEncoder);
+        var localBuilder = new BlobBuilder();
+        new BlobEncoder(localBuilder)
+            .LocalVariableSignature(1)
+            .AddVariable().Type().Type(Types["System.Runtime.CompilerServices.DefaultInterpolatedStringHandler"], true);
+        var locals = MetadataBuilder.AddStandaloneSignature(MetadataBuilder.GetOrAddBlob(localBuilder));
+
+        int bodyOffset = MethodBodyStream.AddMethodBody(IlEncoder, localVariablesSignature: locals);
         IlEncoder.CodeBuilder.Clear();
 
-        MethodDefinitionHandle mainMethodDef = MetadataBuilder.AddMethodDefinition(
+        MethodDefinitionHandle methodDef = MetadataBuilder.AddMethodDefinition(
             attrs,
             MethodImplAttributes.IL,
             MetadataBuilder.GetOrAddString(methodDefinition.Name),
             MetadataBuilder.GetOrAddBlob(signature),
             bodyOffset,
             default);
+
+        if (isEntryPoint)
+            EntryPoint = methodDef;
     }
 
     private void Emit(Expression expression)
@@ -244,9 +324,83 @@ public class Compiler
                 if (Methods.ContainsKey(key))
                     IlEncoder.Call(Methods[key]);
                 break;
-            case Core.Ast.String str:
-                IlEncoder.LoadString(MetadataBuilder.GetOrAddUserString(str.ToString()));
+            case Number number:
+                IlEncoder.LoadConstantI4(Convert.ToInt32(number.Value));
                 break;
+            case Core.Ast.String str:
+                EmitString(str);
+                break;
+        }
+    }
+
+    private void EmitString(Core.Ast.String str)
+    {
+        int stringLength = 0;
+        int expressionCount = 0;
+        foreach (var line in str.Lines)
+        {
+            foreach (var expr in line)
+            {
+                if (expr is StringLiteral stringLiteral)
+                    stringLength += stringLiteral.Value.Length;
+                else
+                    expressionCount++;
+            }
+        }
+        stringLength += (str.Lines.Count - 1) * Environment.NewLine.Length;
+
+        if (expressionCount > 0)
+        {
+            IlEncoder.LoadLocalAddress(0);
+            IlEncoder.LoadConstantI4(stringLength);
+            IlEncoder.LoadConstantI4(expressionCount);
+            IlEncoder.Call(Methods["System.Runtime.CompilerServices.DefaultInterpolatedStringHandler..ctor"]);
+        }
+
+        bool firstLine = true;
+
+        var buffer = new StringBuilder();
+        foreach (var line in str.Lines)
+        {
+            if (!firstLine)
+                buffer.Append(Environment.NewLine);
+            foreach (var expr in line)
+            {
+                if (expr is StringLiteral stringLiteral)
+                    buffer.Append(stringLiteral.Value);
+                else
+                {
+                    if (buffer.Length > 0)
+                    {
+                        // emit the literal string so far
+                        IlEncoder.LoadLocalAddress(0);
+                        IlEncoder.LoadString(MetadataBuilder.GetOrAddUserString(buffer.ToString()));
+                        IlEncoder.Call(Methods["System.Runtime.CompilerServices.DefaultInterpolatedStringHandler.AppendLiteral"]);
+                        buffer.Clear();
+                    }
+
+                    IlEncoder.LoadLocalAddress(0);
+                    Emit(expr);
+                    IlEncoder.Call(Methods["System.Runtime.CompilerServices.DefaultInterpolatedStringHandler.AppendFormatted{Int32}"]);
+                }
+            }
+            firstLine = false;
+        }
+
+        if (expressionCount == 0)
+            IlEncoder.LoadString(MetadataBuilder.GetOrAddUserString(buffer.ToString()));
+        else
+        {
+            if (buffer.Length > 0)
+            {
+                // emit the remaining literal string
+                IlEncoder.LoadLocalAddress(0);
+                IlEncoder.LoadString(MetadataBuilder.GetOrAddUserString(buffer.ToString()));
+                IlEncoder.Call(Methods["System.Runtime.CompilerServices.DefaultInterpolatedStringHandler.AppendLiteral"]);
+            }
+            // finish up the DefaultInterpolatedStringHandler
+            IlEncoder.LoadLocalAddress(0);
+            IlEncoder.Call(Methods["System.Runtime.CompilerServices.DefaultInterpolatedStringHandler.ToStringAndClear"]);
         }
     }
 }
