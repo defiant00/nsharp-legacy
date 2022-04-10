@@ -390,31 +390,27 @@ public class Parser
         var identifierPart = new IdentifierPart(GetToken(res).Position, GetToken(res).Value);
 
         // generics
-        if (Accept(TokenType.Colon).Success)
+        if (Accept(TokenType.LeftCurly).Success)
         {
-            bool parens = Accept(TokenType.LeftParenthesis).Success;
             var typeIdentRes = ParseIdentifier();
             if (!typeIdentRes.Error && typeIdentRes.Result is Identifier typeIdentifier)
             {
                 identifierPart.Types = new();
                 identifierPart.Types.Add(typeIdentifier);
 
-                // check for multiple types and get right parenthesis if the left one is present
-                if (parens)
+                // check for multiple types
+                while (Accept(TokenType.Comma).Success)
                 {
-                    while (Accept(TokenType.Comma).Success)
-                    {
-                        typeIdentRes = ParseIdentifier();
-                        if (!typeIdentRes.Error && typeIdentRes.Result is Identifier nextTypeIdent)
-                            identifierPart.Types.Add(nextTypeIdent);
-                        else
-                            return typeIdentRes;
-                    }
-
-                    res = Accept(TokenType.RightParenthesis);
-                    if (res.Failure)
-                        return InvalidTokenErrorExpression("Invalid token in identifier", res);
+                    typeIdentRes = ParseIdentifier();
+                    if (!typeIdentRes.Error && typeIdentRes.Result is Identifier nextTypeIdent)
+                        identifierPart.Types.Add(nextTypeIdent);
+                    else
+                        return typeIdentRes;
                 }
+
+                res = Accept(TokenType.RightCurly);
+                if (res.Failure)
+                    return InvalidTokenErrorExpression("Invalid token in identifier", res);
             }
             else
                 return typeIdentRes;

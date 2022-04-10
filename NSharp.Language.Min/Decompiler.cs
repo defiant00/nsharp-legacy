@@ -199,18 +199,14 @@ public class Decompiler
         Buffer.Append(identifierPart.Value);
         if (identifierPart.Types != null && identifierPart.Types.Count > 0)
         {
-            Buffer.Append(":");
-            bool parens = Settings.AllParenGenerics || identifierPart.Types.Count > 1;
-            if (parens)
-                Buffer.Append("(");
+            Buffer.Append("{");
             ProcessIdentifier(identifierPart.Types[0]);
             for (int i = 1; i < identifierPart.Types.Count; i++)
             {
                 Buffer.Append(", ");
                 ProcessIdentifier(identifierPart.Types[i]);
             }
-            if (parens)
-                Buffer.Append(")");
+            Buffer.Append("}");
         }
     }
 

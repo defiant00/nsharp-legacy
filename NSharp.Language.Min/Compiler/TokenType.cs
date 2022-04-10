@@ -66,7 +66,8 @@ public enum TokenType
     And,
     Or,
     // in
-    // instanceof
+    // is
+    // as
     BitwiseAnd,
     BitwiseOr,
     BitwiseXor,
