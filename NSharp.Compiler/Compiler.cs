@@ -11,6 +11,8 @@ namespace NSharp.Compiler;
 public class Compiler
 {
     private List<Class> Classes { get; set; } = new();
+    private List<Class> ClassOrder { get; set; } = new();
+    private Dictionary<string, Class> ClassLookup { get; set; } = new();
     // enums
     // interfaces
     // structs
@@ -45,7 +47,9 @@ public class Compiler
             {
                 case Core.Ast.Class cl:
                     // TODO - partial classes
-                    Classes.Add(new Class(currentNamespace, cl));
+                    var newClass = new Class(currentNamespace, cl);
+                    Classes.Add(newClass);
+                    ClassLookup[cl.Name] = newClass;
                     break;
                 // enum
                 // interface
@@ -202,7 +206,11 @@ public class Compiler
 
         var state = new CompilerState();
         foreach (var cl in Classes)
-            CompileClass(state, cl);
+            CompileClassHeader(state, cl);
+
+        state = new CompilerState();
+        foreach (var cl in ClassOrder)
+            CompileClass(cl);
 
         return Diagnostics;
     }
@@ -235,24 +243,55 @@ public class Compiler
 }");
     }
 
-    private void CompileClass(CompilerState state, Class cl)
+    private EntityHandle GetType(CompilerState state, string name)
     {
-        string fullName = cl.Namespace + cl.Name;
+        if (Types.TryGetValue(name, out EntityHandle val))
+            return val;
+
+        // check for a class
+        if (ClassLookup.TryGetValue(name, out Class? cl))
+        {
+            if (cl.Emitting)
+                throw new Exception("Circular reference!");
+            if (cl.Handle == null)
+                CompileClassHeader(state, cl);
+            if (cl.Handle != null)
+                return cl.Handle.Value;
+        }
+
+        // TODO - full type resolution
+        return default;
+    }
+
+    private void CompileClassHeader(CompilerState state, Class cl)
+    {
+        if (cl.Handle != null)
+            return;
+
+        cl.Emitting = true;
+
         var attrs = TypeAttributes.Class | TypeAttributes.AutoLayout | TypeAttributes.BeforeFieldInit;
         if (cl.Modifiers.Contains(Modifier.Public))
             attrs |= TypeAttributes.Public;
 
-        Types[fullName] = MetadataBuilder.AddTypeDefinition(
+        cl.Handle = MetadataBuilder.AddTypeDefinition(
             attrs,
             MetadataBuilder.GetOrAddString(cl.Namespace),
             MetadataBuilder.GetOrAddString(cl.Name),
-            Types["System.Object"],
+            GetType(state, cl.Parent == null ? "System.Object" : cl.Parent.ToDottedString()),
             MetadataTokens.FieldDefinitionHandle(state.FieldDefinitionRow),
             MetadataTokens.MethodDefinitionHandle(state.MethodDefinitionRow));
+        Types[cl.Name] = cl.Handle.Value;
 
         // state.FieldDefinitionRow += cl.Fields.Count;
         state.MethodDefinitionRow += cl.Methods.Count;
 
+        cl.Emitting = false;
+        ClassOrder.Add(cl);
+    }
+
+    private void CompileClass(Class cl)
+    {
         foreach (var method in cl.Methods)
             CompileMethod(method);
     }
@@ -303,7 +342,7 @@ public class Compiler
 
         MethodDefinitionHandle methodDef = MetadataBuilder.AddMethodDefinition(
             attrs,
-            MethodImplAttributes.IL,
+            MethodImplAttributes.IL | MethodImplAttributes.Managed,
             MetadataBuilder.GetOrAddString(methodDefinition.Name),
             MetadataBuilder.GetOrAddBlob(signature),
             bodyOffset,

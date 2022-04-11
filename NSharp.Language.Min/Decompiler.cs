@@ -161,7 +161,13 @@ public class Decompiler
     {
         AppendModifiersIndented(indent, cl.Modifiers);
         Buffer.Append($"class ");
-        Buffer.AppendLine(cl.Name.GetLiteral());
+        Buffer.Append(cl.Name.GetLiteral());
+        if (cl.Parent != null)
+        {
+            Buffer.Append(" : ");
+            ProcessIdentifier(cl.Parent);
+        }
+        Buffer.AppendLine();
         ProcessStatements(indent + 1, cl.Statements);
     }
 

@@ -76,6 +76,7 @@ public partial class Class : Statement
 {
     public List<Modifier> Modifiers { get; set; }
     public string Name { get; set; }
+    public Identifier? Parent { get; set; }
     public List<Statement> Statements { get; set; } = new();
 
     public Class(Position position, List<Modifier> modifiers, string name) : base(position)

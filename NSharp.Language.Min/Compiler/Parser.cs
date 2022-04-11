@@ -144,6 +144,13 @@ public class Parser
 
         var classResult = new Class(GetToken(res, 1).Position, modifiers, GetToken(res, 1).Value);
 
+        if (Accept(TokenType.Colon).Success)
+        {
+            var parentIdent = ParseIdentifier();
+            if (!parentIdent.Error && parentIdent.Result is Identifier pId)
+                classResult.Parent = pId;
+        }
+
         res = Accept(TokenType.EOL, TokenType.Indent);
         if (res.Failure)
             return InvalidTokenErrorStatement("Invalid token in class", res);

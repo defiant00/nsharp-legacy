@@ -9,18 +9,18 @@ Feature                 | Min  | Compile
 Space                   | Both | -
 Comments                | Both | -
 Operators               | Both |
-Order of Operations     | Both |
+Order of Operations     | Both | -
 Assignment              | Both |
 Identifiers             | Both |
 Keyword Identifiers     | Both |
-Strings                 | Both |
+Strings                 | Both | X
 Chars                   | Both |
 Unicode                 |      |
 Numbers                 | Both |
 Hex                     |      |
 Binary                  |      |
-String Interpolation    | Both |
-Method Definitions      | Both |
+String Interpolation    | Both | X
+Method Definitions      | Both | X
 Method Calls            | Both |
 Accessors               |      |
 Generics                | Both |
@@ -34,7 +34,8 @@ Class Definition        | Both |
 Interface Definition    |      |
 Struct Definition       |      |
 Enum Definition         |      |
-Properties              | Both |
+Fields                  | Both |
+Properties              |      |
 Getters and Setters     |      |
 Types                   |      |
 Using                   |      |
