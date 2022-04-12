@@ -101,12 +101,16 @@ public static class Helpers
         ["private"] = TokenType.Private,
         ["static"] = TokenType.Static,
         ["this"] = TokenType.This,
-        ["void"] = TokenType.Void,
         // types
+        ["string"] = TokenType.String,
+
         ["class"] = TokenType.Class,
         ["struct"] = TokenType.Struct,
         ["enum"] = TokenType.Enum,
         ["interface"] = TokenType.Interface,
+        ["fn"] = TokenType.Function,
+        ["var"] = TokenType.Variable,
+        ["from"] = TokenType.From,
         ["return"] = TokenType.Return,
         ["try"] = TokenType.Try,
         ["catch"] = TokenType.Catch,
@@ -159,7 +163,5 @@ public static class Helpers
         ["-"] = TokenType.Subtract,
         ["!"] = TokenType.Not,
         ["~"] = TokenType.BitwiseNot,
-        ["++"] = TokenType.Increment,
-        ["--"] = TokenType.Decrement,
     };
 }

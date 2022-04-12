@@ -9,7 +9,6 @@ public static class TokenHelper
     public static bool IsLiteralExpression(this TokenType type) => type > TokenType.Literal_Expression_Start && type < TokenType.Literal_Expression_End;
     public static bool IsModifier(this TokenType type) => type > TokenType.Modifier_Start && type < TokenType.Modifier_End;
     public static bool IsMultilineOperator(this TokenType type) => type > TokenType.Multiline_Operator_Start && type < TokenType.Multiline_Operator_End;
-    public static bool IsPostOperator(this TokenType type) => type > TokenType.Post_Operator_Start && type < TokenType.Post_Operator_End;
     public static bool IsType(this TokenType type) => type > TokenType.Type_Start && type < TokenType.Type_End;
     public static bool IsUnaryOperator(this TokenType type) => type > TokenType.Unary_Operator_Start && type < TokenType.Unary_Operator_End;
 

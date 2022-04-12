@@ -372,7 +372,7 @@ public class Lexer
             if (c == '"')
             {
                 if (CurrentLength > 0)
-                    Emit(TokenType.String);
+                    Emit(TokenType.StringLiteral);
                 // accept the "
                 Next();
                 Emit(TokenType.StringEnd);
@@ -381,7 +381,7 @@ public class Lexer
             else if (c == '{')
             {
                 if (CurrentLength > 0)
-                    Emit(TokenType.String);
+                    Emit(TokenType.StringLiteral);
                 break;
             }
             else if (c == '\\')

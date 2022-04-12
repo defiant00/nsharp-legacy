@@ -164,7 +164,7 @@ public class Decompiler
         Buffer.Append(cl.Name.GetLiteral());
         if (cl.Parent != null)
         {
-            Buffer.Append(" : ");
+            Buffer.Append(" from ");
             ProcessIdentifier(cl.Parent);
         }
         Buffer.AppendLine();
@@ -192,6 +192,12 @@ public class Decompiler
 
     private void ProcessIdentifier(Identifier identifier)
     {
+        if (identifier.Parts.Count == 2 && identifier.Parts[0].Value == "System" && identifier.Parts[1].Value == "String")
+        {
+            Buffer.Append("string");
+            return;
+        }
+
         ProcessIdentifierPart(identifier.Parts[0]);
         for (int i = 1; i < identifier.Parts.Count; i++)
         {

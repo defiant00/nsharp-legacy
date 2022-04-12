@@ -144,7 +144,7 @@ public class Parser
 
         var classResult = new Class(GetToken(res, 1).Position, modifiers, GetToken(res, 1).Value);
 
-        if (Accept(TokenType.Colon).Success)
+        if (Accept(TokenType.From).Success)
         {
             var parentIdent = ParseIdentifier();
             if (!parentIdent.Error && parentIdent.Result is Identifier pId)
@@ -187,9 +187,8 @@ public class Parser
         if (Peek.Type == TokenType.Class)
             return ParseClass(modifiers);
 
-        bool returnIsVoid = Peek.Type == TokenType.Void;
         ParseResult<Expression>? type = null;
-        if (!returnIsVoid)
+        if (Peek.Type != TokenType.EOL)
         {
             type = ParseType();
             if (type.Error)
@@ -631,7 +630,7 @@ public class Parser
 
             while (Peek.Type != TokenType.StringEnd)
             {
-                if (Peek.Type == TokenType.String)
+                if (Peek.Type == TokenType.StringLiteral)
                 {
                     currentLine.Add(new StringLiteral(Peek.Position, Peek.Value));
                     Next();
@@ -665,6 +664,18 @@ public class Parser
 
     private ParseResult<Expression> ParseType()
     {
+        if (Peek.Type == TokenType.String)
+        {
+            var type = new Identifier(Peek.Position, new IdentifierPart(Peek.Position, "System"));
+            type.Parts.Add(new IdentifierPart(Peek.Position, "String"));
+            Next();
+            return new ParseResult<Expression>(type);
+        }
+
+        // TODO - split this off properly so things that just take dotted text like namespaces
+        // use a separate parse from the more general one that supports generics.
+        // During those changes also make it so this continues the parsing if a match was
+        // found above so you can have string.Join resolve to System.String.Join for example
         if (Peek.Type == TokenType.Literal)
         {
             var typeResult = ParseIdentifier();
