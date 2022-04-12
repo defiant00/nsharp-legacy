@@ -87,5 +87,5 @@ fn DoThing(a int, b int) int
 [ ] assignment is a statement  
 [ ] no compound assignment  
 [X] no `void`  
-[ ] MyClass `from` BaseClass `with` IEnumerable  
+[ ] MyClass `from` BaseClass `is` IEnumerable  
 [ ] local readonly (or const works for runtime as well?)
