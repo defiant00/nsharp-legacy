@@ -1,7 +1,10 @@
 
 class A
-    string First
+    public str First
     System.String Second
+    int test
+    System.Byte arg
+    u8 hai
 
 class B from A
     ; yay

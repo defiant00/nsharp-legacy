@@ -192,10 +192,53 @@ public class Decompiler
 
     private void ProcessIdentifier(Identifier identifier)
     {
-        if (identifier.Parts.Count == 2 && identifier.Parts[0].Value == "System" && identifier.Parts[1].Value == "String")
+        if (identifier.Parts.Count == 2 && identifier.Parts[0].Value == "System" && identifier.Parts[0].Types == null && identifier.Parts[1].Types == null)
         {
-            Buffer.Append("string");
-            return;
+            switch (identifier.Parts[1].Value)
+            {
+                case "String":
+                    Buffer.Append("str");
+                    return;
+                case "Char":
+                    Buffer.Append("char");
+                    return;
+                case "Boolean":
+                    Buffer.Append("bool");
+                    return;
+                case "SByte":
+                    Buffer.Append("i8");
+                    return;
+                case "Int16":
+                    Buffer.Append(Settings.CTypes ? "short" : "i16");
+                    return;
+                case "Int32":
+                    Buffer.Append(Settings.CTypes ? "int" : "i32");
+                    return;
+                case "Int64":
+                    Buffer.Append(Settings.CTypes ? "long" : "i64");
+                    return;
+                case "Byte":
+                    Buffer.Append(Settings.CTypes ? "byte" : "u8");
+                    return;
+                case "UInt16":
+                    Buffer.Append(Settings.CTypes ? "ushort" : "u16");
+                    return;
+                case "UInt32":
+                    Buffer.Append(Settings.CTypes ? "uint" : "u32");
+                    return;
+                case "UInt64":
+                    Buffer.Append(Settings.CTypes ? "ulong" : "u64");
+                    return;
+                case "Single":
+                    Buffer.Append(Settings.CTypes ? "float" : "f32");
+                    return;
+                case "Double":
+                    Buffer.Append(Settings.CTypes ? "double" : "f64");
+                    return;
+                case "Decimal":
+                    Buffer.Append("decimal");
+                    return;
+            }
         }
 
         ProcessIdentifierPart(identifier.Parts[0]);
@@ -335,9 +378,11 @@ public class Decompiler
     private void ProcessProperty(int indent, Property property)
     {
         AppendModifiersIndented(indent, property.Modifiers);
-        ProcessExpression(indent, property.Type);
+        Buffer.Append("fn ");
+        Buffer.Append(property.Name.GetLiteral());
         Buffer.Append(" ");
-        Buffer.AppendLine(property.Name.GetLiteral());
+        ProcessExpression(indent, property.Type);
+        Buffer.AppendLine();
     }
 
     private void ProcessSpace(Space space)

@@ -584,10 +584,10 @@ public class Parser
             var token = Next();
             leftResult = token.Type switch
             {
-                TokenType.Character => new ParseResult<Expression>(new Character(token.Position, token.Value)),
+                TokenType.CharacterLiteral => new ParseResult<Expression>(new Character(token.Position, token.Value)),
                 TokenType.False => new ParseResult<Expression>(new LiteralToken(token.Position, Literal.False)),
                 TokenType.Null => new ParseResult<Expression>(new LiteralToken(token.Position, Literal.Null)),
-                TokenType.Number => new ParseResult<Expression>(new Number(token.Position, token.Value)),
+                TokenType.NumberLiteral => new ParseResult<Expression>(new Number(token.Position, token.Value)),
                 TokenType.This => new ParseResult<Expression>(new CurrentObjectInstance(token.Position)),
                 TokenType.True => new ParseResult<Expression>(new LiteralToken(token.Position, Literal.True)),
                 _ => ErrorExpression("Invalid token in expression: " + token, token.Position)
@@ -664,12 +664,106 @@ public class Parser
 
     private ParseResult<Expression> ParseType()
     {
-        if (Peek.Type == TokenType.String)
+        switch (Peek.Type)
         {
-            var type = new Identifier(Peek.Position, new IdentifierPart(Peek.Position, "System"));
-            type.Parts.Add(new IdentifierPart(Peek.Position, "String"));
-            Next();
-            return new ParseResult<Expression>(type);
+            case TokenType.String:
+                {
+                    var type = new Identifier(Peek.Position, new IdentifierPart(Peek.Position, "System"));
+                    type.Parts.Add(new IdentifierPart(Peek.Position, "String"));
+                    Next();
+                    return new ParseResult<Expression>(type);
+                }
+            case TokenType.Character:
+                {
+                    var type = new Identifier(Peek.Position, new IdentifierPart(Peek.Position, "System"));
+                    type.Parts.Add(new IdentifierPart(Peek.Position, "Char"));
+                    Next();
+                    return new ParseResult<Expression>(type);
+                }
+            case TokenType.Boolean:
+                {
+                    var type = new Identifier(Peek.Position, new IdentifierPart(Peek.Position, "System"));
+                    type.Parts.Add(new IdentifierPart(Peek.Position, "Boolean"));
+                    Next();
+                    return new ParseResult<Expression>(type);
+                }
+            case TokenType.I8:
+                {
+                    var type = new Identifier(Peek.Position, new IdentifierPart(Peek.Position, "System"));
+                    type.Parts.Add(new IdentifierPart(Peek.Position, "SByte"));
+                    Next();
+                    return new ParseResult<Expression>(type);
+                }
+            case TokenType.I16:
+                {
+                    var type = new Identifier(Peek.Position, new IdentifierPart(Peek.Position, "System"));
+                    type.Parts.Add(new IdentifierPart(Peek.Position, "Int16"));
+                    Next();
+                    return new ParseResult<Expression>(type);
+                }
+            case TokenType.I32:
+                {
+                    var type = new Identifier(Peek.Position, new IdentifierPart(Peek.Position, "System"));
+                    type.Parts.Add(new IdentifierPart(Peek.Position, "Int32"));
+                    Next();
+                    return new ParseResult<Expression>(type);
+                }
+            case TokenType.I64:
+                {
+                    var type = new Identifier(Peek.Position, new IdentifierPart(Peek.Position, "System"));
+                    type.Parts.Add(new IdentifierPart(Peek.Position, "Int64"));
+                    Next();
+                    return new ParseResult<Expression>(type);
+                }
+            case TokenType.U8:
+                {
+                    var type = new Identifier(Peek.Position, new IdentifierPart(Peek.Position, "System"));
+                    type.Parts.Add(new IdentifierPart(Peek.Position, "Byte"));
+                    Next();
+                    return new ParseResult<Expression>(type);
+                }
+            case TokenType.U16:
+                {
+                    var type = new Identifier(Peek.Position, new IdentifierPart(Peek.Position, "System"));
+                    type.Parts.Add(new IdentifierPart(Peek.Position, "UInt16"));
+                    Next();
+                    return new ParseResult<Expression>(type);
+                }
+            case TokenType.U32:
+                {
+                    var type = new Identifier(Peek.Position, new IdentifierPart(Peek.Position, "System"));
+                    type.Parts.Add(new IdentifierPart(Peek.Position, "UInt32"));
+                    Next();
+                    return new ParseResult<Expression>(type);
+                }
+            case TokenType.U64:
+                {
+                    var type = new Identifier(Peek.Position, new IdentifierPart(Peek.Position, "System"));
+                    type.Parts.Add(new IdentifierPart(Peek.Position, "UInt64"));
+                    Next();
+                    return new ParseResult<Expression>(type);
+                }
+            case TokenType.F32:
+                {
+                    var type = new Identifier(Peek.Position, new IdentifierPart(Peek.Position, "System"));
+                    type.Parts.Add(new IdentifierPart(Peek.Position, "Single"));
+                    Next();
+                    return new ParseResult<Expression>(type);
+                }
+            case TokenType.F64:
+                {
+                    var type = new Identifier(Peek.Position, new IdentifierPart(Peek.Position, "System"));
+                    type.Parts.Add(new IdentifierPart(Peek.Position, "Double"));
+                    Next();
+                    return new ParseResult<Expression>(type);
+                }
+            case TokenType.Decimal:
+                {
+                    var type = new Identifier(Peek.Position, new IdentifierPart(Peek.Position, "System"));
+                    type.Parts.Add(new IdentifierPart(Peek.Position, "Decimal"));
+                    Next();
+                    return new ParseResult<Expression>(type);
+                }
         }
 
         // TODO - split this off properly so things that just take dotted text like namespaces

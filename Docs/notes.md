@@ -85,7 +85,8 @@ fn DoThing(a int, b int) int
 [ ] no `break` in a `switch`  
 [ ] each switch case is its own scope
 [ ] assignment is a statement  
-[ ] no compound assignment  
+[X] no compound assignment  
 [X] no `void`  
 [ ] MyClass `from` BaseClass `is` IEnumerable  
 [ ] local readonly (or const works for runtime as well?)
+[ ] const by default? or have `var` and `val` for mutable and immutable? `mut` and `val`?

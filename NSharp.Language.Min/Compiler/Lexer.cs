@@ -279,7 +279,7 @@ public class Lexer
             Error("Unclosed '");
         else
         {
-            Emit(TokenType.Character);
+            Emit(TokenType.CharacterLiteral);
             Discard(1);
         }
         return LexStatement;
@@ -335,7 +335,7 @@ public class Lexer
             if (!foundDigitsAfterDecimal)
                 Backup();
         }
-        Emit(TokenType.Number);
+        Emit(TokenType.NumberLiteral);
         return LexStatement;
     }
 
