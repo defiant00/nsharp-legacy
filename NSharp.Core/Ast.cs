@@ -291,10 +291,15 @@ public partial class Property : Statement
 {
     public List<Modifier> Modifiers { get; set; }
     public string Name { get; set; }
-    public Identifier Type { get; set; }
+    public Expression Type { get; set; }
     public Expression? Value { get; set; }
+    public bool Get { get; set; } = true;
+    public bool Set { get; set; } = true;
+    public string SetParameterName { get; set; } = string.Empty;
+    public List<Statement> GetStatements { get; set; } = new();
+    public List<Statement> SetStatements { get; set; } = new();
 
-    public Property(Position position, List<Modifier> modifiers, string name, Identifier type) : base(position)
+    public Property(Position position, List<Modifier> modifiers, string name, Expression type) : base(position)
     {
         Modifiers = modifiers;
         Name = name;

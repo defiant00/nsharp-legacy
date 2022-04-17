@@ -384,7 +384,7 @@ public class Decompiler
             ProcessExpression(indent, methodDef.ReturnType);
             if (methodDef.Statements.Count() == 1 && methodDef.Statements[0] is Return ret)
             {
-                Buffer.Append(" = ");
+                Buffer.Append(" is ");
                 ProcessExpression(indent, ret.Value);
                 Buffer.AppendLine();
                 return;
@@ -392,7 +392,7 @@ public class Decompiler
         }
         else if (methodDef.Statements.Count() == 1)
         {
-            Buffer.Append(" = ");
+            Buffer.Append(" is ");
             Process(0, methodDef.Statements[0], null);
             return;
         }

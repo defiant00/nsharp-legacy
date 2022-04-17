@@ -49,7 +49,11 @@ public enum TokenType
     Function,
     Variable,
     Value,
+    Get,
+    Set,
     From,
+    Is,
+    As,
     Return,
     Try,
     Catch,
@@ -81,9 +85,6 @@ public enum TokenType
     Comparison_Operator_End,
     And,
     Or,
-    // in
-    // is
-    // as
     BitwiseAnd,
     BitwiseOr,
     BitwiseXor,

@@ -529,10 +529,10 @@ public class Parser
     private ParseResult<Statement> ParseMethod(List<Modifier> modifiers, Token nameToken)
     {
         // method
-        // [modifiers] fn [name]([params]) = [statement]
+        // [modifiers] fn [name]([params]) is [statement]
         // [modifiers] fn [name]([params])
         //     [statements]
-        // [modifiers] fn [name]([params]) [type] = [expr]
+        // [modifiers] fn [name]([params]) [type] is [expr]
         // [modifiers] fn [name]([params]) [type]
         //     [statements]
 
@@ -559,8 +559,8 @@ public class Parser
         if (res.Failure)
             return InvalidTokenErrorStatement("Invalid token in method", res);
 
-        // [modifiers] fn [name]([params]) = [statement]
-        if (Accept(TokenType.Assign).Success)
+        // [modifiers] fn [name]([params]) is [statement]
+        if (Accept(TokenType.Is).Success)
         {
             var stmtResult = ParseMethodStatement();
             if (stmtResult.Error)
@@ -577,8 +577,8 @@ public class Parser
                 return ErrorStatement(ex.Value, ex.Position);
             methodDef.ReturnType = typeResult.Result;
 
-            // [modifiers] fn [name]([params]) [type] = [expr]
-            if (Accept(TokenType.Assign).Success)
+            // [modifiers] fn [name]([params]) [type] is [expr]
+            if (Accept(TokenType.Is).Success)
             {
                 var exprResult = ParseExpression();
                 if (exprResult.Error && exprResult.Result is ErrorExpression exp)
@@ -697,20 +697,126 @@ public class Parser
     {
         // property
         // [modifiers] fn [name] [type]
-        // [modifiers] fn [name] [type] [get and/or set]
         // [modifiers] fn [name] [type] = [expr]
+        // [modifiers] fn [name] [type] [get and/or set]
+        // [modifiers] fn [name] [type] [get and/or set] = [expr]
+        // [modifiers] fn [name] [type] is [expr]
         // [modifiers] fn [name] [type]
         //     [statements]
         // [modifiers] fn [name] [type]
-        //     get = [expr]
-        //     set = [statement]
+        //     get is [expr]
+        //     set is [statement]
+        // [modifiers] fn [name] [type] = [expr]
+        //     get is [expr]
+        //     set is [statement]
         // [modifiers] fn [name] [type]
         //     get
         //         [statements]
         //     set
         //         [statements]
+        // [modifiers] fn [name] [type] = [expr]
+        //     get
+        //         [statements]
+        //     set
+        //         [statements]
 
-        throw new NotImplementedException();
+        AcceptResult res;
+
+        var typeResult = ParseType();
+        if (typeResult.Error && typeResult.Result is ErrorExpression ex)
+            return ErrorStatement(ex.Value, ex.Position);
+
+        var propDef = new Property(nameToken.Position, modifiers, nameToken.Value, typeResult.Result);
+
+        // [modifiers] fn [name] [type] [get and/or set]
+        if (Peek.Type == TokenType.Get || Peek.Type == TokenType.Set)
+        {
+            var getSet = Next();
+            var other = TokenType.Set;
+            if (getSet.Type == TokenType.Get)
+                propDef.Set = false;
+            else
+            {
+                propDef.Get = false;
+                other = TokenType.Get;
+            }
+
+            res = Accept(TokenType.Comma, other);
+            if (res.Success)
+            {
+                if (GetToken(res, 1).Type == TokenType.Get)
+                    propDef.Get = true;
+                else
+                    propDef.Set = true;
+            }
+        }
+        else if (Accept(TokenType.Is).Success)
+        {
+            // [modifiers] fn [name] [type] is [expr]
+
+            var exprResult = ParseExpression();
+            if (exprResult.Error && exprResult.Result is ErrorExpression exp)
+                return ErrorStatement(exp.Value, exp.Position);
+            propDef.GetStatements.Add(new Return(exprResult.Result.Position) { Value = exprResult.Result });
+            res = Accept(TokenType.EOL);
+            if (res.Failure)
+                return InvalidTokenErrorStatement("Invalid token in property", res);
+            return new ParseResult<Statement>(propDef);
+        }
+
+        // [modifiers] fn [name] [type] = [expr]
+        // [modifiers] fn [name] [type] [get and/or set] = [expr]
+        if (Accept(TokenType.Assign).Success)
+        {
+            var exprResult = ParseExpression();
+            if (exprResult.Error && exprResult.Result is ErrorExpression exp)
+                return ErrorStatement(exp.Value, exp.Position);
+            propDef.Value = exprResult.Result;
+        }
+
+        res = Accept(TokenType.EOL);
+        if (res.Failure)
+            return InvalidTokenErrorStatement("Invalid token in property", res);
+
+        if (Accept(TokenType.Indent).Success)
+        {
+            if (Peek.Type == TokenType.Get || Peek.Type == TokenType.Set)
+            {
+                // [modifiers] fn [name] [type]
+                //     get is [expr]
+                //     set is [statement]
+                // [modifiers] fn [name] [type]
+                //     get
+                //         [statements]
+                //     set
+                //         [statements]
+
+            }
+            else
+            {
+                // [modifiers] fn [name] [type]
+                //     [statements]
+
+                while (Peek.Type != TokenType.Dedent)
+                    propDef.GetStatements.Add(ParseMethodStatement().Result);
+
+                res = Accept(TokenType.Dedent);
+                if (res.Failure)
+                    return InvalidTokenErrorStatement("Invalid token in property", res);
+            }
+        }
+
+        // // [modifiers] fn [name]([params]) is [statement]
+        // if (Accept(TokenType.Is).Success)
+        // {
+        //     var stmtResult = ParseMethodStatement();
+        //     if (stmtResult.Error)
+        //         return stmtResult;
+        //     methodDef.Statements.Add(stmtResult.Result);
+        //     return new ParseResult<Statement>(methodDef);
+        // }
+
+        return new ParseResult<Statement>(propDef);
     }
 
     private ParseResult<Statement> ParseSpace()

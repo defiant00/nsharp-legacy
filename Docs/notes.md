@@ -10,7 +10,7 @@ Attributes
 
 Anonymous Functions
 ```
-fn(x) = x * x
+fn(x) is x * x
 
 fn(x)
     var y = x * x
@@ -27,13 +27,13 @@ class C
 
 Properties (are functions)
 ```
-fn Name string = _name
+fn Name string is _name
 
-fn As{T} T = _val as T
+fn As{T} T is _val as T
 
 fn Name string
-    get = _name
-    set(val) = _name = val
+    get is _name
+    set(val) is _name = val
 
 fn Name string
     get
@@ -45,8 +45,8 @@ fn Name string
 Short form functions  
 No `void`, no return type if it doesn't return anything
 ```
-fn Test() int = 3
-fn Test() = Console.WriteLine("hi")
+fn Test() int is 3
+fn Test() is Console.WriteLine("hi")
 ```
 
 Loops

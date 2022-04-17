@@ -184,7 +184,22 @@ public partial class Parameter
 
 public partial class Property
 {
-    public override void Print(int indent) => WriteLineIndented(indent, $"Property: {string.Join(" ", Modifiers)} {Type} {Name}");
+    public override void Print(int indent)
+    {
+        WriteLineIndented(indent, $"Property: {string.Join(" ", Modifiers)} {Type} {Name}{(Get ? " get" : "")}{(Set ? " set" : "")}{(Value != null ? " = " + Value.ToString() : "")}");
+        if (GetStatements.Count > 0)
+        {
+            WriteLineIndented(indent + 1, "get");
+            foreach (var statement in GetStatements)
+                statement.Print(indent + 2);
+        }
+        if (SetStatements.Count > 0)
+        {
+            WriteLineIndented(indent + 1, $"set({SetParameterName})");
+            foreach (var statement in SetStatements)
+                statement.Print(indent + 2);
+        }
+    }
 }
 
 public partial class Return
