@@ -99,6 +99,21 @@ public partial class Comment : Statement
     }
 }
 
+public partial class Constant : Statement
+{
+    public List<Modifier> Modifiers { get; set; }
+    public string Name { get; set; }
+    public Expression Type { get; set; }
+    public Expression? Value { get; set; }
+
+    public Constant(Position position, List<Modifier> modifiers, string name, Expression type) : base(position)
+    {
+        Modifiers = modifiers;
+        Name = name;
+        Type = type;
+    }
+}
+
 public partial class Continue : Statement
 {
     public Continue(Position position) : base(position) { }
@@ -275,15 +290,23 @@ public partial class Parameter : Expression
 public partial class Property : Statement
 {
     public List<Modifier> Modifiers { get; set; }
-    public Identifier Type { get; set; }
     public string Name { get; set; }
+    public Identifier Type { get; set; }
+    public Expression? Value { get; set; }
 
-    public Property(Position position, List<Modifier> modifiers, Identifier type, string name) : base(position)
+    public Property(Position position, List<Modifier> modifiers, string name, Identifier type) : base(position)
     {
         Modifiers = modifiers;
-        Type = type;
         Name = name;
+        Type = type;
     }
+}
+
+public partial class Return : Statement
+{
+    public Expression? Value;
+
+    public Return(Position position) : base(position) { }
 }
 
 public partial class Space : Statement
@@ -311,5 +334,20 @@ public partial class StringLiteral : Expression
     public StringLiteral(Position position, string value) : base(position)
     {
         Value = value;
+    }
+}
+
+public partial class Variable : Statement
+{
+    public List<Modifier> Modifiers { get; set; }
+    public string Name { get; set; }
+    public Expression Type { get; set; }
+    public Expression? Value { get; set; }
+
+    public Variable(Position position, List<Modifier> modifiers, string name, Expression type) : base(position)
+    {
+        Modifiers = modifiers;
+        Name = name;
+        Type = type;
     }
 }

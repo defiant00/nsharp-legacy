@@ -42,6 +42,9 @@ public class Decompiler
             case Comment comment:
                 ProcessComment(indent, comment);
                 break;
+            case Constant constant:
+                ProcessConstant(indent, constant);
+                break;
             case Continue:
                 ProcessContinue(indent);
                 break;
@@ -66,8 +69,14 @@ public class Decompiler
             case Property property:
                 ProcessProperty(indent, property);
                 break;
+            case Return ret:
+                ProcessReturn(indent, ret);
+                break;
             case Space space:
                 ProcessSpace(space);
+                break;
+            case Variable variable:
+                ProcessVariable(indent, variable);
                 break;
             default:
                 AppendLineIndented(indent, $"[{currentItem}]");
@@ -79,9 +88,6 @@ public class Decompiler
     {
         switch (expression)
         {
-            case null:
-                Buffer.Append("void");
-                break;
             case Core.Ast.Array array:
                 ProcessArray(indent, array);
                 break;
@@ -177,6 +183,21 @@ public class Decompiler
         if (comment.IsDocumentation)
             Buffer.Append(";");
         Buffer.AppendLine(comment.Value);
+    }
+
+    private void ProcessConstant(int indent, Constant constant)
+    {
+        AppendModifiersIndented(indent, constant.Modifiers);
+        Buffer.Append("val ");
+        Buffer.Append(constant.Name);
+        Buffer.Append(" ");
+        ProcessExpression(indent, constant.Type);
+        if (constant.Value != null)
+        {
+            Buffer.Append(" = ");
+            ProcessExpression(indent, constant.Value);
+        }
+        Buffer.AppendLine();
     }
 
     private void ProcessContinue(int indent) => AppendLineIndented(indent, "continue");
@@ -326,8 +347,7 @@ public class Decompiler
     private void ProcessMethodDefinition(int indent, MethodDefinition methodDef)
     {
         AppendModifiersIndented(indent, methodDef.Modifiers);
-        ProcessExpression(indent, methodDef.ReturnType);
-        Buffer.Append(" ");
+        Buffer.Append("fn ");
         Buffer.Append(methodDef.Name.GetLiteral());
         Buffer.Append("(");
         bool paramMultiline = Settings.ParamMultiline && methodDef.Parameters.Count > 1;
@@ -357,7 +377,27 @@ public class Decompiler
             Buffer.AppendLine();
             Indent(indent);
         }
-        Buffer.AppendLine(")");
+        Buffer.Append(")");
+        if (methodDef.ReturnType != null)
+        {
+            Buffer.Append(" ");
+            ProcessExpression(indent, methodDef.ReturnType);
+            if (methodDef.Statements.Count() == 1 && methodDef.Statements[0] is Return ret)
+            {
+                Buffer.Append(" = ");
+                ProcessExpression(indent, ret.Value);
+                Buffer.AppendLine();
+                return;
+            }
+        }
+        else if (methodDef.Statements.Count() == 1)
+        {
+            Buffer.Append(" = ");
+            Process(0, methodDef.Statements[0], null);
+            return;
+        }
+
+        Buffer.AppendLine();
         ProcessStatements(indent + 1, methodDef.Statements);
     }
 
@@ -382,6 +422,17 @@ public class Decompiler
         Buffer.Append(property.Name.GetLiteral());
         Buffer.Append(" ");
         ProcessExpression(indent, property.Type);
+        Buffer.AppendLine();
+    }
+
+    private void ProcessReturn(int indent, Return ret)
+    {
+        AppendIndented(indent, "return");
+        if (ret.Value != null)
+        {
+            Buffer.Append(" ");
+            ProcessExpression(indent, ret.Value);
+        }
         Buffer.AppendLine();
     }
 
@@ -425,5 +476,20 @@ public class Decompiler
                 Buffer.Append("}");
         }
         Buffer.Append("\"");
+    }
+
+    private void ProcessVariable(int indent, Variable variable)
+    {
+        AppendModifiersIndented(indent, variable.Modifiers);
+        Buffer.Append("var ");
+        Buffer.Append(variable.Name);
+        Buffer.Append(" ");
+        ProcessExpression(indent, variable.Type);
+        if (variable.Value != null)
+        {
+            Buffer.Append(" = ");
+            ProcessExpression(indent, variable.Value);
+        }
+        Buffer.AppendLine();
     }
 }

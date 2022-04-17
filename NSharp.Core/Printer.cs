@@ -52,6 +52,11 @@ public partial class Comment
     public override void Print(int indent) => WriteLineIndented(indent, $"Comment{(IsDocumentation ? " (doc)" : "")}: {Value}");
 }
 
+public partial class Constant
+{
+    public override void Print(int indent) => WriteLineIndented(indent, $"Constant: {string.Join(" ", Modifiers)} {Type} {Name}{(Value != null ? " = " + Value : "")}");
+}
+
 public partial class Continue
 {
     public override void Print(int indent) => WriteLineIndented(indent, "Continue");
@@ -182,6 +187,11 @@ public partial class Property
     public override void Print(int indent) => WriteLineIndented(indent, $"Property: {string.Join(" ", Modifiers)} {Type} {Name}");
 }
 
+public partial class Return
+{
+    public override void Print(int indent) => WriteLineIndented(indent, $"Return: {Value}");
+}
+
 public partial class Space
 {
     public override void Print(int indent) => WriteLineIndented(indent, $"Space: {Size}");
@@ -198,4 +208,9 @@ public partial class String
 public partial class StringLiteral
 {
     public override string ToString() => Value;
+}
+
+public partial class Variable
+{
+    public override void Print(int indent) => WriteLineIndented(indent, $"Variable: {string.Join(" ", Modifiers)} {Type} {Name}{(Value != null ? " = " + Value : "")}");
 }

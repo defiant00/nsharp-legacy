@@ -48,6 +48,7 @@ public enum TokenType
     Interface,
     Function,
     Variable,
+    Value,
     From,
     Return,
     Try,

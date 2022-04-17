@@ -81,12 +81,13 @@ fn DoThing(a int, b int) int
 ```
 
 [X] No `++` and `--` or unary `+`  
-[ ] no syntactic sugar for string concatenation (call concat and tostring if you really need it)  
+[X] no syntactic sugar for string concatenation (call concat and tostring if you really need it)  
+[ ] no syntactic sugar for arrays - need to check how unpleasant using the class directly is  
 [ ] no `break` in a `switch`  
 [ ] each switch case is its own scope
 [ ] assignment is a statement  
 [X] no compound assignment  
 [X] no `void`  
-[ ] MyClass `from` BaseClass `is` IEnumerable  
-[ ] local readonly (or const works for runtime as well?)
-[ ] const by default? or have `var` and `val` for mutable and immutable? `mut` and `val`?
+[ ] MyClass `from` BaseClass `is` Interface1, Interface2  
+[ ] `var` and `val` for mutable and immutable, `val` is `const` or `readonly` as applicable  
+[ ] implicit types wherever possible

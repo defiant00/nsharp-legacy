@@ -1,13 +1,21 @@
 
-class A
-    public str First
-    System.String Second
-    int test
-    System.Byte arg
-    u8 hai
+class MyClass
+    public val First int
+    val Second int = 3
+    val Third str = "Hello"
 
-class B from A
-    ; yay
+    public var Fourth int
+    var Fifth int = 3
+    var Sixth str = "Hello"
 
-class C from B
-    ; hello
+    public fn Test() = System.Console.WriteLine("hi")
+
+    public fn Test2()
+        ; multiline
+        System.Console.WriteLine("hey")
+
+    public fn Test3() int = 12
+
+    public fn Test4() int
+        ; multiline
+        System.Console.WriteLine("another value")

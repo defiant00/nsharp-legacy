@@ -130,6 +130,7 @@ public static class Helpers
         ["interface"] = TokenType.Interface,
         ["fn"] = TokenType.Function,
         ["var"] = TokenType.Variable,
+        ["val"] = TokenType.Value,
         ["from"] = TokenType.From,
         ["return"] = TokenType.Return,
         ["try"] = TokenType.Try,
