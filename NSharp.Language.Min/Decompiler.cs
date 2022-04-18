@@ -422,7 +422,62 @@ public class Decompiler
         Buffer.Append(property.Name.GetLiteral());
         Buffer.Append(" ");
         ProcessExpression(indent, property.Type);
+        if (property.GetStatements.Count == 0 && property.SetStatements.Count == 0 && property.Get != property.Set)
+            Buffer.Append(property.Get ? " get" : " set");
+        else if (property.SetStatements.Count == 0 && property.GetStatements.Count == 1 && property.GetStatements[0] is Return ret)
+        {
+            Buffer.Append(" is ");
+            ProcessExpression(indent, ret.Value);
+        }
+        if (property.Value != null)
+        {
+            Buffer.Append(" = ");
+            ProcessExpression(indent, property.Value);
+        }
         Buffer.AppendLine();
+        if (property.SetStatements.Count == 0 && property.GetStatements.Count > 1)
+        {
+            foreach (var statement in property.GetStatements)
+                Process(indent + 1, statement, null);
+            return;
+        }
+        else if (property.SetStatements.Count > 0)
+        {
+            if (property.GetStatements.Count > 0)
+            {
+                AppendIndented(indent + 1, "get");
+
+                if (property.GetStatements.Count == 1 && property.GetStatements[0] is Return ret)
+                {
+                    Buffer.Append(" is ");
+                    ProcessExpression(indent, ret.Value);
+                    Buffer.AppendLine();
+                }
+                else
+                {
+                    Buffer.AppendLine();
+                    foreach (var statement in property.GetStatements)
+                        Process(indent + 2, statement, null);
+                }
+            }
+        }
+        if (property.SetStatements.Count > 0)
+        {
+            AppendIndented(indent + 1, "set(");
+            Buffer.Append(property.SetParameterName);
+            Buffer.Append(")");
+            if (property.SetStatements.Count == 1)
+            {
+                Buffer.Append(" is ");
+                Process(0, property.SetStatements[0], null);
+            }
+            else
+            {
+                Buffer.AppendLine();
+                foreach (var statement in property.SetStatements)
+                    Process(indent + 2, statement, null);
+            }
+        }
     }
 
     private void ProcessReturn(int indent, Return ret)

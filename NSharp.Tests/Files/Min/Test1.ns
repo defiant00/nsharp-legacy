@@ -10,15 +10,23 @@ class MyClass
     fn Eighth int
         ; multiline
         Something()
-    
+    fn Argle int
+        get is Thing()
+        set(v) is Thing(v)
     fn Ninth int
         get is GetValue()
         set(v)
             ; multiline
             Save(v)
-    
     fn Tenth int
         get
             ; multiline
             GetVal()
         set(v) is Save(v)
+    fn Bargle int = 7
+        get
+            ; multiline
+            GetVal()
+        set(v)
+            ; multi
+            SetVal(v)
