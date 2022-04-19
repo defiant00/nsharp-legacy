@@ -1,3 +1,49 @@
+## Items
+
+* Expressions
+    * _ str literal
+    * _ char literal
+    * _ number literal
+    * _ array literal
+    * _ null literal
+    * _ field/property
+    * _ method call
+    * _ accessor
+    * _ new
+    * _ new array
+    * _ binary op
+    * _ unary op
+    * _ ternary
+    * _ anonymous fn
+    * _ default
+    * _ typeof?
+* Statements
+    * _ comment
+    * file level
+        * _ namespace
+        * _ import
+        * _ class def
+        * _ interface def
+        * _ struct def
+        * _ enum def
+        * _ method def
+        * _ constructor def
+        * _ field def
+        * _ const def
+        * _ property def
+    * method level
+        * _ var
+        * _ const
+        * _ using
+        * _ assignment
+        * _ if/else
+        * _ switch
+        * _ for
+        * _ foreach
+        * _ try/catch/finally
+        * _ return
+        * _ base/super
+
 ## Min Syntax Notes
 
 Attributes

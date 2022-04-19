@@ -131,8 +131,8 @@ public class Decompiler
 
     private void ProcessArray(int indent, Core.Ast.Array array)
     {
-        ProcessExpression(indent, array.Type);
         Buffer.Append("[]");
+        ProcessExpression(indent, array.Type);
     }
 
     private void ProcessAssignment(int indent, Assignment assignment)

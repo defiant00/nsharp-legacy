@@ -1,7 +1,7 @@
 
 class MyClass
-    fn First int
-    fn Second int = 3
+    fn First []int
+    fn Second [][][]int = 3
     fn Third int get
     fn Fourth int set
     fn Fifth int get, set

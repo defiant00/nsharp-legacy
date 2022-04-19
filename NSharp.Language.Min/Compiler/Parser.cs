@@ -88,6 +88,20 @@ public class Parser
 
     private Token ErrorToken(AcceptResult result) => Tokens[result.StartingIndex + result.Count];
 
+    private ParseResult<Expression> ParseArray()
+    {
+        var start = Peek;
+        var res = Accept(TokenType.LeftBracket, TokenType.RightBracket);
+        if (res.Failure)
+            return InvalidTokenErrorExpression("Invalid token in array type declaration", res);
+
+        var typeResult = ParseType();
+        if (typeResult.Error)
+            return typeResult;
+
+        return new ParseResult<Expression>(new Core.Ast.Array(start.Position, typeResult.Result));
+    }
+
     private ParseResult<Expression> ParseAssignment(Expression left)
     {
         var op = Next().Type.ToAssignmentOperator();
@@ -1051,24 +1065,16 @@ public class Parser
                     Next();
                     return new ParseResult<Expression>(type);
                 }
+            case TokenType.LeftBracket:
+                return ParseArray();
+            case TokenType.Literal:
+                return ParseIdentifier();
         }
 
         // TODO - split this off properly so things that just take dotted text like namespaces
         // use a separate parse from the more general one that supports generics.
         // During those changes also make it so this continues the parsing if a match was
         // found above so you can have string.Join resolve to System.String.Join for example
-        if (Peek.Type == TokenType.Literal)
-        {
-            var typeResult = ParseIdentifier();
-            if (typeResult.Error)
-                return typeResult;
-
-            var type = typeResult.Result;
-            while (Accept(TokenType.LeftBracket, TokenType.RightBracket).Success)
-                type = new Core.Ast.Array(type.Position, type);
-
-            return new ParseResult<Expression>(type);
-        }
 
         var token = Next();
         return ErrorExpression("Invalid token in type parsing: " + token, token.Position);

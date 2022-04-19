@@ -15,6 +15,7 @@ Identifiers             | Both |
 Keyword Identifiers     | Both |
 Strings                 | Both | X
 Chars                   | Both |
+Arrays                  | Both |
 Unicode                 |      |
 Numbers                 | Both |
 Hex                     |      |

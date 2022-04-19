@@ -14,7 +14,7 @@ public abstract partial class AstItem
 
 public partial class Array
 {
-    public override string ToString() => $"{Type}[]";
+    public override string ToString() => $"[]{Type}";
 }
 
 public partial class Assignment
