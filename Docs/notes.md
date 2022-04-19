@@ -25,6 +25,7 @@
         * _ interface def
         * _ struct def
         * _ enum def
+        * _ attributes
     * class level
         * _ class def
         * _ interface def
@@ -36,6 +37,7 @@
         * _ field def
         * _ const def
         * _ property def
+        * _ attributes
     * method level
         * _ var
         * _ const
@@ -48,6 +50,7 @@
         * _ try/catch/finally
         * _ return
         * _ base/super
+        * _ attributes
 
 ## Min Syntax Notes
 
