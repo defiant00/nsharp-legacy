@@ -18,7 +18,6 @@
     * _ default
     * _ typeof?
 * Statements
-    * _ comment
     * file level
         * _ namespace
         * _ import
@@ -26,8 +25,14 @@
         * _ interface def
         * _ struct def
         * _ enum def
+    * class level
+        * _ class def
+        * _ interface def
+        * _ struct def
+        * _ enum def
         * _ method def
         * _ constructor def
+        * _ delegate def
         * _ field def
         * _ const def
         * _ property def
