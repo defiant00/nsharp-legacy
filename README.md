@@ -35,9 +35,9 @@ Interface Definition    |      |
 Struct Definition       |      |
 Enum Definition         |      |
 Fields                  | Both |
-Properties              |      |
-Getters and Setters     |      |
-Types                   |      |
+Properties              | Both |
+Getters and Setters     | Both |
+Types                   | Both |
 Using                   |      |
 Import                  | Both |
 Attributes              |      |
