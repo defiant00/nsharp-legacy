@@ -33,6 +33,9 @@ public class Decompiler
         {
             case null:
                 return;
+            case Assignment assignment:
+                ProcessAssignment(indent, assignment);
+                break;
             case Break:
                 ProcessBreak(indent);
                 break;
@@ -44,6 +47,9 @@ public class Decompiler
                 break;
             case Constant constant:
                 ProcessConstant(indent, constant);
+                break;
+            case ConstructorDefinition ctorDef:
+                ProcessConstructorDefinition(indent, ctorDef);
                 break;
             case Continue:
                 ProcessContinue(indent);
@@ -91,9 +97,6 @@ public class Decompiler
             case Core.Ast.Array array:
                 ProcessArray(indent, array);
                 break;
-            case Assignment assignment:
-                ProcessAssignment(indent, assignment);
-                break;
             case BinaryOperator binaryOperator:
                 ProcessBinaryOperator(indent, binaryOperator, parentPrecedence);
                 break;
@@ -137,11 +140,13 @@ public class Decompiler
 
     private void ProcessAssignment(int indent, Assignment assignment)
     {
+        Indent(indent);
         ProcessExpression(indent, assignment.Left);
         Buffer.Append(" ");
         Buffer.Append(assignment.Operator.StringVal());
         Buffer.Append(" ");
         ProcessExpression(indent, assignment.Right);
+        Buffer.AppendLine();
     }
 
     private void ProcessBinaryOperator(int indent, BinaryOperator binaryOperator, int parentPrecedence)
@@ -173,6 +178,16 @@ public class Decompiler
             Buffer.Append(" from ");
             ProcessIdentifier(cl.Parent);
         }
+        if (cl.Interfaces.Count > 0)
+        {
+            Buffer.Append(" is ");
+            ProcessIdentifier(cl.Interfaces[0]);
+            for (int i = 1; i < cl.Interfaces.Count; i++)
+            {
+                Buffer.Append(", ");
+                ProcessIdentifier(cl.Interfaces[i]);
+            }
+        }
         Buffer.AppendLine();
         ProcessStatements(indent + 1, cl.Statements);
     }
@@ -198,6 +213,50 @@ public class Decompiler
             ProcessExpression(indent, constant.Value);
         }
         Buffer.AppendLine();
+    }
+
+    private void ProcessConstructorDefinition(int indent, ConstructorDefinition ctorDef)
+    {
+        AppendModifiersIndented(indent, ctorDef.Modifiers);
+        Buffer.Append("fn new(");
+        bool paramMultiline = Settings.ParamMultiline && ctorDef.Parameters.Count > 1;
+        if (paramMultiline)
+        {
+            Buffer.AppendLine();
+            Indent(indent + 1);
+        }
+        if (ctorDef.Parameters.Count > 0)
+        {
+            ProcessParameter(indent, ctorDef.Parameters[0]);
+            for (int i = 1; i < ctorDef.Parameters.Count; i++)
+            {
+                Buffer.Append(",");
+                if (paramMultiline)
+                {
+                    Buffer.AppendLine();
+                    Indent(indent + 1);
+                }
+                else
+                    Buffer.Append(" ");
+                ProcessParameter(indent, ctorDef.Parameters[i]);
+            }
+        }
+        if (paramMultiline)
+        {
+            Buffer.AppendLine();
+            Indent(indent);
+        }
+        Buffer.Append(")");
+        if (ctorDef.Statements.Count() == 1)
+        {
+            Buffer.Append(" is ");
+            Process(0, ctorDef.Statements[0], null);
+        }
+        else
+        {
+            Buffer.AppendLine();
+            ProcessStatements(indent + 1, ctorDef.Statements);
+        }
     }
 
     private void ProcessContinue(int indent) => AppendLineIndented(indent, "continue");
@@ -410,9 +469,9 @@ public class Decompiler
 
     private void ProcessParameter(int indent, Parameter parameter)
     {
-        ProcessExpression(indent, parameter.Type);
-        Buffer.Append(" ");
         Buffer.Append(parameter.Name.GetLiteral());
+        Buffer.Append(" ");
+        ProcessExpression(indent, parameter.Type);
     }
 
     private void ProcessProperty(int indent, Property property)
@@ -482,7 +541,7 @@ public class Decompiler
 
     private void ProcessReturn(int indent, Return ret)
     {
-        AppendIndented(indent, "return");
+        AppendIndented(indent, "ret");
         if (ret.Value != null)
         {
             Buffer.Append(" ");

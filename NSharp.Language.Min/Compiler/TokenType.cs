@@ -54,6 +54,7 @@ public enum TokenType
     From,
     Is,
     As,
+    New,
     Return,
     Try,
     Catch,

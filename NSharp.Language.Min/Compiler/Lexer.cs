@@ -236,7 +236,7 @@ public class Lexer
                         Emit(TokenType.EOL);
                     return null;
                 case ';':
-                    return Error("Comments must be on their own line");
+                    return LexComment;
                 case '\'':
                     return LexCharacter;
                 case '"':

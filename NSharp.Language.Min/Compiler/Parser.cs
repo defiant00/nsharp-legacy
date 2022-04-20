@@ -102,13 +102,16 @@ public class Parser
         return new ParseResult<Expression>(new Core.Ast.Array(start.Position, typeResult.Result));
     }
 
-    private ParseResult<Expression> ParseAssignment(Expression left)
+    private ParseResult<Statement> ParseAssignment(Expression left)
     {
         var op = Next().Type.ToAssignmentOperator();
         var right = ParseExpression();
-        if (right.Error)
-            return right;
-        return new ParseResult<Expression>(new Assignment(left.Position, op, left, right.Result));
+        if (right.Error && right.Result is ErrorExpression ex)
+            return ErrorStatement(ex.Value, ex.Position);
+        var res = Accept(TokenType.EOL);
+        if (res.Failure)
+            return InvalidTokenErrorStatement("Invalid token in assignment", res);
+        return new ParseResult<Statement>(new Assignment(left.Position, op, left, right.Result));
     }
 
     private ParseResult<Expression> ParseBinaryOperatorRightSide(int leftPrecedence, Expression left)
@@ -163,6 +166,20 @@ public class Parser
             var parentIdent = ParseIdentifier();
             if (!parentIdent.Error && parentIdent.Result is Identifier pId)
                 classResult.Parent = pId;
+        }
+
+        if (Accept(TokenType.Is).Success)
+        {
+            var interfaceIdent = ParseIdentifier();
+            if (!interfaceIdent.Error && interfaceIdent.Result is Identifier iId)
+                classResult.Interfaces.Add(iId);
+
+            while (Accept(TokenType.Comma).Success)
+            {
+                interfaceIdent = ParseIdentifier();
+                if (!interfaceIdent.Error && interfaceIdent.Result is Identifier id)
+                    classResult.Interfaces.Add(id);
+            }
         }
 
         res = Accept(TokenType.EOL, TokenType.Indent);
@@ -268,6 +285,62 @@ public class Parser
         return new ParseResult<Statement>(constant);
     }
 
+    private ParseResult<Statement> ParseConstructor(List<Modifier> modifiers, Token start)
+    {
+        // constructor
+        // [modifiers] fn new([params]) is [statement]
+        // [modifiers] fn new([params])
+        //     [statements]
+
+        var res = Accept(TokenType.New, TokenType.LeftParenthesis);
+        if (res.Failure)
+            return InvalidTokenErrorStatement("Invalid token in ctor", res);
+
+        var ctorDef = new ConstructorDefinition(start.Position, modifiers);
+
+        while (Peek.Type != TokenType.RightParenthesis)
+        {
+            res = Accept(TokenType.Literal);
+            if (res.Failure)
+                return InvalidTokenErrorStatement("Invalid token in parameter", res);
+            var paramNameToken = GetToken(res);
+            var paramType = ParseType();
+            if (!paramType.Error)
+                ctorDef.Parameters.Add(new Parameter(paramType.Result.Position, paramType.Result, paramNameToken.Value));
+
+            Accept(TokenType.Comma);
+        }
+
+        res = Accept(TokenType.RightParenthesis);
+        if (res.Failure)
+            return InvalidTokenErrorStatement("Invalid token in ctor", res);
+
+        // [modifiers] fn new([params]) is [statement]
+        if (Accept(TokenType.Is).Success)
+        {
+            var stmtResult = ParseMethodStatement();
+            if (stmtResult.Error)
+                return stmtResult;
+            ctorDef.Statements.Add(stmtResult.Result);
+            return new ParseResult<Statement>(ctorDef);
+        }
+
+        // [modifiers] fn new([params])
+        //     [statements]
+        res = Accept(TokenType.EOL, TokenType.Indent);
+        if (res.Failure)
+            return InvalidTokenErrorStatement("Invalid token in ctor", res);
+
+        while (Peek.Type != TokenType.Dedent)
+            ctorDef.Statements.Add(ParseMethodStatement().Result);
+
+        res = Accept(TokenType.Dedent);
+        if (res.Failure)
+            return InvalidTokenErrorStatement("Invalid token in ctor", res);
+
+        return new ParseResult<Statement>(ctorDef);
+    }
+
     private ParseResult<Statement> ParseContinue()
     {
         var res = Accept(TokenType.Continue, TokenType.EOL);
@@ -287,21 +360,27 @@ public class Parser
         var left = ParsePrimaryExpression();
         if (left.Error)
             return left;
-        if (Peek.Type.IsAssignment())
-            return ParseAssignment(left.Result);
         return ParseBinaryOperatorRightSide(0, left.Result);
     }
 
     private ParseResult<Statement> ParseExpressionStatement()
     {
-        var token = Peek;
-        var exprStatement = new ExpressionStatement(token.Position, ParseExpression().Result);
+        var left = ParsePrimaryExpression();
+        if (left.Error && left.Result is ErrorExpression ex)
+            return ErrorStatement(ex.Value, ex.Position);
+
+        if (Peek.Type.IsAssignment())
+            return ParseAssignment(left.Result);
+
+        var expr = ParseBinaryOperatorRightSide(0, left.Result);
+        if (expr.Error && expr.Result is ErrorExpression exp)
+            return ErrorStatement(exp.Value, exp.Position);
 
         var res = Accept(TokenType.EOL);
         if (res.Failure)
             return InvalidTokenErrorStatement("Invalid token in expression statement", res);
 
-        return new ParseResult<Statement>(exprStatement);
+        return new ParseResult<Statement>(new ExpressionStatement(expr.Result.Position, expr.Result));
     }
 
     private ParseResult<Statement> ParseFileModifiableStatement()
@@ -364,6 +443,81 @@ public class Parser
         }
 
         return new ParseResult<Statement>(file, error);
+    }
+
+    // Returns the error parse result, or null on success.
+    private ParseResult<Statement>? ParseGetSet(Property propDef)
+    {
+        AcceptResult res;
+        if (Peek.Type == TokenType.Get)
+        {
+            if (Accept(TokenType.Get, TokenType.Is).Success)
+            {
+                // get is [expr]
+
+                var exprResult = ParseExpression();
+                if (exprResult.Error && exprResult.Result is ErrorExpression exp)
+                    return ErrorStatement(exp.Value, exp.Position);
+                propDef.GetStatements.Add(new Return(exprResult.Result.Position) { Value = exprResult.Result });
+                res = Accept(TokenType.EOL);
+                if (res.Failure)
+                    return InvalidTokenErrorStatement("Invalid token in get", res);
+            }
+            else
+            {
+                // get
+                //     [statements]
+
+                res = Accept(TokenType.Get, TokenType.EOL, TokenType.Indent);
+                if (res.Failure)
+                    return InvalidTokenErrorStatement("Invalid token in get", res);
+
+                while (Peek.Type != TokenType.Dedent)
+                    propDef.GetStatements.Add(ParseMethodStatement().Result);
+
+                res = Accept(TokenType.Dedent);
+                if (res.Failure)
+                    return InvalidTokenErrorStatement("Invalid token in get", res);
+            }
+        }
+        else
+        {
+            res = Accept(TokenType.Set, TokenType.LeftParenthesis, TokenType.Literal, TokenType.RightParenthesis);
+            if (res.Failure)
+                return InvalidTokenErrorStatement("Invalid token in set", res);
+            propDef.SetParameterName = GetToken(res, 2).Value;
+
+            if (Accept(TokenType.Is).Success)
+            {
+                // set(v) is [statement]
+
+                var stmtResult = ParseMethodStatement();
+                if (stmtResult.Error)
+                    return stmtResult;
+                propDef.SetStatements.Add(stmtResult.Result);
+
+                // res = Accept(TokenType.EOL);
+                // if (res.Failure)
+                //     return InvalidTokenErrorStatement("Invalid token in set", res);
+            }
+            else
+            {
+                // set(v)
+                //     [statements]
+
+                res = Accept(TokenType.EOL, TokenType.Indent);
+                if (res.Failure)
+                    return InvalidTokenErrorStatement("Invalid token in set", res);
+
+                while (Peek.Type != TokenType.Dedent)
+                    propDef.SetStatements.Add(ParseMethodStatement().Result);
+
+                res = Accept(TokenType.Dedent);
+                if (res.Failure)
+                    return InvalidTokenErrorStatement("Invalid token in set", res);
+            }
+        }
+        return null;
     }
 
     private ParseResult<Expression> ParseIdentifier()
@@ -564,7 +718,7 @@ public class Parser
             var paramNameToken = GetToken(res);
             var paramType = ParseType();
             if (!paramType.Error)
-                methodDef.Parameters.Add(new Parameter(paramType.Result.Position, paramType.Result, Next().Value));
+                methodDef.Parameters.Add(new Parameter(paramType.Result.Position, paramType.Result, paramNameToken.Value));
 
             Accept(TokenType.Comma);
         }
@@ -627,6 +781,9 @@ public class Parser
     {
         var start = Next();     // accept fn
 
+        if (Peek.Type == TokenType.New)
+            return ParseConstructor(modifiers, start);
+
         var res = Accept(TokenType.Literal);
         if (res.Failure)
             return InvalidTokenErrorStatement("Invalid token in method or property", res);
@@ -647,6 +804,7 @@ public class Parser
             TokenType.Continue => ParseContinue(),
             TokenType.EOL => ParseSpace(),
             TokenType.If => ParseIf(),
+            TokenType.Return => ParseReturn(),
             _ => ParseExpressionStatement(),
         };
 
@@ -828,79 +986,21 @@ public class Parser
         return new ParseResult<Statement>(propDef);
     }
 
-    // Returns the error parse result, or null on success.
-    private ParseResult<Statement>? ParseGetSet(Property propDef)
+    private ParseResult<Statement> ParseReturn()
     {
-        AcceptResult res;
-        if (Peek.Type == TokenType.Get)
+        var start = Next();     // accept return
+        var ret = new Return(start.Position);
+        if (Peek.Type != TokenType.EOL)
         {
-            if (Accept(TokenType.Get, TokenType.Is).Success)
-            {
-                // get is [expr]
-
-                var exprResult = ParseExpression();
-                if (exprResult.Error && exprResult.Result is ErrorExpression exp)
-                    return ErrorStatement(exp.Value, exp.Position);
-                propDef.GetStatements.Add(new Return(exprResult.Result.Position) { Value = exprResult.Result });
-                res = Accept(TokenType.EOL);
-                if (res.Failure)
-                    return InvalidTokenErrorStatement("Invalid token in get", res);
-            }
-            else
-            {
-                // get
-                //     [statements]
-
-                res = Accept(TokenType.Get, TokenType.EOL, TokenType.Indent);
-                if (res.Failure)
-                    return InvalidTokenErrorStatement("Invalid token in get", res);
-
-                while (Peek.Type != TokenType.Dedent)
-                    propDef.GetStatements.Add(ParseMethodStatement().Result);
-
-                res = Accept(TokenType.Dedent);
-                if (res.Failure)
-                    return InvalidTokenErrorStatement("Invalid token in get", res);
-            }
+            var expr = ParseExpression();
+            if (expr.Error && expr.Result is ErrorExpression ex)
+                return ErrorStatement(ex.Value, ex.Position);
+            ret.Value = expr.Result;
         }
-        else
-        {
-            res = Accept(TokenType.Set, TokenType.LeftParenthesis, TokenType.Literal, TokenType.RightParenthesis);
-            if (res.Failure)
-                return InvalidTokenErrorStatement("Invalid token in set", res);
-            propDef.SetParameterName = GetToken(res, 2).Value;
-
-            if (Accept(TokenType.Is).Success)
-            {
-                // set(v) is [statement]
-
-                var stmtResult = ParseMethodStatement();
-                if (stmtResult.Error)
-                    return stmtResult;
-                propDef.SetStatements.Add(stmtResult.Result);
-
-                // res = Accept(TokenType.EOL);
-                // if (res.Failure)
-                //     return InvalidTokenErrorStatement("Invalid token in set", res);
-            }
-            else
-            {
-                // set(v)
-                //     [statements]
-
-                res = Accept(TokenType.EOL, TokenType.Indent);
-                if (res.Failure)
-                    return InvalidTokenErrorStatement("Invalid token in set", res);
-
-                while (Peek.Type != TokenType.Dedent)
-                    propDef.SetStatements.Add(ParseMethodStatement().Result);
-
-                res = Accept(TokenType.Dedent);
-                if (res.Failure)
-                    return InvalidTokenErrorStatement("Invalid token in set", res);
-            }
-        }
-        return null;
+        var res = Accept(TokenType.EOL);
+        if (res.Failure)
+            return InvalidTokenErrorStatement("Invalid token in return", res);
+        return new ParseResult<Statement>(ret);
     }
 
     private ParseResult<Statement> ParseSpace()

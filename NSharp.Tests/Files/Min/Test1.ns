@@ -1,32 +1,9 @@
-
 class MyClass
-    fn First []int
-    fn Second [][][]int = 3
-    fn Third int get
-    fn Fourth int set
-    fn Fifth int get, set
-    fn Sixth int set, get = 4
-    fn Seventh int is DoThing()
-    fn Eighth int
+    fn Argle(x int, y str)
         ; multiline
-        Something()
-    fn Argle int
-        get is Thing()
-        set(v) is Thing(v)
-    fn Ninth int
-        get is GetValue()
-        set(v)
-            ; multiline
-            Save(v)
-    fn Tenth int
-        get
-            ; multiline
-            GetVal()
-        set(v) is Save(v)
-    fn Bargle int = 7
-        get
-            ; multiline
-            GetVal()
-        set(v)
-            ; multi
-            SetVal(v)
+        x = 1
+        break
+        continue
+        ret
+        ret x
+    fn new() is ; empty

@@ -19,7 +19,7 @@ public partial class Array
 
 public partial class Assignment
 {
-    public override string ToString() => $"({Left} Assign.{Operator} {Right})";
+    public override void Print(int indent) => WriteLineIndented(indent, $"Assignment: {Left} Assign.{Operator} {Right}");
 }
 
 public partial class BinaryOperator
@@ -41,7 +41,7 @@ public partial class Class
 {
     public override void Print(int indent)
     {
-        WriteLineIndented(indent, $"Class: {string.Join(" ", Modifiers)} {Name}{(Parent != null ? " : " + Parent : "")}");
+        WriteLineIndented(indent, $"Class: {string.Join(" ", Modifiers)} {Name}{(Parent != null ? " inherits " + Parent : "")}{(Interfaces.Count > 0 ? " implements " : "")}{string.Join(", ", Interfaces)}");
         foreach (var statement in Statements)
             statement.Print(indent + 1);
     }
@@ -55,6 +55,16 @@ public partial class Comment
 public partial class Constant
 {
     public override void Print(int indent) => WriteLineIndented(indent, $"Constant: {string.Join(" ", Modifiers)} {Type} {Name}{(Value != null ? " = " + Value : "")}");
+}
+
+public partial class ConstructorDefinition
+{
+    public override void Print(int indent)
+    {
+        WriteLineIndented(indent, $"Constructor: {string.Join(" ", Modifiers)} .ctor({string.Join(", ", Parameters)})");
+        foreach (var statement in Statements)
+            statement.Print(indent + 1);
+    }
 }
 
 public partial class Continue

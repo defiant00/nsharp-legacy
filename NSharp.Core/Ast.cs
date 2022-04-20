@@ -29,7 +29,7 @@ public partial class Array : Expression
     }
 }
 
-public partial class Assignment : Expression
+public partial class Assignment : Statement
 {
     public AssignmentOperator Operator { get; set; }
     public Expression Left { get; set; }
@@ -77,6 +77,7 @@ public partial class Class : Statement
     public List<Modifier> Modifiers { get; set; }
     public string Name { get; set; }
     public Identifier? Parent { get; set; }
+    public List<Identifier> Interfaces { get; set; } = new();
     public List<Statement> Statements { get; set; } = new();
 
     public Class(Position position, List<Modifier> modifiers, string name) : base(position)
@@ -111,6 +112,18 @@ public partial class Constant : Statement
         Modifiers = modifiers;
         Name = name;
         Type = type;
+    }
+}
+
+public partial class ConstructorDefinition : Statement
+{
+    public List<Modifier> Modifiers { get; set; }
+    public List<Parameter> Parameters { get; set; } = new();
+    public List<Statement> Statements { get; set; } = new();
+
+    public ConstructorDefinition(Position position, List<Modifier> modifiers) : base(position)
+    {
+        Modifiers = modifiers;
     }
 }
 
