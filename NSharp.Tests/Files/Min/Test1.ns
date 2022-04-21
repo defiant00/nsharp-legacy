@@ -6,4 +6,9 @@ class MyClass
         continue
         ret
         ret x
-    fn new() is ; empty
+    fn new()
+        ; empty
+        x ??= 3 ?? 4
+        x is 3
+        j as 4
+        x?.y

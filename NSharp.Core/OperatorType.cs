@@ -4,6 +4,10 @@ public enum OperatorType
 {
     None,
     Dot,
+    NullDot,
+    NullCoalesce,
+    Is,
+    As,
     Add,
     Subtract,
     Multiply,
@@ -31,34 +35,40 @@ public static class OperatorHelpers
     public static int Precedence(this OperatorType operatorType) =>
         operatorType switch
         {
-            OperatorType.Dot => 10,
+            OperatorType.Dot => 12,
+            OperatorType.NullDot => 12,
 
-            OperatorType.Multiply => 9,
-            OperatorType.Divide => 9,
-            OperatorType.Modulo => 9,
+            OperatorType.As => 11,
 
-            OperatorType.Add => 8,
-            OperatorType.Subtract => 8,
+            OperatorType.Multiply => 10,
+            OperatorType.Divide => 10,
+            OperatorType.Modulo => 10,
 
-            OperatorType.LeftShift => 7,
-            OperatorType.RightShift => 7,
+            OperatorType.Add => 9,
+            OperatorType.Subtract => 9,
 
-            OperatorType.BitwiseAnd => 6,
+            OperatorType.LeftShift => 8,
+            OperatorType.RightShift => 8,
 
-            OperatorType.BitwiseOr => 5,
-            OperatorType.BitwiseXor => 5,
+            OperatorType.BitwiseAnd => 7,
 
-            OperatorType.LessThan => 4,
-            OperatorType.GreaterThan => 4,
-            OperatorType.LessThanOrEqual => 4,
-            OperatorType.GreaterThanOrEqual => 4,
+            OperatorType.BitwiseOr => 6,
+            OperatorType.BitwiseXor => 6,
 
-            OperatorType.Equal => 3,
-            OperatorType.NotEqual => 3,
+            OperatorType.Is => 5,
+            OperatorType.LessThan => 5,
+            OperatorType.GreaterThan => 5,
+            OperatorType.LessThanOrEqual => 5,
+            OperatorType.GreaterThanOrEqual => 5,
 
-            OperatorType.And => 2,
+            OperatorType.Equal => 4,
+            OperatorType.NotEqual => 4,
 
-            OperatorType.Or => 1,
+            OperatorType.And => 3,
+
+            OperatorType.Or => 2,
+
+            OperatorType.NullCoalesce => 1,
 
             _ => -1,
         };

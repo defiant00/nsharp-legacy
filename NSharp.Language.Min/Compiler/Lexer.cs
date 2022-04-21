@@ -5,7 +5,7 @@ namespace NSharp.Language.Min.Compiler;
 public class Lexer
 {
     const char EOL = '\0';
-    const string OPERATOR_CHARACTERS = "()[]{}<>!=+-*/%,.:&|^~";
+    const string OPERATOR_CHARACTERS = "()[]{}<>?!=+-*/%,.:&|^~";
 
     private delegate StateFunction? StateFunction();
 

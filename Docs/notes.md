@@ -94,7 +94,6 @@ Access modifiers - sane defaults (protected, final? see kotlin) and only keyword
 Check types with `is` and support c# single-line declaration cast check `if val is SomeClass c`  
 Cast with `as`, `val as SomeClass`
 
-[X] no syntactic sugar for string concatenation (call concat and tostring if you really need it)  
 [ ] no `break` in a `switch`  
 [ ] each switch case is its own scope
 [ ] implicit types wherever possible

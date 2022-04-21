@@ -152,7 +152,7 @@ public class Decompiler
     private void ProcessBinaryOperator(int indent, BinaryOperator binaryOperator, int parentPrecedence)
     {
         bool parentheses = Settings.AllParens || binaryOperator.Operator.Precedence() < parentPrecedence;
-        bool space = binaryOperator.Operator != OperatorType.Dot;
+        bool space = binaryOperator.Operator != OperatorType.Dot && binaryOperator.Operator != OperatorType.NullDot;
         if (parentheses)
             Buffer.Append("(");
         ProcessExpression(indent, binaryOperator.Left, binaryOperator.Operator.Precedence());

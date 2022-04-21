@@ -14,4 +14,5 @@ public enum AssignmentOperator
     BitwiseXor,
     LeftShift,
     RightShift,
+    NullCoalesce,
 }

@@ -27,6 +27,9 @@ public static class TokenHelper
         type switch
         {
             TokenType.Dot => OperatorType.Dot,
+            TokenType.NullDot => OperatorType.NullDot,
+
+            TokenType.As => OperatorType.As,
 
             TokenType.Multiply => OperatorType.Multiply,
             TokenType.Divide => OperatorType.Divide,
@@ -43,6 +46,7 @@ public static class TokenHelper
             TokenType.BitwiseOr => OperatorType.BitwiseOr,
             TokenType.BitwiseXor => OperatorType.BitwiseXor,
 
+            TokenType.Is => OperatorType.Is,
             TokenType.LessThan => OperatorType.LessThan,
             TokenType.GreaterThan => OperatorType.GreaterThan,
             TokenType.LessThanOrEqual => OperatorType.LessThanOrEqual,
@@ -54,6 +58,8 @@ public static class TokenHelper
             TokenType.And => OperatorType.And,
 
             TokenType.Or => OperatorType.Or,
+
+            TokenType.NullCoalesce => OperatorType.NullCoalesce,
 
             _ => OperatorType.None,
         };
@@ -74,6 +80,7 @@ public static class TokenHelper
             TokenType.BitwiseXorAssign => AssignmentOperator.BitwiseXor,
             TokenType.LeftShiftAssign => AssignmentOperator.LeftShift,
             TokenType.RightShiftAssign => AssignmentOperator.RightShift,
+            TokenType.NullCoalesceAssign => AssignmentOperator.NullCoalesce,
             _ => AssignmentOperator.None,
         };
 }

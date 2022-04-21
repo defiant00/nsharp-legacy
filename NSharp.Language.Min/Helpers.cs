@@ -51,24 +51,40 @@ public static class Helpers
         op switch
         {
             OperatorType.Dot => ".",
-            OperatorType.Add => "+",
-            OperatorType.Subtract => "-",
+            OperatorType.NullDot => "?.",
+
+            OperatorType.As => "as",
+
             OperatorType.Multiply => "*",
             OperatorType.Divide => "/",
             OperatorType.Modulo => "%",
-            OperatorType.Equal => "==",
-            OperatorType.NotEqual => "!=",
+
+            OperatorType.Add => "+",
+            OperatorType.Subtract => "-",
+
+            OperatorType.LeftShift => "<<",
+            OperatorType.RightShift => ">>",
+
+            OperatorType.BitwiseAnd => "&",
+
+            OperatorType.BitwiseOr => "|",
+            OperatorType.BitwiseXor => "^",
+
+            OperatorType.Is => "is",
             OperatorType.LessThan => "<",
             OperatorType.GreaterThan => ">",
             OperatorType.LessThanOrEqual => "<=",
             OperatorType.GreaterThanOrEqual => ">=",
+
+            OperatorType.Equal => "==",
+            OperatorType.NotEqual => "!=",
+
             OperatorType.And => "and",
+
             OperatorType.Or => "or",
-            OperatorType.BitwiseAnd => "&",
-            OperatorType.BitwiseOr => "|",
-            OperatorType.BitwiseXor => "^",
-            OperatorType.LeftShift => "<<",
-            OperatorType.RightShift => ">>",
+
+            OperatorType.NullCoalesce => "??",
+
             _ => $"[{op}]",
         };
 
@@ -86,6 +102,7 @@ public static class Helpers
             AssignmentOperator.BitwiseXor => "^=",
             AssignmentOperator.LeftShift => "<<=",
             AssignmentOperator.RightShift => ">>=",
+            AssignmentOperator.NullCoalesce => "??=",
             _ => $"[{op}]",
         };
 
@@ -163,6 +180,8 @@ public static class Helpers
         [">>"] = TokenType.RightShift,
         ["."] = TokenType.Dot,
         [".."] = TokenType.DoubleDot,
+        ["?."] = TokenType.NullDot,
+        ["??"] = TokenType.NullCoalesce,
         [","] = TokenType.Comma,
         [":"] = TokenType.Colon,
         ["("] = TokenType.LeftParenthesis,
@@ -182,6 +201,7 @@ public static class Helpers
         ["^="] = TokenType.BitwiseXorAssign,
         ["<<="] = TokenType.LeftShiftAssign,
         [">>="] = TokenType.RightShiftAssign,
+        ["??="] = TokenType.NullCoalesceAssign,
         ["*"] = TokenType.Multiply,
         ["/"] = TokenType.Divide,
         ["%"] = TokenType.Modulo,
