@@ -88,6 +88,33 @@ public class Parser
 
     private Token ErrorToken(AcceptResult result) => Tokens[result.StartingIndex + result.Count];
 
+    private ParseResult<Expression> ParseAccessor(Expression expr)
+    {
+        var res = Accept(TokenType.LeftBracket);
+        if (res.Failure)
+            return InvalidTokenErrorExpression("Invalid token in accessor", res);
+
+        var argExpr = ParseExpression();
+        if (argExpr.Error)
+            return argExpr;
+
+        var accessor = new Accessor(expr.Position, expr, argExpr.Result);
+
+        while (Accept(TokenType.Comma).Success)
+        {
+            argExpr = ParseExpression();
+            if (argExpr.Error)
+                return argExpr;
+            accessor.Arguments.Add(argExpr.Result);
+        }
+
+        res = Accept(TokenType.RightBracket);
+        if (res.Failure)
+            return InvalidTokenErrorExpression("Invalid token in accessor", res);
+
+        return new ParseResult<Expression>(accessor);
+    }
+
     private ParseResult<Expression> ParseArray()
     {
         var start = Peek;
@@ -163,22 +190,22 @@ public class Parser
 
         if (Accept(TokenType.From).Success)
         {
-            var parentIdent = ParseIdentifier();
-            if (!parentIdent.Error && parentIdent.Result is Identifier pId)
-                classResult.Parent = pId;
+            var parentIdent = ParseType();
+            if (!parentIdent.Error)
+                classResult.Parent = parentIdent.Result;
         }
 
         if (Accept(TokenType.Is).Success)
         {
-            var interfaceIdent = ParseIdentifier();
-            if (!interfaceIdent.Error && interfaceIdent.Result is Identifier iId)
-                classResult.Interfaces.Add(iId);
+            var interfaceIdent = ParseType();
+            if (!interfaceIdent.Error)
+                classResult.Interfaces.Add(interfaceIdent.Result);
 
             while (Accept(TokenType.Comma).Success)
             {
-                interfaceIdent = ParseIdentifier();
-                if (!interfaceIdent.Error && interfaceIdent.Result is Identifier id)
-                    classResult.Interfaces.Add(id);
+                interfaceIdent = ParseType();
+                if (!interfaceIdent.Error)
+                    classResult.Interfaces.Add(interfaceIdent.Result);
             }
         }
 
@@ -365,16 +392,12 @@ public class Parser
 
     private ParseResult<Statement> ParseExpressionStatement()
     {
-        var left = ParsePrimaryExpression();
-        if (left.Error && left.Result is ErrorExpression ex)
+        var expr = ParseExpression();
+        if (expr.Error && expr.Result is ErrorExpression ex)
             return ErrorStatement(ex.Value, ex.Position);
 
         if (Peek.Type.IsAssignment())
-            return ParseAssignment(left.Result);
-
-        var expr = ParseBinaryOperatorRightSide(0, left.Result);
-        if (expr.Error && expr.Result is ErrorExpression exp)
-            return ErrorStatement(exp.Value, exp.Position);
+            return ParseAssignment(expr.Result);
 
         var res = Accept(TokenType.EOL);
         if (res.Failure)
@@ -443,6 +466,33 @@ public class Parser
         }
 
         return new ParseResult<Statement>(file, error);
+    }
+
+    private ParseResult<Expression> ParseGeneric(Expression expr)
+    {
+        var res = Accept(TokenType.LeftCurly);
+        if (res.Failure)
+            return InvalidTokenErrorExpression("Invalid token in generic", res);
+
+        var argExpr = ParseExpression();
+        if (argExpr.Error)
+            return argExpr;
+
+        var generic = new Generic(expr.Position, expr, argExpr.Result);
+
+        while (Accept(TokenType.Comma).Success)
+        {
+            argExpr = ParseExpression();
+            if (argExpr.Error)
+                return argExpr;
+            generic.Arguments.Add(argExpr.Result);
+        }
+
+        res = Accept(TokenType.RightCurly);
+        if (res.Failure)
+            return InvalidTokenErrorExpression("Invalid token in generic", res);
+
+        return new ParseResult<Expression>(generic);
     }
 
     // Returns the error parse result, or null on success.
@@ -522,68 +572,46 @@ public class Parser
 
     private ParseResult<Expression> ParseIdentifier()
     {
-        var start = Peek.Position;
-
-        var firstPartResult = ParseIdentifierPart();
-
-        if (!firstPartResult.Error && firstPartResult.Result is IdentifierPart firstPart)
-        {
-            var identifier = new Identifier(start, firstPart);
-
-            var res = Accept(TokenType.Dot);
-            while (res.Success)
-            {
-                var nextPartResult = ParseIdentifierPart();
-                if (!nextPartResult.Error && nextPartResult.Result is IdentifierPart nextPart)
-                {
-                    identifier.Parts.Add(nextPart);
-                    res = Accept(TokenType.Dot);
-                }
-                else
-                    return nextPartResult;
-            }
-
-            return new ParseResult<Expression>(identifier);
-        }
-        return firstPartResult;
+        var start = Next();
+        return new ParseResult<Expression>(new Identifier(start.Position, start.Value));
     }
 
-    private ParseResult<Expression> ParseIdentifierPart()
-    {
-        var res = Accept(TokenType.Literal);
-        if (res.Failure)
-            return InvalidTokenErrorExpression("Invalid token in identifier", res);
-        var identifierPart = new IdentifierPart(GetToken(res).Position, GetToken(res).Value);
+    // private ParseResult<Expression> ParseIdentifierPart()
+    // {
+    //     var res = Accept(TokenType.Literal);
+    //     if (res.Failure)
+    //         return InvalidTokenErrorExpression("Invalid token in identifier", res);
+    //     var identifierPart = new IdentifierPart(GetToken(res).Position, GetToken(res).Value);
 
-        // generics
-        if (Accept(TokenType.LeftCurly).Success)
-        {
-            var typeIdentRes = ParseIdentifier();
-            if (!typeIdentRes.Error && typeIdentRes.Result is Identifier typeIdentifier)
-            {
-                identifierPart.Types = new();
-                identifierPart.Types.Add(typeIdentifier);
+    //     // generics
+    //     if (Accept(TokenType.LeftCurly).Success)
+    //     {
+    //         var typeIdentRes = ParseIdentifier();
+    //         if (!typeIdentRes.Error && typeIdentRes.Result is Identifier typeIdentifier)
+    //         {
+    //             identifierPart.Types = new();
+    //             identifierPart.Types.Add(typeIdentifier);
 
-                // check for multiple types
-                while (Accept(TokenType.Comma).Success)
-                {
-                    typeIdentRes = ParseIdentifier();
-                    if (!typeIdentRes.Error && typeIdentRes.Result is Identifier nextTypeIdent)
-                        identifierPart.Types.Add(nextTypeIdent);
-                    else
-                        return typeIdentRes;
-                }
+    //             // check for multiple types
+    //             while (Accept(TokenType.Comma).Success)
+    //             {
+    //                 typeIdentRes = ParseIdentifier();
+    //                 if (!typeIdentRes.Error && typeIdentRes.Result is Identifier nextTypeIdent)
+    //                     identifierPart.Types.Add(nextTypeIdent);
+    //                 else
+    //                     return typeIdentRes;
+    //             }
 
-                res = Accept(TokenType.RightCurly);
-                if (res.Failure)
-                    return InvalidTokenErrorExpression("Invalid token in identifier", res);
-            }
-            else
-                return typeIdentRes;
-        }
+    //             res = Accept(TokenType.RightCurly);
+    //             if (res.Failure)
+    //                 return InvalidTokenErrorExpression("Invalid token in identifier", res);
+    //         }
+    //         else
+    //             return typeIdentRes;
+    //     }
 
-        return new ParseResult<Expression>(identifierPart);
-    }
+    //     return new ParseResult<Expression>(identifierPart);
+    // }
 
     private ParseResult<Statement> ParseIf(bool inElseIf = false)
     {
@@ -647,16 +675,24 @@ public class Parser
 
     private ParseResult<Statement> ParseImport()
     {
-        var useToken = Next();
-        var identifier = ParseIdentifier();
-        var res = Accept(TokenType.EOL);
+        var res = Accept(TokenType.Use, TokenType.Literal);
         if (res.Failure)
             return InvalidTokenErrorStatement("Invalid token in use", res);
 
-        if (!identifier.Error && identifier.Result is Identifier ident)
-            return new ParseResult<Statement>(new Import(useToken.Position, ident));
+        var import = new Import(GetToken(res).Position, GetToken(res, 1).Value);
 
-        return ErrorStatement("Couldn't parse use", useToken.Position);
+        res = Accept(TokenType.Dot, TokenType.Literal);
+        while (res.Success)
+        {
+            import.Value.Add(GetToken(res, 1).Value);
+            res = Accept(TokenType.Dot, TokenType.Literal);
+        }
+
+        res = Accept(TokenType.EOL);
+        if (res.Failure)
+            return InvalidTokenErrorStatement("Invalid token in use", res);
+
+        return new ParseResult<Statement>(import);
     }
 
     private ParseResult<Statement> ParseInterface(List<Modifier> modifiers)
@@ -665,9 +701,9 @@ public class Parser
         return ErrorStatement("Interface parsing not supported yet", new Position());
     }
 
-    private ParseResult<Expression> ParseMethodCall(Expression target)
+    private ParseResult<Expression> ParseMethodCall(Expression expr)
     {
-        var methodCall = new MethodCall(target.Position, target);
+        var methodCall = new MethodCall(expr.Position, expr);
         var res = Accept(TokenType.LeftParenthesis);
         if (res.Failure)
             return InvalidTokenErrorExpression("Invalid token in method call", res);
@@ -677,13 +713,13 @@ public class Parser
             var paramExpr = ParseExpression();
             if (paramExpr.Error)
                 return paramExpr;
-            methodCall.Parameters.Add(paramExpr.Result);
+            methodCall.Arguments.Add(paramExpr.Result);
             while (Accept(TokenType.Comma).Success)
             {
                 paramExpr = ParseExpression();
                 if (paramExpr.Error)
                     return paramExpr;
-                methodCall.Parameters.Add(paramExpr.Result);
+                methodCall.Arguments.Add(paramExpr.Result);
             }
         }
 
@@ -810,16 +846,24 @@ public class Parser
 
     private ParseResult<Statement> ParseNamespace()
     {
-        var nsToken = Next();
-        var identifier = ParseIdentifier();
-        var res = Accept(TokenType.EOL);
+        var res = Accept(TokenType.Namespace, TokenType.Literal);
         if (res.Failure)
             return InvalidTokenErrorStatement("Invalid token in namespace", res);
 
-        if (!identifier.Error && identifier.Result is Identifier ident)
-            return new ParseResult<Statement>(new Namespace(nsToken.Position, ident));
+        var ns = new Namespace(GetToken(res).Position, GetToken(res, 1).Value);
 
-        return ErrorStatement("Couldn't parse namespace", nsToken.Position);
+        res = Accept(TokenType.Dot, TokenType.Literal);
+        while (res.Success)
+        {
+            ns.Value.Add(GetToken(res, 1).Value);
+            res = Accept(TokenType.Dot, TokenType.Literal);
+        }
+
+        res = Accept(TokenType.EOL);
+        if (res.Failure)
+            return InvalidTokenErrorStatement("Invalid token in namespace", res);
+
+        return new ParseResult<Statement>(ns);
     }
 
     private ParseResult<Expression> ParseParenthesizedExpression()
@@ -859,8 +903,17 @@ public class Parser
         if (leftResult.Error)
             return leftResult;
 
-        if (Peek.Type == TokenType.LeftParenthesis)
-            leftResult = ParseMethodCall(leftResult.Result);
+        while (Peek.Type == TokenType.LeftParenthesis ||
+            Peek.Type == TokenType.LeftBracket ||
+            Peek.Type == TokenType.LeftCurly)
+        {
+            if (Peek.Type == TokenType.LeftParenthesis)
+                leftResult = ParseMethodCall(leftResult.Result);
+            else if (Peek.Type == TokenType.LeftBracket)
+                leftResult = ParseAccessor(leftResult.Result);
+            else if (Peek.Type == TokenType.LeftCurly)
+                leftResult = ParseGeneric(leftResult.Result);
+        }
 
         return leftResult;
     }
@@ -1067,104 +1120,104 @@ public class Parser
     {
         switch (Peek.Type)
         {
-            case TokenType.String:
-                {
-                    var type = new Identifier(Peek.Position, new IdentifierPart(Peek.Position, "System"));
-                    type.Parts.Add(new IdentifierPart(Peek.Position, "String"));
-                    Next();
-                    return new ParseResult<Expression>(type);
-                }
-            case TokenType.Character:
-                {
-                    var type = new Identifier(Peek.Position, new IdentifierPart(Peek.Position, "System"));
-                    type.Parts.Add(new IdentifierPart(Peek.Position, "Char"));
-                    Next();
-                    return new ParseResult<Expression>(type);
-                }
-            case TokenType.Boolean:
-                {
-                    var type = new Identifier(Peek.Position, new IdentifierPart(Peek.Position, "System"));
-                    type.Parts.Add(new IdentifierPart(Peek.Position, "Boolean"));
-                    Next();
-                    return new ParseResult<Expression>(type);
-                }
-            case TokenType.I8:
-                {
-                    var type = new Identifier(Peek.Position, new IdentifierPart(Peek.Position, "System"));
-                    type.Parts.Add(new IdentifierPart(Peek.Position, "SByte"));
-                    Next();
-                    return new ParseResult<Expression>(type);
-                }
-            case TokenType.I16:
-                {
-                    var type = new Identifier(Peek.Position, new IdentifierPart(Peek.Position, "System"));
-                    type.Parts.Add(new IdentifierPart(Peek.Position, "Int16"));
-                    Next();
-                    return new ParseResult<Expression>(type);
-                }
-            case TokenType.I32:
-                {
-                    var type = new Identifier(Peek.Position, new IdentifierPart(Peek.Position, "System"));
-                    type.Parts.Add(new IdentifierPart(Peek.Position, "Int32"));
-                    Next();
-                    return new ParseResult<Expression>(type);
-                }
-            case TokenType.I64:
-                {
-                    var type = new Identifier(Peek.Position, new IdentifierPart(Peek.Position, "System"));
-                    type.Parts.Add(new IdentifierPart(Peek.Position, "Int64"));
-                    Next();
-                    return new ParseResult<Expression>(type);
-                }
-            case TokenType.U8:
-                {
-                    var type = new Identifier(Peek.Position, new IdentifierPart(Peek.Position, "System"));
-                    type.Parts.Add(new IdentifierPart(Peek.Position, "Byte"));
-                    Next();
-                    return new ParseResult<Expression>(type);
-                }
-            case TokenType.U16:
-                {
-                    var type = new Identifier(Peek.Position, new IdentifierPart(Peek.Position, "System"));
-                    type.Parts.Add(new IdentifierPart(Peek.Position, "UInt16"));
-                    Next();
-                    return new ParseResult<Expression>(type);
-                }
-            case TokenType.U32:
-                {
-                    var type = new Identifier(Peek.Position, new IdentifierPart(Peek.Position, "System"));
-                    type.Parts.Add(new IdentifierPart(Peek.Position, "UInt32"));
-                    Next();
-                    return new ParseResult<Expression>(type);
-                }
-            case TokenType.U64:
-                {
-                    var type = new Identifier(Peek.Position, new IdentifierPart(Peek.Position, "System"));
-                    type.Parts.Add(new IdentifierPart(Peek.Position, "UInt64"));
-                    Next();
-                    return new ParseResult<Expression>(type);
-                }
-            case TokenType.F32:
-                {
-                    var type = new Identifier(Peek.Position, new IdentifierPart(Peek.Position, "System"));
-                    type.Parts.Add(new IdentifierPart(Peek.Position, "Single"));
-                    Next();
-                    return new ParseResult<Expression>(type);
-                }
-            case TokenType.F64:
-                {
-                    var type = new Identifier(Peek.Position, new IdentifierPart(Peek.Position, "System"));
-                    type.Parts.Add(new IdentifierPart(Peek.Position, "Double"));
-                    Next();
-                    return new ParseResult<Expression>(type);
-                }
-            case TokenType.Decimal:
-                {
-                    var type = new Identifier(Peek.Position, new IdentifierPart(Peek.Position, "System"));
-                    type.Parts.Add(new IdentifierPart(Peek.Position, "Decimal"));
-                    Next();
-                    return new ParseResult<Expression>(type);
-                }
+            // case TokenType.String:
+            //     {
+            //         var type = new Identifier(Peek.Position, new IdentifierPart(Peek.Position, "System"));
+            //         type.Parts.Add(new IdentifierPart(Peek.Position, "String"));
+            //         Next();
+            //         return new ParseResult<Expression>(type);
+            //     }
+            // case TokenType.Character:
+            //     {
+            //         var type = new Identifier(Peek.Position, new IdentifierPart(Peek.Position, "System"));
+            //         type.Parts.Add(new IdentifierPart(Peek.Position, "Char"));
+            //         Next();
+            //         return new ParseResult<Expression>(type);
+            //     }
+            // case TokenType.Boolean:
+            //     {
+            //         var type = new Identifier(Peek.Position, new IdentifierPart(Peek.Position, "System"));
+            //         type.Parts.Add(new IdentifierPart(Peek.Position, "Boolean"));
+            //         Next();
+            //         return new ParseResult<Expression>(type);
+            //     }
+            // case TokenType.I8:
+            //     {
+            //         var type = new Identifier(Peek.Position, new IdentifierPart(Peek.Position, "System"));
+            //         type.Parts.Add(new IdentifierPart(Peek.Position, "SByte"));
+            //         Next();
+            //         return new ParseResult<Expression>(type);
+            //     }
+            // case TokenType.I16:
+            //     {
+            //         var type = new Identifier(Peek.Position, new IdentifierPart(Peek.Position, "System"));
+            //         type.Parts.Add(new IdentifierPart(Peek.Position, "Int16"));
+            //         Next();
+            //         return new ParseResult<Expression>(type);
+            //     }
+            // case TokenType.I32:
+            //     {
+            //         var type = new Identifier(Peek.Position, new IdentifierPart(Peek.Position, "System"));
+            //         type.Parts.Add(new IdentifierPart(Peek.Position, "Int32"));
+            //         Next();
+            //         return new ParseResult<Expression>(type);
+            //     }
+            // case TokenType.I64:
+            //     {
+            //         var type = new Identifier(Peek.Position, new IdentifierPart(Peek.Position, "System"));
+            //         type.Parts.Add(new IdentifierPart(Peek.Position, "Int64"));
+            //         Next();
+            //         return new ParseResult<Expression>(type);
+            //     }
+            // case TokenType.U8:
+            //     {
+            //         var type = new Identifier(Peek.Position, new IdentifierPart(Peek.Position, "System"));
+            //         type.Parts.Add(new IdentifierPart(Peek.Position, "Byte"));
+            //         Next();
+            //         return new ParseResult<Expression>(type);
+            //     }
+            // case TokenType.U16:
+            //     {
+            //         var type = new Identifier(Peek.Position, new IdentifierPart(Peek.Position, "System"));
+            //         type.Parts.Add(new IdentifierPart(Peek.Position, "UInt16"));
+            //         Next();
+            //         return new ParseResult<Expression>(type);
+            //     }
+            // case TokenType.U32:
+            //     {
+            //         var type = new Identifier(Peek.Position, new IdentifierPart(Peek.Position, "System"));
+            //         type.Parts.Add(new IdentifierPart(Peek.Position, "UInt32"));
+            //         Next();
+            //         return new ParseResult<Expression>(type);
+            //     }
+            // case TokenType.U64:
+            //     {
+            //         var type = new Identifier(Peek.Position, new IdentifierPart(Peek.Position, "System"));
+            //         type.Parts.Add(new IdentifierPart(Peek.Position, "UInt64"));
+            //         Next();
+            //         return new ParseResult<Expression>(type);
+            //     }
+            // case TokenType.F32:
+            //     {
+            //         var type = new Identifier(Peek.Position, new IdentifierPart(Peek.Position, "System"));
+            //         type.Parts.Add(new IdentifierPart(Peek.Position, "Single"));
+            //         Next();
+            //         return new ParseResult<Expression>(type);
+            //     }
+            // case TokenType.F64:
+            //     {
+            //         var type = new Identifier(Peek.Position, new IdentifierPart(Peek.Position, "System"));
+            //         type.Parts.Add(new IdentifierPart(Peek.Position, "Double"));
+            //         Next();
+            //         return new ParseResult<Expression>(type);
+            //     }
+            // case TokenType.Decimal:
+            //     {
+            //         var type = new Identifier(Peek.Position, new IdentifierPart(Peek.Position, "System"));
+            //         type.Parts.Add(new IdentifierPart(Peek.Position, "Decimal"));
+            //         Next();
+            //         return new ParseResult<Expression>(type);
+            //     }
             case TokenType.LeftBracket:
                 return ParseArray();
             case TokenType.Literal:

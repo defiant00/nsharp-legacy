@@ -23,7 +23,7 @@ Binary                  |      |
 String Interpolation    | Both | X
 Method Definitions      | Both | X
 Method Calls            | Both |
-Accessors               |      |
+Accessors               | Both |
 Generics                | Both |
 If                      | Both |
 Switch                  |      |

@@ -14,9 +14,19 @@ public abstract class Expression : AstItem
 
 public abstract class Statement : AstItem
 {
-    public virtual bool IsCode => true;
-
     public Statement(Position position) : base(position) { }
+}
+
+public partial class Accessor : Expression
+{
+    public Expression Expr { get; set; }
+    public List<Expression> Arguments { get; set; } = new();
+
+    public Accessor(Position position, Expression expr, Expression arg) : base(position)
+    {
+        Expr = expr;
+        Arguments.Add(arg);
+    }
 }
 
 public partial class Array : Expression
@@ -76,8 +86,8 @@ public partial class Class : Statement
 {
     public List<Modifier> Modifiers { get; set; }
     public string Name { get; set; }
-    public Identifier? Parent { get; set; }
-    public List<Identifier> Interfaces { get; set; } = new();
+    public Expression? Parent { get; set; }
+    public List<Expression> Interfaces { get; set; } = new();
     public List<Statement> Statements { get; set; } = new();
 
     public Class(Position position, List<Modifier> modifiers, string name) : base(position)
@@ -91,8 +101,6 @@ public partial class Comment : Statement
 {
     public string Value { get; set; }
     public bool IsDocumentation { get; set; }
-
-    public override bool IsCode => false;
 
     public Comment(Position position, string value) : base(position)
     {
@@ -150,7 +158,6 @@ public partial class ErrorExpression : Expression
 public partial class ErrorStatement : Statement
 {
     public string Value { get; set; }
-    public override bool IsCode => false;
 
     public ErrorStatement(Position position, string value) : base(position)
     {
@@ -189,22 +196,23 @@ public partial class For : Statement
     public For(Position position) : base(position) { }
 }
 
-public partial class Identifier : Expression
+public partial class Generic : Expression
 {
-    public List<IdentifierPart> Parts { get; set; } = new();
+    public Expression Expr { get; set; }
+    public List<Expression> Arguments { get; set; } = new();
 
-    public Identifier(Position position, IdentifierPart firstPart) : base(position)
+    public Generic(Position position, Expression expr, Expression arg) : base(position)
     {
-        Parts.Add(firstPart);
+        Expr = expr;
+        Arguments.Add(arg);
     }
 }
 
-public partial class IdentifierPart : Expression
+public partial class Identifier : Expression
 {
     public string Value { get; set; }
-    public List<Identifier>? Types { get; set; }
 
-    public IdentifierPart(Position position, string value) : base(position)
+    public Identifier(Position position, string value) : base(position)
     {
         Value = value;
     }
@@ -224,11 +232,11 @@ public partial class If : Statement
 
 public partial class Import : Statement
 {
-    public Identifier Value { get; set; }
+    public List<string> Value { get; set; } = new();
 
-    public Import(Position position, Identifier value) : base(position)
+    public Import(Position position, string value) : base(position)
     {
-        Value = value;
+        Value.Add(value);
     }
 }
 
@@ -244,12 +252,12 @@ public partial class LiteralToken : Expression
 
 public partial class MethodCall : Expression
 {
-    public Expression Target { get; set; }
-    public List<Expression> Parameters { get; set; } = new();
+    public Expression Expr { get; set; }
+    public List<Expression> Arguments { get; set; } = new();
 
-    public MethodCall(Position position, Expression target) : base(position)
+    public MethodCall(Position position, Expression expr) : base(position)
     {
-        Target = target;
+        Expr = expr;
     }
 }
 
@@ -270,11 +278,11 @@ public partial class MethodDefinition : Statement
 
 public partial class Namespace : Statement
 {
-    public Identifier Name { get; set; }
+    public List<string> Value { get; set; } = new();
 
-    public Namespace(Position position, Identifier name) : base(position)
+    public Namespace(Position position, string value) : base(position)
     {
-        Name = name;
+        Value.Add(value);
     }
 }
 
@@ -330,7 +338,6 @@ public partial class Return : Statement
 public partial class Space : Statement
 {
     public int Size { get; set; }
-    public override bool IsCode => false;
 
     public Space(Position position, int size) : base(position)
     {

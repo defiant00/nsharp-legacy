@@ -12,6 +12,11 @@ public abstract partial class AstItem
     public virtual void Print(int indent) => WriteLineIndented(indent, $"[{this}]");
 }
 
+public partial class Accessor
+{
+    public override string ToString() => $"{Expr}[{string.Join(", ", Arguments)}]";
+}
+
 public partial class Array
 {
     public override string ToString() => $"[]{Type}";
@@ -124,16 +129,14 @@ public partial class For
     }
 }
 
-public partial class Identifier
+public partial class Generic
 {
-    public string ToDottedString() => string.Join(".", Parts.Select(p => p.Value));
-
-    public override string ToString() => string.Join(".", Parts);
+    public override string ToString() => $"{Expr}{{{string.Join(", ", Arguments)}}}";
 }
 
-public partial class IdentifierPart
+public partial class Identifier
 {
-    public override string ToString() => (Types != null && Types.Count > 0) ? $"{Value}<{string.Join(", ", Types)}>" : Value;
+    public override string ToString() => Value;
 }
 
 public partial class If
@@ -154,7 +157,7 @@ public partial class If
 
 public partial class Import
 {
-    public override void Print(int indent) => WriteLineIndented(indent, $"Import: {Value}");
+    public override void Print(int indent) => WriteLineIndented(indent, $"Import: {string.Join(".", Value)}");
 }
 
 public partial class LiteralToken
@@ -164,7 +167,7 @@ public partial class LiteralToken
 
 public partial class MethodCall
 {
-    public override string ToString() => $"{Target}({string.Join(", ", Parameters)})";
+    public override string ToString() => $"{Expr}({string.Join(", ", Arguments)})";
 }
 
 public partial class MethodDefinition
@@ -179,7 +182,7 @@ public partial class MethodDefinition
 
 public partial class Namespace
 {
-    public override void Print(int indent) => WriteLineIndented(indent, $"Namespace: {Name}");
+    public override void Print(int indent) => WriteLineIndented(indent, $"Namespace: {string.Join(".", Value)}");
 }
 
 public partial class Number

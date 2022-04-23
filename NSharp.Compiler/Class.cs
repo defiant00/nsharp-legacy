@@ -11,7 +11,7 @@ public class Class
     public string Namespace { get; set; }
     public List<Modifier> Modifiers { get; set; }
     public string Name { get; set; }
-    public Identifier? Parent { get; set; }
+    public Expression? Parent { get; set; }
     public List<Class> Classes { get; set; } = new();
     // enum
     // interface

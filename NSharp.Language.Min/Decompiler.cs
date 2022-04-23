@@ -94,6 +94,9 @@ public class Decompiler
     {
         switch (expression)
         {
+            case Accessor accessor:
+                ProcessAccessor(indent, accessor);
+                break;
             case Core.Ast.Array array:
                 ProcessArray(indent, array);
                 break;
@@ -107,6 +110,9 @@ public class Decompiler
                 break;
             case CurrentObjectInstance:
                 Buffer.Append("this");
+                break;
+            case Generic generic:
+                ProcessGeneric(indent, generic);
                 break;
             case Identifier identifier:
                 ProcessIdentifier(identifier);
@@ -130,6 +136,19 @@ public class Decompiler
                 Buffer.Append($"[{expression}]");
                 break;
         }
+    }
+
+    private void ProcessAccessor(int indent, Accessor accessor)
+    {
+        ProcessExpression(indent, accessor.Expr);
+        Buffer.Append("[");
+        ProcessExpression(indent, accessor.Arguments[0]);
+        for (int i = 1; i < accessor.Arguments.Count; i++)
+        {
+            Buffer.Append(", ");
+            ProcessExpression(indent, accessor.Arguments[i]);
+        }
+        Buffer.Append("]");
     }
 
     private void ProcessArray(int indent, Core.Ast.Array array)
@@ -176,16 +195,16 @@ public class Decompiler
         if (cl.Parent != null)
         {
             Buffer.Append(" from ");
-            ProcessIdentifier(cl.Parent);
+            ProcessExpression(indent, cl.Parent);
         }
         if (cl.Interfaces.Count > 0)
         {
             Buffer.Append(" is ");
-            ProcessIdentifier(cl.Interfaces[0]);
+            ProcessExpression(indent, cl.Interfaces[0]);
             for (int i = 1; i < cl.Interfaces.Count; i++)
             {
                 Buffer.Append(", ");
-                ProcessIdentifier(cl.Interfaces[i]);
+                ProcessExpression(indent, cl.Interfaces[i]);
             }
         }
         Buffer.AppendLine();
@@ -270,79 +289,78 @@ public class Decompiler
 
     private void ProcessFile(int indent, Core.Ast.File file) => ProcessStatements(indent, file.Statements);
 
-    private void ProcessIdentifier(Identifier identifier)
+    private void ProcessGeneric(int indent, Generic generic)
     {
-        if (identifier.Parts.Count == 2 && identifier.Parts[0].Value == "System" && identifier.Parts[0].Types == null && identifier.Parts[1].Types == null)
+        ProcessExpression(indent, generic.Expr);
+        Buffer.Append("{");
+        ProcessExpression(indent, generic.Arguments[0]);
+        for (int i = 1; i < generic.Arguments.Count; i++)
         {
-            switch (identifier.Parts[1].Value)
-            {
-                case "String":
-                    Buffer.Append("str");
-                    return;
-                case "Char":
-                    Buffer.Append("char");
-                    return;
-                case "Boolean":
-                    Buffer.Append("bool");
-                    return;
-                case "SByte":
-                    Buffer.Append("i8");
-                    return;
-                case "Int16":
-                    Buffer.Append(Settings.CTypes ? "short" : "i16");
-                    return;
-                case "Int32":
-                    Buffer.Append(Settings.CTypes ? "int" : "i32");
-                    return;
-                case "Int64":
-                    Buffer.Append(Settings.CTypes ? "long" : "i64");
-                    return;
-                case "Byte":
-                    Buffer.Append(Settings.CTypes ? "byte" : "u8");
-                    return;
-                case "UInt16":
-                    Buffer.Append(Settings.CTypes ? "ushort" : "u16");
-                    return;
-                case "UInt32":
-                    Buffer.Append(Settings.CTypes ? "uint" : "u32");
-                    return;
-                case "UInt64":
-                    Buffer.Append(Settings.CTypes ? "ulong" : "u64");
-                    return;
-                case "Single":
-                    Buffer.Append(Settings.CTypes ? "float" : "f32");
-                    return;
-                case "Double":
-                    Buffer.Append(Settings.CTypes ? "double" : "f64");
-                    return;
-                case "Decimal":
-                    Buffer.Append("decimal");
-                    return;
-            }
+            Buffer.Append(", ");
+            ProcessExpression(indent, generic.Arguments[i]);
         }
-
-        ProcessIdentifierPart(identifier.Parts[0]);
-        for (int i = 1; i < identifier.Parts.Count; i++)
-        {
-            Buffer.Append(".");
-            ProcessIdentifierPart(identifier.Parts[i]);
-        }
+        Buffer.Append("}");
     }
 
-    private void ProcessIdentifierPart(IdentifierPart identifierPart)
+    private void ProcessIdentifier(Identifier identifier)
     {
-        Buffer.Append(identifierPart.Value);
-        if (identifierPart.Types != null && identifierPart.Types.Count > 0)
-        {
-            Buffer.Append("{");
-            ProcessIdentifier(identifierPart.Types[0]);
-            for (int i = 1; i < identifierPart.Types.Count; i++)
-            {
-                Buffer.Append(", ");
-                ProcessIdentifier(identifierPart.Types[i]);
-            }
-            Buffer.Append("}");
-        }
+        Buffer.Append(identifier.Value);
+
+        // if (identifier.Parts.Count == 2 && identifier.Parts[0].Value == "System" && identifier.Parts[0].Types == null && identifier.Parts[1].Types == null)
+        // {
+        //     switch (identifier.Parts[1].Value)
+        //     {
+        //         case "String":
+        //             Buffer.Append("str");
+        //             return;
+        //         case "Char":
+        //             Buffer.Append("char");
+        //             return;
+        //         case "Boolean":
+        //             Buffer.Append("bool");
+        //             return;
+        //         case "SByte":
+        //             Buffer.Append("i8");
+        //             return;
+        //         case "Int16":
+        //             Buffer.Append(Settings.CTypes ? "short" : "i16");
+        //             return;
+        //         case "Int32":
+        //             Buffer.Append(Settings.CTypes ? "int" : "i32");
+        //             return;
+        //         case "Int64":
+        //             Buffer.Append(Settings.CTypes ? "long" : "i64");
+        //             return;
+        //         case "Byte":
+        //             Buffer.Append(Settings.CTypes ? "byte" : "u8");
+        //             return;
+        //         case "UInt16":
+        //             Buffer.Append(Settings.CTypes ? "ushort" : "u16");
+        //             return;
+        //         case "UInt32":
+        //             Buffer.Append(Settings.CTypes ? "uint" : "u32");
+        //             return;
+        //         case "UInt64":
+        //             Buffer.Append(Settings.CTypes ? "ulong" : "u64");
+        //             return;
+        //         case "Single":
+        //             Buffer.Append(Settings.CTypes ? "float" : "f32");
+        //             return;
+        //         case "Double":
+        //             Buffer.Append(Settings.CTypes ? "double" : "f64");
+        //             return;
+        //         case "Decimal":
+        //             Buffer.Append("decimal");
+        //             return;
+        //     }
+        // }
+
+        // ProcessIdentifierPart(identifier.Parts[0]);
+        // for (int i = 1; i < identifier.Parts.Count; i++)
+        // {
+        //     Buffer.Append(".");
+        //     ProcessIdentifierPart(identifier.Parts[i]);
+        // }
     }
 
     private void ProcessIf(int indent, If ifStatement, bool indentFirstLine = true)
@@ -372,7 +390,7 @@ public class Decompiler
     private void ProcessImport(int indent, Import import)
     {
         AppendIndented(indent, "use ");
-        ProcessExpression(indent, import.Value);
+        Buffer.AppendJoin(".", import.Value);
         Buffer.AppendLine();
     }
 
@@ -389,15 +407,15 @@ public class Decompiler
 
     private void ProcessMethodCall(int indent, MethodCall methodCall)
     {
-        ProcessExpression(indent, methodCall.Target);
+        ProcessExpression(indent, methodCall.Expr);
         Buffer.Append("(");
-        if (methodCall.Parameters.Count > 0)
+        if (methodCall.Arguments.Count > 0)
         {
-            ProcessExpression(indent, methodCall.Parameters[0]);
-            for (int i = 1; i < methodCall.Parameters.Count; i++)
+            ProcessExpression(indent, methodCall.Arguments[0]);
+            for (int i = 1; i < methodCall.Arguments.Count; i++)
             {
                 Buffer.Append(", ");
-                ProcessExpression(indent, methodCall.Parameters[i]);
+                ProcessExpression(indent, methodCall.Arguments[i]);
             }
         }
         Buffer.Append(")");
@@ -463,7 +481,7 @@ public class Decompiler
     private void ProcessNamespace(int indent, Namespace ns)
     {
         AppendIndented(indent, "ns ");
-        ProcessExpression(indent, ns.Name);
+        Buffer.AppendJoin(".", ns.Value);
         Buffer.AppendLine();
     }
 

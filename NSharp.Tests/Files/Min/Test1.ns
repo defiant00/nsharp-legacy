@@ -1,5 +1,17 @@
+ns test.thing
+
+use System.Console
+
 class MyClass
-    fn Argle(x int, y str)
+    fn Argle(x a, y b)
+        a[1]
+        b.c[1]
+        "hello"[1]
+        12[a]
+        thing{a, b}
+        x{a}[2](1, 3)
+        a.b.c
+        a.b.c = 12
         ; multiline
         x = 1
         break

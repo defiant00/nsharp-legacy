@@ -55,7 +55,7 @@ public class Compiler
                 // interface
                 // struct
                 case Namespace ns:
-                    currentNamespace = ns.Name.ToDottedString();
+                    currentNamespace = string.Join(".", ns.Value);
                     break;
             }
         }
@@ -278,7 +278,7 @@ public class Compiler
             attrs,
             MetadataBuilder.GetOrAddString(cl.Namespace),
             MetadataBuilder.GetOrAddString(cl.Name),
-            GetType(state, cl.Parent == null ? "System.Object" : cl.Parent.ToDottedString()),
+            GetType(state, cl.Parent?.ToString() ?? "System.Object"),
             MetadataTokens.FieldDefinitionHandle(state.FieldDefinitionRow),
             MetadataTokens.MethodDefinitionHandle(state.MethodDefinitionRow));
         Types[cl.Name] = cl.Handle.Value;
@@ -357,9 +357,9 @@ public class Compiler
         switch (expression)
         {
             case MethodCall methodCall:
-                foreach (var param in methodCall.Parameters)
-                    Emit(param);
-                string key = methodCall.Target.ToString() ?? "";
+                foreach (var arg in methodCall.Arguments)
+                    Emit(arg);
+                string key = methodCall.Expr.ToString() ?? "";
                 if (Methods.ContainsKey(key))
                     IlEncoder.Call(Methods[key]);
                 break;
