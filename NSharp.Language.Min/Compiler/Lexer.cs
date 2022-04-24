@@ -17,7 +17,7 @@ public class Lexer
     private Stack<int> IndentationLevels { get; set; }
     private Stack<TokenType> Brackets { get; set; }
     private bool LastEmittedWasMultilineOperator { get; set; }
-    private bool InExpression => LastEmittedWasMultilineOperator || Brackets.Count > 0;
+    private bool InExpression => LastEmittedWasMultilineOperator || Brackets.Any();
     private bool LastEmittedWasEol { get; set; }
     private List<Token> EolTokens { get; set; }
     private Stack<TokenType> StringTerminators { get; set; }
@@ -52,7 +52,7 @@ public class Lexer
 
     public void EndOfFile()
     {
-        while (Brackets.Count > 0)
+        while (Brackets.Any())
             Error($"Missing '{Brackets.Pop()}'");
         EmitIndent(0);
         Emit(TokenType.EOF);
@@ -127,10 +127,10 @@ public class Lexer
         else if (token == TokenType.StringStart)
             StringTerminators.Push(TokenType.StringEnd);
 
-        if (Brackets.Count > 0 && Brackets.Peek() == token)
+        if (Brackets.Any() && Brackets.Peek() == token)
             Brackets.Pop();
 
-        if (StringTerminators.Count > 0 && StringTerminators.Peek() == token)
+        if (StringTerminators.Any() && StringTerminators.Peek() == token)
             StringTerminators.Pop();
 
         var emitToken = new Token(token, CurrentPosition, CurrentValue);
@@ -145,7 +145,7 @@ public class Lexer
         }
         else
         {
-            if (token != TokenType.Indent && token != TokenType.Dedent && EolTokens.Count > 0)
+            if (token != TokenType.Indent && token != TokenType.Dedent && EolTokens.Any())
             {
                 Tokens.AddRange(EolTokens);
                 EolTokens.Clear();
@@ -171,7 +171,7 @@ public class Lexer
         }
         else
         {
-            while (IndentationLevels.Count > 0 && indent < currentIndent)
+            while (IndentationLevels.Any() && indent < currentIndent)
             {
                 Emit(TokenType.Dedent);
                 IndentationLevels.Pop();
@@ -242,7 +242,7 @@ public class Lexer
                 case '"':
                     return LexString;
                 default:
-                    if (peekVal == '}' && StringTerminators.Count > 0 && StringTerminators.Peek() == TokenType.RightCurly)
+                    if (peekVal == '}' && StringTerminators.Any() && StringTerminators.Peek() == TokenType.RightCurly)
                         return LexString;
                     else if (IsValidLiteralStart(peekVal))
                         return LexLiteral;
@@ -366,7 +366,7 @@ public class Lexer
         else
             Emit(TokenType.RightCurly);
 
-        while (StringTerminators.Count > 0 && StringTerminators.Peek() == TokenType.StringEnd)
+        while (StringTerminators.Any() && StringTerminators.Peek() == TokenType.StringEnd)
         {
             char c = Peek;
             if (c == '"')

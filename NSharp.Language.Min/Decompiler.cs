@@ -197,7 +197,7 @@ public class Decompiler
             Buffer.Append(" from ");
             ProcessExpression(indent, cl.Parent);
         }
-        if (cl.Interfaces.Count > 0)
+        if (cl.Interfaces.Any())
         {
             Buffer.Append(" is ");
             ProcessExpression(indent, cl.Interfaces[0]);
@@ -244,7 +244,7 @@ public class Decompiler
             Buffer.AppendLine();
             Indent(indent + 1);
         }
-        if (ctorDef.Parameters.Count > 0)
+        if (ctorDef.Parameters.Any())
         {
             ProcessParameter(indent, ctorDef.Parameters[0]);
             for (int i = 1; i < ctorDef.Parameters.Count; i++)
@@ -409,7 +409,7 @@ public class Decompiler
     {
         ProcessExpression(indent, methodCall.Expr);
         Buffer.Append("(");
-        if (methodCall.Arguments.Count > 0)
+        if (methodCall.Arguments.Any())
         {
             ProcessExpression(indent, methodCall.Arguments[0]);
             for (int i = 1; i < methodCall.Arguments.Count; i++)
@@ -433,7 +433,7 @@ public class Decompiler
             Buffer.AppendLine();
             Indent(indent + 1);
         }
-        if (methodDef.Parameters.Count > 0)
+        if (methodDef.Parameters.Any())
         {
             ProcessParameter(indent, methodDef.Parameters[0]);
             for (int i = 1; i < methodDef.Parameters.Count; i++)
@@ -518,9 +518,9 @@ public class Decompiler
                 Process(indent + 1, statement, null);
             return;
         }
-        else if (property.SetStatements.Count > 0)
+        else if (property.SetStatements.Any())
         {
-            if (property.GetStatements.Count > 0)
+            if (property.GetStatements.Any())
             {
                 AppendIndented(indent + 1, "get");
 
@@ -538,7 +538,7 @@ public class Decompiler
                 }
             }
         }
-        if (property.SetStatements.Count > 0)
+        if (property.SetStatements.Any())
         {
             AppendIndented(indent + 1, "set(");
             Buffer.Append(property.SetParameterName);

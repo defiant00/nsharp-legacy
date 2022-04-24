@@ -77,7 +77,7 @@ public class SyntaxTreePrinterVisitor : ISyntaxTreeVisitor
             Write(" inherits ");
             item.Parent.Accept(this);
         }
-        if (item.Interfaces.Count > 0)
+        if (item.Interfaces.Any())
         {
             Write(" implements ");
             bool first = true;
@@ -125,6 +125,14 @@ public class SyntaxTreePrinterVisitor : ISyntaxTreeVisitor
             first = false;
         }
         Write(")");
+        if (item.Statements.Any())
+        {
+            WriteLine();
+            Indent++;
+            foreach (var statement in item.Statements)
+                statement.Accept(this);
+            Indent--;
+        }
     }
 
     public void Visit(ConstructorDefinition item)
@@ -281,7 +289,7 @@ public class SyntaxTreePrinterVisitor : ISyntaxTreeVisitor
     public void Visit(Interface item)
     {
         WriteIndented($"Interface: {string.Join(" ", item.Modifiers)} {item.Name}");
-        if (item.Interfaces.Count > 0)
+        if (item.Interfaces.Any())
         {
             Write(" is ");
             bool first = true;
@@ -390,7 +398,7 @@ public class SyntaxTreePrinterVisitor : ISyntaxTreeVisitor
             item.Value.Accept(this);
         }
         WriteLine();
-        if (item.GetStatements.Count > 0)
+        if (item.GetStatements.Any())
         {
             Indent++;
             WriteLineIndented("get");
@@ -399,7 +407,7 @@ public class SyntaxTreePrinterVisitor : ISyntaxTreeVisitor
                 statement.Accept(this);
             Indent -= 2;
         }
-        if (item.SetStatements.Count > 0)
+        if (item.SetStatements.Any())
         {
             Indent++;
             WriteLineIndented($"set({item.SetParameterName})");

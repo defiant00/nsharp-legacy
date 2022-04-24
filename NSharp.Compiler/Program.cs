@@ -162,7 +162,7 @@ public static class Program
 
     private static void HandleResult(Result result)
     {
-        if (result.Diagnostics.Count > 0)
+        if (result.Diagnostics.Any())
         {
             Console.WriteLine(result.FileName);
             foreach (var diagnostic in result.Diagnostics)
