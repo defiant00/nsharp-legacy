@@ -1,20 +1,4 @@
-ns test.thing
-
-use System.Console
-
-interface ITest
-    fn First int
-    fn Second str get
-    fn Third str set
-    fn Fourth long get, set
-    fn Fifth()
-    fn Sixth(x int, y str) str
-
 class MyClass
-    interface I2
-        fn Val str
-    var x int
-    var y List{int}
-    var z System.Collection.Generic.List{str}
+    var x [][]str.List{MyClass}.Something{Generic}.And.Another
     fn Test()
         str.Join(", ", myList)

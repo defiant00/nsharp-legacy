@@ -151,7 +151,6 @@ public class ConstructorCall : Expression
 {
     public Expression Expr { get; set; }
     public List<Expression> Arguments { get; set; } = new();
-    public List<Statement> Statements { get; set; } = new();
 
     public ConstructorCall(Position position, Expression expr) : base(position)
     {
