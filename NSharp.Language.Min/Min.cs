@@ -23,10 +23,10 @@ public class Min : ILanguage
         return result;
     }
 
-    public SaveResult Save(string fileName, AstItem ast)
+    public SaveResult Save(string fileName, ISyntaxTreeItem item)
     {
         var result = new SaveResult(fileName);
-        string code = new Decompiler(Settings).Decompile(ast);
+        string code = new Decompiler(Settings).Decompile(item);
         System.IO.File.WriteAllText(fileName, code);
         return result;
     }

@@ -15,10 +15,10 @@ public class Decompiler
         Buffer = new StringBuilder();
     }
 
-    public string Decompile(AstItem ast)
+    public string Decompile(ISyntaxTreeItem item)
     {
         Buffer.Clear();
-        Process(0, ast, null);
+        Process(0, item, null);
         return Buffer.ToString();
     }
 
@@ -27,7 +27,7 @@ public class Decompiler
     private void AppendLineIndented(int indent, string content) => Buffer.AppendLineIndented(Settings.Indentation, indent, content);
     private void AppendModifiersIndented(int indent, List<Modifier> modifiers) => Buffer.AppendModifiersIndented(Settings.Indentation, indent, modifiers);
 
-    private void Process(int indent, AstItem? currentItem, AstItem? priorItem)
+    private void Process(int indent, ISyntaxTreeItem? currentItem, ISyntaxTreeItem? priorItem)
     {
         switch (currentItem)
         {
@@ -171,7 +171,7 @@ public class Decompiler
     private void ProcessBinaryOperator(int indent, BinaryOperator binaryOperator, int parentPrecedence)
     {
         bool parentheses = Settings.AllParens || binaryOperator.Operator.Precedence() < parentPrecedence;
-        bool space = binaryOperator.Operator != OperatorType.Dot && binaryOperator.Operator != OperatorType.NullDot;
+        bool space = binaryOperator.Operator != BinaryOperatorType.Dot && binaryOperator.Operator != BinaryOperatorType.NullDot;
         if (parentheses)
             Buffer.Append("(");
         ProcessExpression(indent, binaryOperator.Left, binaryOperator.Operator.Precedence());
@@ -576,7 +576,7 @@ public class Decompiler
 
     private void ProcessStatements(int indent, List<Statement> statements)
     {
-        AstItem? priorStatement = null;
+        ISyntaxTreeItem? priorStatement = null;
         foreach (var statement in statements)
         {
             Process(indent, statement, priorStatement);

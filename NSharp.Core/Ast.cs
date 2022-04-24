@@ -1,23 +1,29 @@
 namespace NSharp.Core.Ast;
 
-public abstract partial class AstItem
+public interface ISyntaxTreeItem
+{
+    public Position Position { get; set; }
+}
+
+public abstract class Expression : ISyntaxTreeItem
 {
     public Position Position { get; set; }
 
-    public AstItem(Position position) => Position = position;
+    public Expression(Position position) => Position = position;
+
+    public virtual void Accept(ISyntaxTreeVisitor visitor) => visitor.Visit(this);
 }
 
-public abstract class Expression : AstItem
+public abstract class Statement : ISyntaxTreeItem
 {
-    public Expression(Position position) : base(position) { }
+    public Position Position { get; set; }
+
+    public Statement(Position position) => Position = position;
+
+    public virtual void Accept(ISyntaxTreeVisitor visitor) => visitor.Visit(this);
 }
 
-public abstract class Statement : AstItem
-{
-    public Statement(Position position) : base(position) { }
-}
-
-public partial class Accessor : Expression
+public class Accessor : Expression
 {
     public Expression Expr { get; set; }
     public List<Expression> Arguments { get; set; } = new();
@@ -27,9 +33,11 @@ public partial class Accessor : Expression
         Expr = expr;
         Arguments.Add(arg);
     }
+
+    public override void Accept(ISyntaxTreeVisitor visitor) => visitor.Visit(this);
 }
 
-public partial class Array : Expression
+public class Array : Expression
 {
     public Expression Type { get; set; }
 
@@ -37,9 +45,11 @@ public partial class Array : Expression
     {
         Type = type;
     }
+
+    public override void Accept(ISyntaxTreeVisitor visitor) => visitor.Visit(this);
 }
 
-public partial class Assignment : Statement
+public class Assignment : Statement
 {
     public AssignmentOperator Operator { get; set; }
     public Expression Left { get; set; }
@@ -51,28 +61,34 @@ public partial class Assignment : Statement
         Left = left;
         Right = right;
     }
+
+    public override void Accept(ISyntaxTreeVisitor visitor) => visitor.Visit(this);
 }
 
-public partial class BinaryOperator : Expression
+public class BinaryOperator : Expression
 {
-    public OperatorType Operator { get; set; }
+    public BinaryOperatorType Operator { get; set; }
     public Expression Left { get; set; }
     public Expression Right { get; set; }
 
-    public BinaryOperator(Position position, OperatorType op, Expression left, Expression right) : base(position)
+    public BinaryOperator(Position position, BinaryOperatorType op, Expression left, Expression right) : base(position)
     {
         Operator = op;
         Left = left;
         Right = right;
     }
+
+    public override void Accept(ISyntaxTreeVisitor visitor) => visitor.Visit(this);
 }
 
-public partial class Break : Statement
+public class Break : Statement
 {
     public Break(Position position) : base(position) { }
+
+    public override void Accept(ISyntaxTreeVisitor visitor) => visitor.Visit(this);
 }
 
-public partial class Character : Expression
+public class Character : Expression
 {
     public string Value { get; set; }
 
@@ -80,9 +96,11 @@ public partial class Character : Expression
     {
         Value = value;
     }
+
+    public override void Accept(ISyntaxTreeVisitor visitor) => visitor.Visit(this);
 }
 
-public partial class Class : Statement
+public class Class : Statement
 {
     public List<Modifier> Modifiers { get; set; }
     public string Name { get; set; }
@@ -95,9 +113,11 @@ public partial class Class : Statement
         Modifiers = modifiers;
         Name = name;
     }
+
+    public override void Accept(ISyntaxTreeVisitor visitor) => visitor.Visit(this);
 }
 
-public partial class Comment : Statement
+public class Comment : Statement
 {
     public string Value { get; set; }
     public bool IsDocumentation { get; set; }
@@ -106,9 +126,11 @@ public partial class Comment : Statement
     {
         Value = value;
     }
+
+    public override void Accept(ISyntaxTreeVisitor visitor) => visitor.Visit(this);
 }
 
-public partial class Constant : Statement
+public class Constant : Statement
 {
     public List<Modifier> Modifiers { get; set; }
     public string Name { get; set; }
@@ -121,9 +143,24 @@ public partial class Constant : Statement
         Name = name;
         Type = type;
     }
+
+    public override void Accept(ISyntaxTreeVisitor visitor) => visitor.Visit(this);
 }
 
-public partial class ConstructorDefinition : Statement
+public class ConstructorCall : Expression
+{
+    public Expression Expr { get; set; }
+    public List<Expression> Arguments { get; set; } = new();
+
+    public ConstructorCall(Position position, Expression expr) : base(position)
+    {
+        Expr = expr;
+    }
+
+    public override void Accept(ISyntaxTreeVisitor visitor) => visitor.Visit(this);
+}
+
+public class ConstructorDefinition : Statement
 {
     public List<Modifier> Modifiers { get; set; }
     public List<Parameter> Parameters { get; set; } = new();
@@ -133,19 +170,25 @@ public partial class ConstructorDefinition : Statement
     {
         Modifiers = modifiers;
     }
+
+    public override void Accept(ISyntaxTreeVisitor visitor) => visitor.Visit(this);
 }
 
-public partial class Continue : Statement
+public class Continue : Statement
 {
     public Continue(Position position) : base(position) { }
+
+    public override void Accept(ISyntaxTreeVisitor visitor) => visitor.Visit(this);
 }
 
-public partial class CurrentObjectInstance : Expression
+public class CurrentObjectInstance : Expression
 {
     public CurrentObjectInstance(Position position) : base(position) { }
+
+    public override void Accept(ISyntaxTreeVisitor visitor) => visitor.Visit(this);
 }
 
-public partial class ErrorExpression : Expression
+public class ErrorExpression : Expression
 {
     public string Value { get; set; }
 
@@ -153,9 +196,11 @@ public partial class ErrorExpression : Expression
     {
         Value = value;
     }
+
+    public override void Accept(ISyntaxTreeVisitor visitor) => visitor.Visit(this);
 }
 
-public partial class ErrorStatement : Statement
+public class ErrorStatement : Statement
 {
     public string Value { get; set; }
 
@@ -163,9 +208,11 @@ public partial class ErrorStatement : Statement
     {
         Value = value;
     }
+
+    public override void Accept(ISyntaxTreeVisitor visitor) => visitor.Visit(this);
 }
 
-public partial class ExpressionStatement : Statement
+public class ExpressionStatement : Statement
 {
     public Expression Expression { get; set; }
 
@@ -173,9 +220,11 @@ public partial class ExpressionStatement : Statement
     {
         Expression = expression;
     }
+
+    public override void Accept(ISyntaxTreeVisitor visitor) => visitor.Visit(this);
 }
 
-public partial class File : Statement
+public class File : Statement
 {
     public string Name { get; set; }
     public List<Statement> Statements { get; set; } = new();
@@ -184,9 +233,11 @@ public partial class File : Statement
     {
         Name = name;
     }
+
+    public override void Accept(ISyntaxTreeVisitor visitor) => visitor.Visit(this);
 }
 
-public partial class For : Statement
+public class For : Statement
 {
     public Statement? Init { get; set; }
     public Expression? Condition { get; set; }
@@ -194,9 +245,11 @@ public partial class For : Statement
     public List<Statement> Statements { get; set; } = new();
 
     public For(Position position) : base(position) { }
+
+    public override void Accept(ISyntaxTreeVisitor visitor) => visitor.Visit(this);
 }
 
-public partial class Generic : Expression
+public class Generic : Expression
 {
     public Expression Expr { get; set; }
     public List<Expression> Arguments { get; set; } = new();
@@ -206,9 +259,11 @@ public partial class Generic : Expression
         Expr = expr;
         Arguments.Add(arg);
     }
+
+    public override void Accept(ISyntaxTreeVisitor visitor) => visitor.Visit(this);
 }
 
-public partial class Identifier : Expression
+public class Identifier : Expression
 {
     public string Value { get; set; }
 
@@ -216,9 +271,11 @@ public partial class Identifier : Expression
     {
         Value = value;
     }
+
+    public override void Accept(ISyntaxTreeVisitor visitor) => visitor.Visit(this);
 }
 
-public partial class If : Statement
+public class If : Statement
 {
     public Expression Condition { get; set; }
     public List<Statement> Statements { get; set; } = new();
@@ -228,9 +285,11 @@ public partial class If : Statement
     {
         Condition = condition;
     }
+
+    public override void Accept(ISyntaxTreeVisitor visitor) => visitor.Visit(this);
 }
 
-public partial class Import : Statement
+public class Import : Statement
 {
     public List<string> Value { get; set; } = new();
 
@@ -238,9 +297,26 @@ public partial class Import : Statement
     {
         Value.Add(value);
     }
+
+    public override void Accept(ISyntaxTreeVisitor visitor) => visitor.Visit(this);
 }
 
-public partial class LiteralToken : Expression
+public class Is : Expression
+{
+    public Expression Expr { get; set; }
+    public Expression Type { get; set; }
+    public string? Name { get; set; }
+
+    public Is(Position position, Expression expr, Expression type) : base(position)
+    {
+        Expr = expr;
+        Type = type;
+    }
+
+    public override void Accept(ISyntaxTreeVisitor visitor) => visitor.Visit(this);
+}
+
+public class LiteralToken : Expression
 {
     public Literal Token { get; set; }
 
@@ -248,9 +324,11 @@ public partial class LiteralToken : Expression
     {
         Token = token;
     }
+
+    public override void Accept(ISyntaxTreeVisitor visitor) => visitor.Visit(this);
 }
 
-public partial class MethodCall : Expression
+public class MethodCall : Expression
 {
     public Expression Expr { get; set; }
     public List<Expression> Arguments { get; set; } = new();
@@ -259,9 +337,11 @@ public partial class MethodCall : Expression
     {
         Expr = expr;
     }
+
+    public override void Accept(ISyntaxTreeVisitor visitor) => visitor.Visit(this);
 }
 
-public partial class MethodDefinition : Statement
+public class MethodDefinition : Statement
 {
     public List<Modifier> Modifiers { get; set; }
     public Expression? ReturnType { get; set; }
@@ -274,9 +354,11 @@ public partial class MethodDefinition : Statement
         Modifiers = modifiers;
         Name = name;
     }
+
+    public override void Accept(ISyntaxTreeVisitor visitor) => visitor.Visit(this);
 }
 
-public partial class Namespace : Statement
+public class Namespace : Statement
 {
     public List<string> Value { get; set; } = new();
 
@@ -284,9 +366,11 @@ public partial class Namespace : Statement
     {
         Value.Add(value);
     }
+
+    public override void Accept(ISyntaxTreeVisitor visitor) => visitor.Visit(this);
 }
 
-public partial class Number : Expression
+public class Number : Expression
 {
     public string Value { get; set; }
 
@@ -294,9 +378,11 @@ public partial class Number : Expression
     {
         Value = value;
     }
+
+    public override void Accept(ISyntaxTreeVisitor visitor) => visitor.Visit(this);
 }
 
-public partial class Parameter : Expression
+public class Parameter : Expression
 {
     public Expression Type { get; set; }
     public string Name { get; set; }
@@ -306,9 +392,11 @@ public partial class Parameter : Expression
         Type = type;
         Name = name;
     }
+
+    public override void Accept(ISyntaxTreeVisitor visitor) => visitor.Visit(this);
 }
 
-public partial class Property : Statement
+public class Property : Statement
 {
     public List<Modifier> Modifiers { get; set; }
     public string Name { get; set; }
@@ -326,16 +414,20 @@ public partial class Property : Statement
         Name = name;
         Type = type;
     }
+
+    public override void Accept(ISyntaxTreeVisitor visitor) => visitor.Visit(this);
 }
 
-public partial class Return : Statement
+public class Return : Statement
 {
     public Expression? Value;
 
     public Return(Position position) : base(position) { }
+
+    public override void Accept(ISyntaxTreeVisitor visitor) => visitor.Visit(this);
 }
 
-public partial class Space : Statement
+public class Space : Statement
 {
     public int Size { get; set; }
 
@@ -343,16 +435,20 @@ public partial class Space : Statement
     {
         Size = size;
     }
+
+    public override void Accept(ISyntaxTreeVisitor visitor) => visitor.Visit(this);
 }
 
-public partial class String : Expression
+public class String : Expression
 {
     public List<List<Expression>> Lines { get; set; } = new();
 
     public String(Position position) : base(position) { }
+
+    public override void Accept(ISyntaxTreeVisitor visitor) => visitor.Visit(this);
 }
 
-public partial class StringLiteral : Expression
+public class StringLiteral : Expression
 {
     public string Value { get; set; }
 
@@ -360,9 +456,25 @@ public partial class StringLiteral : Expression
     {
         Value = value;
     }
+
+    public override void Accept(ISyntaxTreeVisitor visitor) => visitor.Visit(this);
 }
 
-public partial class Variable : Statement
+public class UnaryOperator : Expression
+{
+    public UnaryOperatorType Operator { get; set; }
+    public Expression Expr { get; set; }
+
+    public UnaryOperator(Position position, UnaryOperatorType op, Expression expr) : base(position)
+    {
+        Operator = op;
+        Expr = expr;
+    }
+
+    public override void Accept(ISyntaxTreeVisitor visitor) => visitor.Visit(this);
+}
+
+public class Variable : Statement
 {
     public List<Modifier> Modifiers { get; set; }
     public string Name { get; set; }
@@ -375,4 +487,6 @@ public partial class Variable : Statement
         Name = name;
         Type = type;
     }
+
+    public override void Accept(ISyntaxTreeVisitor visitor) => visitor.Visit(this);
 }

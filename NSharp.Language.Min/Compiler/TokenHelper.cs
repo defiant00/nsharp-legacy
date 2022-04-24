@@ -23,48 +23,56 @@ public static class TokenHelper
             _ => throw new Exception($"Could not match token type {type} to a modifier."),
         };
 
-    public static OperatorType ToOperator(this TokenType type) =>
+    public static UnaryOperatorType ToUnaryOperator(this TokenType type) =>
         type switch
         {
-            TokenType.Dot => OperatorType.Dot,
-            TokenType.NullDot => OperatorType.NullDot,
-
-            TokenType.As => OperatorType.As,
-
-            TokenType.Multiply => OperatorType.Multiply,
-            TokenType.Divide => OperatorType.Divide,
-            TokenType.Modulo => OperatorType.Modulo,
-
-            TokenType.Add => OperatorType.Add,
-            TokenType.Subtract => OperatorType.Subtract,
-
-            TokenType.LeftShift => OperatorType.LeftShift,
-            TokenType.RightShift => OperatorType.RightShift,
-
-            TokenType.BitwiseAnd => OperatorType.BitwiseAnd,
-
-            TokenType.BitwiseOr => OperatorType.BitwiseOr,
-            TokenType.BitwiseXor => OperatorType.BitwiseXor,
-
-            TokenType.Is => OperatorType.Is,
-            TokenType.LessThan => OperatorType.LessThan,
-            TokenType.GreaterThan => OperatorType.GreaterThan,
-            TokenType.LessThanOrEqual => OperatorType.LessThanOrEqual,
-            TokenType.GreaterThanOrEqual => OperatorType.GreaterThanOrEqual,
-
-            TokenType.Equal => OperatorType.Equal,
-            TokenType.NotEqual => OperatorType.NotEqual,
-
-            TokenType.And => OperatorType.And,
-
-            TokenType.Or => OperatorType.Or,
-
-            TokenType.NullCoalesce => OperatorType.NullCoalesce,
-
-            _ => OperatorType.None,
+            TokenType.Subtract => UnaryOperatorType.Negate,
+            TokenType.Not => UnaryOperatorType.Not,
+            TokenType.BitwiseNot => UnaryOperatorType.BitwiseNot,
+            _ => UnaryOperatorType.None,
         };
 
-    public static int Precedence(this Token token) => token.Type.ToOperator().Precedence();
+    public static BinaryOperatorType ToBinaryOperator(this TokenType type) =>
+        type switch
+        {
+            TokenType.Dot => BinaryOperatorType.Dot,
+            TokenType.NullDot => BinaryOperatorType.NullDot,
+
+            TokenType.As => BinaryOperatorType.As,
+
+            TokenType.Multiply => BinaryOperatorType.Multiply,
+            TokenType.Divide => BinaryOperatorType.Divide,
+            TokenType.Modulo => BinaryOperatorType.Modulo,
+
+            TokenType.Add => BinaryOperatorType.Add,
+            TokenType.Subtract => BinaryOperatorType.Subtract,
+
+            TokenType.LeftShift => BinaryOperatorType.LeftShift,
+            TokenType.RightShift => BinaryOperatorType.RightShift,
+
+            TokenType.BitwiseAnd => BinaryOperatorType.BitwiseAnd,
+
+            TokenType.BitwiseOr => BinaryOperatorType.BitwiseOr,
+            TokenType.BitwiseXor => BinaryOperatorType.BitwiseXor,
+
+            TokenType.LessThan => BinaryOperatorType.LessThan,
+            TokenType.GreaterThan => BinaryOperatorType.GreaterThan,
+            TokenType.LessThanOrEqual => BinaryOperatorType.LessThanOrEqual,
+            TokenType.GreaterThanOrEqual => BinaryOperatorType.GreaterThanOrEqual,
+
+            TokenType.Equal => BinaryOperatorType.Equal,
+            TokenType.NotEqual => BinaryOperatorType.NotEqual,
+
+            TokenType.And => BinaryOperatorType.And,
+
+            TokenType.Or => BinaryOperatorType.Or,
+
+            TokenType.NullCoalesce => BinaryOperatorType.NullCoalesce,
+
+            _ => BinaryOperatorType.None,
+        };
+
+    public static int Precedence(this Token token) => token.Type.ToBinaryOperator().Precedence();
 
     public static AssignmentOperator ToAssignmentOperator(this TokenType type) =>
         type switch

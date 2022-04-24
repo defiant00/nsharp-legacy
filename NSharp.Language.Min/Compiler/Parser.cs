@@ -62,7 +62,7 @@ public class Parser
 
         var file = ParseFileStatement(fileName);
 
-        file.Result.Print(0);
+        file.Result.Accept(new SyntaxTreePrinterVisitor());
 
         return file;
     }
@@ -167,7 +167,7 @@ public class Parser
             }
 
             // Merge left and right.
-            left = new BinaryOperator(left.Position, op.Type.ToOperator(), left, right.Result);
+            left = new BinaryOperator(left.Position, op.Type.ToBinaryOperator(), left, right.Result);
         }
     }
 
@@ -312,7 +312,41 @@ public class Parser
         return new ParseResult<Statement>(constant);
     }
 
-    private ParseResult<Statement> ParseConstructor(List<Modifier> modifiers, Token start)
+    private ParseResult<Expression> ParseConstructorCall()
+    {
+        var start = Next();     // accept new
+        var typeResult = ParseType();
+        if (typeResult.Error)
+            return typeResult;
+
+        var ctor = new ConstructorCall(start.Position, typeResult.Result);
+        var res = Accept(TokenType.LeftParenthesis);
+        if (res.Failure)
+            return InvalidTokenErrorExpression("Invalid token in constructor call", res);
+
+        if (Peek.Type != TokenType.RightParenthesis)
+        {
+            var argExpr = ParseExpression();
+            if (argExpr.Error)
+                return argExpr;
+            ctor.Arguments.Add(argExpr.Result);
+            while (Accept(TokenType.Comma).Success)
+            {
+                argExpr = ParseExpression();
+                if (argExpr.Error)
+                    return argExpr;
+                ctor.Arguments.Add(argExpr.Result);
+            }
+        }
+
+        res = Accept(TokenType.RightParenthesis);
+        if (res.Failure)
+            return InvalidTokenErrorExpression("Invalid token in constructor call", res);
+
+        return new ParseResult<Expression>(ctor);
+    }
+
+    private ParseResult<Statement> ParseConstructorDefinition(List<Modifier> modifiers, Token start)
     {
         // constructor
         // [modifiers] fn new([params]) is [statement]
@@ -701,6 +735,20 @@ public class Parser
         return ErrorStatement("Interface parsing not supported yet", new Position());
     }
 
+    private ParseResult<Expression> ParseIs(Expression expr)
+    {
+        Next(); // accept is
+        var typeResult = ParseExpression();
+        if (typeResult.Error)
+            return typeResult;
+        var isExpr = new Is(expr.Position, expr, typeResult.Result);
+
+        if (Peek.Type == TokenType.Literal)
+            isExpr.Name = Next().Value;
+
+        return new ParseResult<Expression>(isExpr);
+    }
+
     private ParseResult<Expression> ParseMethodCall(Expression expr)
     {
         var methodCall = new MethodCall(expr.Position, expr);
@@ -818,7 +866,7 @@ public class Parser
         var start = Next();     // accept fn
 
         if (Peek.Type == TokenType.New)
-            return ParseConstructor(modifiers, start);
+            return ParseConstructorDefinition(modifiers, start);
 
         var res = Accept(TokenType.Literal);
         if (res.Failure)
@@ -886,6 +934,10 @@ public class Parser
             leftResult = ParseIdentifier();
         else if (Peek.Type == TokenType.StringStart)
             leftResult = ParseString();
+        else if (Peek.Type == TokenType.New)
+            leftResult = ParseConstructorCall();
+        else if (Peek.Type.IsUnaryOperator())
+            leftResult = ParseUnaryOperator();
         else
         {
             var token = Next();
@@ -905,7 +957,8 @@ public class Parser
 
         while (Peek.Type == TokenType.LeftParenthesis ||
             Peek.Type == TokenType.LeftBracket ||
-            Peek.Type == TokenType.LeftCurly)
+            Peek.Type == TokenType.LeftCurly ||
+            Peek.Type == TokenType.Is)
         {
             if (Peek.Type == TokenType.LeftParenthesis)
                 leftResult = ParseMethodCall(leftResult.Result);
@@ -913,6 +966,8 @@ public class Parser
                 leftResult = ParseAccessor(leftResult.Result);
             else if (Peek.Type == TokenType.LeftCurly)
                 leftResult = ParseGeneric(leftResult.Result);
+            else if (Peek.Type == TokenType.Is)
+                leftResult = ParseIs(leftResult.Result);
         }
 
         return leftResult;
@@ -1231,6 +1286,15 @@ public class Parser
 
         var token = Next();
         return ErrorExpression("Invalid token in type parsing: " + token, token.Position);
+    }
+
+    private ParseResult<Expression> ParseUnaryOperator()
+    {
+        var op = Next();
+        var exprResult = ParseExpression();
+        if (exprResult.Error)
+            return exprResult;
+        return new ParseResult<Expression>(new UnaryOperator(op.Position, op.Type.ToUnaryOperator(), exprResult.Result));
     }
 
     private ParseResult<Statement> ParseVariable(List<Modifier> modifiers)

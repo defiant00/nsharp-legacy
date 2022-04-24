@@ -47,43 +47,42 @@ public static class Helpers
             _ => $"[{modifier}]",
         };
 
-    public static string StringVal(this OperatorType op) =>
+    public static string StringVal(this BinaryOperatorType op) =>
         op switch
         {
-            OperatorType.Dot => ".",
-            OperatorType.NullDot => "?.",
+            BinaryOperatorType.Dot => ".",
+            BinaryOperatorType.NullDot => "?.",
 
-            OperatorType.As => "as",
+            BinaryOperatorType.As => "as",
 
-            OperatorType.Multiply => "*",
-            OperatorType.Divide => "/",
-            OperatorType.Modulo => "%",
+            BinaryOperatorType.Multiply => "*",
+            BinaryOperatorType.Divide => "/",
+            BinaryOperatorType.Modulo => "%",
 
-            OperatorType.Add => "+",
-            OperatorType.Subtract => "-",
+            BinaryOperatorType.Add => "+",
+            BinaryOperatorType.Subtract => "-",
 
-            OperatorType.LeftShift => "<<",
-            OperatorType.RightShift => ">>",
+            BinaryOperatorType.LeftShift => "<<",
+            BinaryOperatorType.RightShift => ">>",
 
-            OperatorType.BitwiseAnd => "&",
+            BinaryOperatorType.BitwiseAnd => "&",
 
-            OperatorType.BitwiseOr => "|",
-            OperatorType.BitwiseXor => "^",
+            BinaryOperatorType.BitwiseOr => "|",
+            BinaryOperatorType.BitwiseXor => "^",
 
-            OperatorType.Is => "is",
-            OperatorType.LessThan => "<",
-            OperatorType.GreaterThan => ">",
-            OperatorType.LessThanOrEqual => "<=",
-            OperatorType.GreaterThanOrEqual => ">=",
+            BinaryOperatorType.LessThan => "<",
+            BinaryOperatorType.GreaterThan => ">",
+            BinaryOperatorType.LessThanOrEqual => "<=",
+            BinaryOperatorType.GreaterThanOrEqual => ">=",
 
-            OperatorType.Equal => "==",
-            OperatorType.NotEqual => "!=",
+            BinaryOperatorType.Equal => "==",
+            BinaryOperatorType.NotEqual => "!=",
 
-            OperatorType.And => "and",
+            BinaryOperatorType.And => "and",
 
-            OperatorType.Or => "or",
+            BinaryOperatorType.Or => "or",
 
-            OperatorType.NullCoalesce => "??",
+            BinaryOperatorType.NullCoalesce => "??",
 
             _ => $"[{op}]",
         };
