@@ -24,18 +24,19 @@
         * X namespace
         * X import
         * X class def
-        * _ interface def
+        * X interface def
         * _ struct def
-        * _ enum def
+        * X enum def
+        * X delegate def
         * _ attributes
     * class level
         * X class def
-        * _ interface def
+        * X interface def
         * _ struct def
-        * _ enum def
+        * X enum def
         * X method def
         * X constructor def
-        * _ delegate def
+        * X delegate def
         * X field def
         * X const def
         * X property def

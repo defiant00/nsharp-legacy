@@ -145,6 +145,7 @@ public static class Helpers
         ["enum"] = TokenType.Enum,
         ["interface"] = TokenType.Interface,
         ["fn"] = TokenType.Function,
+        ["del"] = TokenType.Delegate,
         ["var"] = TokenType.Variable,
         ["val"] = TokenType.Value,
         ["get"] = TokenType.Get,

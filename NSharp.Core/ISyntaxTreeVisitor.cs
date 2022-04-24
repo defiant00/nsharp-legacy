@@ -19,6 +19,9 @@ public interface ISyntaxTreeVisitor
     public void Visit(ConstructorDefinition item);
     public void Visit(Continue item);
     public void Visit(CurrentObjectInstance item);
+    public void Visit(DelegateDefinition item);
+    public void Visit(Enumeration item);
+    public void Visit(EnumerationItem item);
     public void Visit(ErrorExpression item);
     public void Visit(ErrorStatement item);
     public void Visit(ExpressionStatement item);
@@ -28,14 +31,17 @@ public interface ISyntaxTreeVisitor
     public void Visit(Identifier item);
     public void Visit(If item);
     public void Visit(Import item);
+    public void Visit(Interface item);
     public void Visit(Is item);
     public void Visit(LiteralToken item);
     public void Visit(MethodCall item);
     public void Visit(MethodDefinition item);
+    public void Visit(MethodSignature item);
     public void Visit(Namespace item);
     public void Visit(Number item);
     public void Visit(Parameter item);
     public void Visit(Property item);
+    public void Visit(PropertySignature item);
     public void Visit(Return item);
     public void Visit(Space item);
     public void Visit(Ast.String item);

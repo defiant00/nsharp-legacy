@@ -188,6 +188,51 @@ public class CurrentObjectInstance : Expression
     public override void Accept(ISyntaxTreeVisitor visitor) => visitor.Visit(this);
 }
 
+public class DelegateDefinition : Statement
+{
+    public List<Modifier> Modifiers { get; set; }
+    public Expression? ReturnType { get; set; }
+    public string Name { get; set; }
+    public List<Parameter> Parameters { get; set; } = new();
+
+    public DelegateDefinition(Position position, List<Modifier> modifiers, string name) : base(position)
+    {
+        Modifiers = modifiers;
+        Name = name;
+    }
+
+    public override void Accept(ISyntaxTreeVisitor visitor) => visitor.Visit(this);
+}
+
+public class Enumeration : Statement
+{
+    public List<Modifier> Modifiers { get; set; }
+    public string Name { get; set; }
+    public List<EnumerationItem> Values { get; set; } = new();
+
+    public Enumeration(Position position, List<Modifier> modifiers, string name) : base(position)
+    {
+        Modifiers = modifiers;
+        Name = name;
+    }
+
+    public override void Accept(ISyntaxTreeVisitor visitor) => visitor.Visit(this);
+}
+
+public class EnumerationItem : Statement
+{
+    public string Name { get; set; }
+    public int? Value { get; set; }
+    public Comment? Comment { get; set; }
+
+    public EnumerationItem(Position position, string name) : base(position)
+    {
+        Name = name;
+    }
+
+    public override void Accept(ISyntaxTreeVisitor visitor) => visitor.Visit(this);
+}
+
 public class ErrorExpression : Expression
 {
     public string Value { get; set; }
@@ -301,6 +346,22 @@ public class Import : Statement
     public override void Accept(ISyntaxTreeVisitor visitor) => visitor.Visit(this);
 }
 
+public class Interface : Statement
+{
+    public List<Modifier> Modifiers { get; set; }
+    public string Name { get; set; }
+    public List<Expression> Interfaces { get; set; } = new();
+    public List<Statement> Statements { get; set; } = new();
+
+    public Interface(Position position, List<Modifier> modifiers, string name) : base(position)
+    {
+        Modifiers = modifiers;
+        Name = name;
+    }
+
+    public override void Accept(ISyntaxTreeVisitor visitor) => visitor.Visit(this);
+}
+
 public class Is : Expression
 {
     public Expression Expr { get; set; }
@@ -350,6 +411,22 @@ public class MethodDefinition : Statement
     public List<Statement> Statements { get; set; } = new();
 
     public MethodDefinition(Position position, List<Modifier> modifiers, string name) : base(position)
+    {
+        Modifiers = modifiers;
+        Name = name;
+    }
+
+    public override void Accept(ISyntaxTreeVisitor visitor) => visitor.Visit(this);
+}
+
+public class MethodSignature : Statement
+{
+    public List<Modifier> Modifiers { get; set; }
+    public Expression? ReturnType { get; set; }
+    public string Name { get; set; }
+    public List<Parameter> Parameters { get; set; } = new();
+
+    public MethodSignature(Position position, List<Modifier> modifiers, string name) : base(position)
     {
         Modifiers = modifiers;
         Name = name;
@@ -409,6 +486,24 @@ public class Property : Statement
     public List<Statement> SetStatements { get; set; } = new();
 
     public Property(Position position, List<Modifier> modifiers, string name, Expression type) : base(position)
+    {
+        Modifiers = modifiers;
+        Name = name;
+        Type = type;
+    }
+
+    public override void Accept(ISyntaxTreeVisitor visitor) => visitor.Visit(this);
+}
+
+public class PropertySignature : Statement
+{
+    public List<Modifier> Modifiers { get; set; }
+    public string Name { get; set; }
+    public Expression Type { get; set; }
+    public bool Get { get; set; } = true;
+    public bool Set { get; set; } = true;
+
+    public PropertySignature(Position position, List<Modifier> modifiers, string name, Expression type) : base(position)
     {
         Modifiers = modifiers;
         Name = name;

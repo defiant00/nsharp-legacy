@@ -47,6 +47,7 @@ public enum TokenType
     Enum,
     Interface,
     Function,
+    Delegate,
     Variable,
     Value,
     Get,
@@ -59,7 +60,6 @@ public enum TokenType
     Finally,
     Throw,
     For,
-    // while/loop
     Break,
     Continue,
     LeftParenthesis,
