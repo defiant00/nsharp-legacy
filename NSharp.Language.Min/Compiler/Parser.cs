@@ -12,8 +12,6 @@ public class Parser
 
     private Token Next() => Tokens[CurrentIndex++];
 
-    private void Backup() => CurrentIndex--;
-
     private ParseResult<Expression> ErrorExpression(string error, Position position)
     {
         // todo - log the error
@@ -355,6 +353,36 @@ public class Parser
         res = Accept(TokenType.RightParenthesis);
         if (res.Failure)
             return InvalidTokenErrorExpression("Invalid token in constructor call", res);
+
+        if (Accept(TokenType.LeftCurly).Success)
+        {
+            while (Peek.Type != TokenType.RightCurly)
+            {
+                var left = ParseExpression();
+                if (left.Error)
+                    return left;
+
+                res = Accept(TokenType.Assign);
+                if (res.Failure)
+                    return InvalidTokenErrorExpression("Invalid token in constructor call", res);
+
+                var right = ParseExpression();
+                if (right.Error)
+                    return right;
+
+                ctor.Statements.Add(new Assignment(
+                    left.Result.Position,
+                    AssignmentOperator.Assign,
+                    left.Result,
+                    right.Result));
+
+                Accept(TokenType.Comma);
+            }
+
+            res = Accept(TokenType.RightCurly);
+            if (res.Failure)
+                return InvalidTokenErrorExpression("Invalid token in constructor call", res);
+        }
 
         return new ParseResult<Expression>(ctor);
     }

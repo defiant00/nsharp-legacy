@@ -96,23 +96,6 @@ for i < 7
     ; while loop
 ```
 
-Initializers or a more generic syntax?
-```
-; constructor specifically
-new Customer()
-    FirstName = "First"
-    LastName = "Last"
-
-; more generic (applies to any expression statement or assignment?)
-Store.Customer
-    FirstName = "First"
-    LastName = "Last"
-
-var person = new Person()
-    FirstName = "First"
-    LastName = "Last"
-```
-
 Access modifiers - sane defaults (protected, final? see kotlin) and only keywords for differences (eg, no `protected`). Maybe `open` to not be `final` but abstract are always open?
 
 [ ] no `break` in a `switch`  

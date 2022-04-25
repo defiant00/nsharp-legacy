@@ -125,6 +125,15 @@ public class SyntaxTreePrinterVisitor : ISyntaxTreeVisitor
             first = false;
         }
         Write(")");
+        if (item.Statements.Any())
+        {
+            WriteLine(" {");
+            Indent++;
+            foreach (var statement in item.Statements)
+                statement.Accept(this);
+            Indent--;
+            WriteIndented("}");
+        }
     }
 
     public void Visit(ConstructorDefinition item)

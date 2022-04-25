@@ -5,10 +5,10 @@ namespace NSharp.Language.Min.Compiler;
 public static class TokenHelper
 {
     public static bool IsAssignment(this TokenType type) => type > TokenType.Assignment_Start && type < TokenType.Assignment_End;
-    public static bool IsComparisonOperator(this TokenType type) => type > TokenType.Comparison_Operator_Start && type < TokenType.Comparison_Operator_End;
-    public static bool IsLiteralExpression(this TokenType type) => type > TokenType.Literal_Expression_Start && type < TokenType.Literal_Expression_End;
+    public static bool IsLineContinuationHeld(this TokenType type) => type > TokenType.Line_Continuation_Held_Start && type < TokenType.Line_Continuation_Held_End;
+    public static bool IsLineContinuationPostfix(this TokenType type) => type > TokenType.Line_Continuation_Postfix_Start && type < TokenType.Line_Continuation_Postfix_End;
+    public static bool IsLineContinuationPrefix(this TokenType type) => type > TokenType.Line_Continuation_Prefix_Start && type < TokenType.Line_Continuation_Prefix_End;
     public static bool IsModifier(this TokenType type) => type > TokenType.Modifier_Start && type < TokenType.Modifier_End;
-    public static bool IsMultilineOperator(this TokenType type) => type > TokenType.Multiline_Operator_Start && type < TokenType.Multiline_Operator_End;
     public static bool IsType(this TokenType type) => type > TokenType.Type_Start && type < TokenType.Type_End;
     public static bool IsUnaryOperator(this TokenType type) => type > TokenType.Unary_Operator_Start && type < TokenType.Unary_Operator_End;
 

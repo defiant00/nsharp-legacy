@@ -1,4 +1,4 @@
 class MyClass
-    var x [][]str.List{MyClass}.Something{Generic}.And.Another
     fn Test()
-        str.Join(", ", myList)
+        new Person(){Name = "Me"}
+        new Person(new Name(){First = "First", Last = "Last"}){Age = 42}

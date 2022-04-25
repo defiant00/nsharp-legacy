@@ -15,11 +15,9 @@ public class Lexer
     private int LineCurrentIndex { get; set; }
     private StateFunction? State { get; set; }
     private Stack<int> IndentationLevels { get; set; }
-    private Stack<TokenType> Brackets { get; set; }
-    private bool LastEmittedWasMultilineOperator { get; set; }
-    private bool InExpression => LastEmittedWasMultilineOperator || Brackets.Any();
-    private bool LastEmittedWasEol { get; set; }
-    private List<Token> EolTokens { get; set; }
+    private Queue<Token> HeldTokens { get; set; }
+    private Queue<int> HeldIndents { get; set; }
+    private bool LastEmittedWasLineContinuation { get; set; }
     private Stack<TokenType> StringTerminators { get; set; }
 
     public List<Token> Tokens { get; set; }
@@ -31,10 +29,9 @@ public class Lexer
         Tokens = new List<Token>();
         Line = string.Empty;
         LineNumber = 0;
-        Brackets = new Stack<TokenType>();
-        LastEmittedWasMultilineOperator = false;
-        LastEmittedWasEol = false;
-        EolTokens = new List<Token>();
+        HeldTokens = new Queue<Token>();
+        HeldIndents = new Queue<int>();
+        LastEmittedWasLineContinuation = false;
         StringTerminators = new Stack<TokenType>();
     }
 
@@ -52,8 +49,6 @@ public class Lexer
 
     public void EndOfFile()
     {
-        while (Brackets.Any())
-            Error($"Missing '{Brackets.Pop()}'");
         EmitIndent(0);
         Emit(TokenType.EOF);
     }
@@ -109,78 +104,82 @@ public class Lexer
         return null;
     }
 
-    private void Emit(TokenType token)
+    private void Emit(TokenType token, int indent = 0)
     {
-        // operators
-        LastEmittedWasMultilineOperator = token.IsMultilineOperator();
-
-        // brackets and strings
-        if (token == TokenType.LeftParenthesis)
-            Brackets.Push(TokenType.RightParenthesis);
-        else if (token == TokenType.LeftBracket)
-            Brackets.Push(TokenType.RightBracket);
-        else if (token == TokenType.LeftCurly)
+        // Hold certain tokens in case the next line is a prefix line continuation.
+        if (token.IsLineContinuationHeld())
         {
-            Brackets.Push(TokenType.RightCurly);
-            StringTerminators.Push(TokenType.RightCurly);
-        }
-        else if (token == TokenType.StringStart)
-            StringTerminators.Push(TokenType.StringEnd);
-
-        if (Brackets.Any() && Brackets.Peek() == token)
-            Brackets.Pop();
-
-        if (StringTerminators.Any() && StringTerminators.Peek() == token)
-            StringTerminators.Pop();
-
-        var emitToken = new Token(token, CurrentPosition, CurrentValue);
-        if (token == TokenType.EOL)
-        {
-            if (LastEmittedWasEol)
-                EolTokens.Add(emitToken);
-            else
-                Tokens.Add(emitToken);
-
-            LastEmittedWasEol = true;
+            HeldTokens.Enqueue(new Token(token, CurrentPosition, CurrentValue));
+            HeldIndents.Enqueue(indent);
         }
         else
         {
-            if (token != TokenType.Indent && token != TokenType.Dedent && EolTokens.Any())
+            // If the previous or current token is a line continuation, clear the
+            // held tokens.
+            if (LastEmittedWasLineContinuation || token.IsLineContinuationPrefix())
             {
-                Tokens.AddRange(EolTokens);
-                EolTokens.Clear();
+                HeldTokens.Clear();
+                HeldIndents.Clear();
             }
-            Tokens.Add(emitToken);
 
-            LastEmittedWasEol = false;
+            // Emit any held tokens.
+            var eols = new List<Token>();
+            bool firstEol = true;
+            while (HeldTokens.Any())
+            {
+                var tok = HeldTokens.Dequeue();
+                int ind = HeldIndents.Dequeue();
+                if (tok.Type == TokenType.EOL)
+                {
+                    if (firstEol)
+                    {
+                        Tokens.Add(tok);
+                        firstEol = false;
+                    }
+                    else
+                        eols.Add(tok);
+                }
+                else
+                {
+                    int currentIndent = IndentationLevels.Peek();
+                    if (ind > currentIndent)
+                    {
+                        Tokens.Add(new Token(TokenType.Indent, tok.Position, string.Empty));
+                        IndentationLevels.Push(ind);
+                    }
+                    else
+                    {
+                        while (IndentationLevels.Any() && ind < currentIndent)
+                        {
+                            Tokens.Add(new Token(TokenType.Dedent, tok.Position, string.Empty));
+                            IndentationLevels.Pop();
+                            currentIndent = IndentationLevels.Peek();
+                        }
+                        if (!IndentationLevels.Any() || currentIndent != ind)
+                            Error("Mismatched indentation level");
+                    }
+                }
+            }
+            Tokens.AddRange(eols);
+
+            // String terminators.
+            if (token == TokenType.LeftCurly)
+                StringTerminators.Push(TokenType.RightCurly);
+            else if (token == TokenType.StringStart)
+                StringTerminators.Push(TokenType.StringEnd);
+            else if (StringTerminators.Any() && StringTerminators.Peek() == token)
+                StringTerminators.Pop();
+
+            // Emit the current token.
+            Tokens.Add(new Token(token, CurrentPosition, CurrentValue));
+
+            LastEmittedWasLineContinuation = token.IsLineContinuationPostfix();
         }
 
         LineStartIndex = LineCurrentIndex;
     }
 
-    private void EmitIndent(int indent)
-    {
-        if (InExpression)
-            return;
-
-        int currentIndent = IndentationLevels.Peek();
-        if (indent > currentIndent)
-        {
-            Emit(TokenType.Indent);
-            IndentationLevels.Push(indent);
-        }
-        else
-        {
-            while (IndentationLevels.Any() && indent < currentIndent)
-            {
-                Emit(TokenType.Dedent);
-                IndentationLevels.Pop();
-                currentIndent = IndentationLevels.Peek();
-            }
-            if (IndentationLevels.Count == 0 || currentIndent != indent)
-                Error("Mismatched indentation level");
-        }
-    }
+    private void EmitIndent(int indent) => Emit(TokenType.Indent, indent);
 
     private StateFunction? LexIndent()
     {
@@ -194,8 +193,7 @@ public class Lexer
                 case '\n':
                     Backup();
                     Discard();
-                    if (!InExpression)
-                        Emit(TokenType.EOL);
+                    Emit(TokenType.EOL);
                     return null;
                 case ' ':
                     indent++;
@@ -232,8 +230,7 @@ public class Lexer
                 case '\r':
                 case '\n':
                     Discard();
-                    if (!InExpression)
-                        Emit(TokenType.EOL);
+                    Emit(TokenType.EOL);
                     return null;
                 case ';':
                     return LexComment;
