@@ -16,7 +16,7 @@
     * X unary op
     * X is op
     * _ ternary
-    * _ anonymous fn
+    * X anonymous fn
     * _ default
     * _ typeof?
 * Statements
@@ -74,6 +74,7 @@ fn(x) is x * x
 fn(x)
     var y = x * x
     ret y * 2
+fn
 ```
 
 Loops
