@@ -56,6 +56,7 @@
         * X return
         * _ base/super
         * _ attributes
+        * _ throw/rethrow
 
 ## Min Syntax Notes
 
