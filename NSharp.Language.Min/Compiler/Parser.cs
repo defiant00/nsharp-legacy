@@ -18,11 +18,15 @@ public class Parser
         return new ParseResult<Expression>(new ErrorExpression(position, error), true);
     }
 
+    private ParseResult<Expression> ErrorExpression(ErrorStatement stmt) => ErrorExpression(stmt.Value, stmt.Position);
+
     private ParseResult<Statement> ErrorStatement(string error, Position position)
     {
         // todo - log the error
         return new ParseResult<Statement>(new ErrorStatement(position, error), true);
     }
+
+    private ParseResult<Statement> ErrorStatement(ErrorExpression expr) => ErrorStatement(expr.Value, expr.Position);
 
     private ParseResult<Expression> InvalidTokenErrorExpression(string error, AcceptResult result)
     {
@@ -152,7 +156,7 @@ public class Parser
         {
             var stmtResult = ParseMethodStatement(false);
             if (stmtResult.Error && stmtResult.Result is ErrorStatement es)
-                return ErrorExpression(es.Value, es.Position);
+                return ErrorExpression(es);
             anonFn.Statements.Add(stmtResult.Result);
             return new ParseResult<Expression>(anonFn);
         }
@@ -188,7 +192,7 @@ public class Parser
         {
             var stmtRes = ParseMethodStatement();
             if (stmtRes.Error && stmtRes.Result is ErrorStatement es)
-                return ErrorExpression(es.Value, es.Position);
+                return ErrorExpression(es);
             anonFn.Statements.Add(stmtRes.Result);
         }
 
@@ -218,7 +222,7 @@ public class Parser
         var op = Next().Type.ToAssignmentOperator();
         var right = ParseExpression();
         if (right.Error && right.Result is ErrorExpression ex)
-            return ErrorStatement(ex.Value, ex.Position);
+            return ErrorStatement(ex);
         var res = Accept(TokenType.EOL);
         if (res.Failure)
             return InvalidTokenErrorStatement("Invalid token in assignment", res);
@@ -255,9 +259,9 @@ public class Parser
         }
     }
 
-    private ParseResult<Statement> ParseBreak(bool acceptEol)
+    private ParseResult<Statement> ParseBreak()
     {
-        var res = acceptEol ? Accept(TokenType.Break, TokenType.EOL) : Accept(TokenType.Break);
+        var res = Accept(TokenType.Break, TokenType.EOL);
         if (res.Failure)
             return InvalidTokenErrorStatement("Invalid token in break", res);
         return new ParseResult<Statement>(new Break(GetToken(res).Position));
@@ -348,7 +352,7 @@ public class Parser
             case TokenType.Function:
                 return ParseMethodOrProperty(modifiers);
             case TokenType.Variable:
-                return ParseVariable(modifiers);
+                return ParseField(modifiers);
         }
 
         var token = Next();
@@ -393,7 +397,7 @@ public class Parser
 
         var typeResult = ParseType();
         if (typeResult.Error && typeResult.Result is ErrorExpression ex)
-            return ErrorStatement(ex.Value, ex.Position);
+            return ErrorStatement(ex);
 
         var constant = new Constant(start.Position, modifiers, name, typeResult.Result);
 
@@ -401,7 +405,7 @@ public class Parser
         {
             var exprResult = ParseExpression();
             if (exprResult.Error && exprResult.Result is ErrorExpression exp)
-                return ErrorStatement(exp.Value, exp.Position);
+                return ErrorStatement(exp);
             constant.Value = exprResult.Result;
         }
 
@@ -537,9 +541,9 @@ public class Parser
         return new ParseResult<Statement>(ctorDef);
     }
 
-    private ParseResult<Statement> ParseContinue(bool acceptEol)
+    private ParseResult<Statement> ParseContinue()
     {
-        var res = acceptEol ? Accept(TokenType.Continue, TokenType.EOL) : Accept(TokenType.Continue);
+        var res = Accept(TokenType.Continue, TokenType.EOL);
         if (res.Failure)
             return InvalidTokenErrorStatement("Invalid token in continue", res);
         return new ParseResult<Statement>(new Continue(GetToken(res).Position));
@@ -652,7 +656,7 @@ public class Parser
     {
         var expr = ParseExpression();
         if (expr.Error && expr.Result is ErrorExpression ex)
-            return ErrorStatement(ex.Value, ex.Position);
+            return ErrorStatement(ex);
 
         if (Peek.Type.IsAssignment())
             return ParseAssignment(expr.Result);
@@ -665,6 +669,40 @@ public class Parser
         }
 
         return new ParseResult<Statement>(new ExpressionStatement(expr.Result.Position, expr.Result));
+    }
+
+    private ParseResult<Statement> ParseField(List<Modifier> modifiers)
+    {
+        // [modifiers] var [name] [type]
+        // [modifiers] var [name] [type] = [expr]
+
+        var start = Next();     // accept var
+
+        var res = Accept(TokenType.Literal);
+        if (res.Failure)
+            return InvalidTokenErrorStatement("Invalid token in field", res);
+
+        string name = GetToken(res).Value;
+
+        var typeResult = ParseType();
+        if (typeResult.Error && typeResult.Result is ErrorExpression ex)
+            return ErrorStatement(ex);
+
+        var field = new Field(start.Position, modifiers, name, typeResult.Result);
+
+        if (Accept(TokenType.Assign).Success)
+        {
+            var exprResult = ParseExpression();
+            if (exprResult.Error && exprResult.Result is ErrorExpression exp)
+                return ErrorStatement(exp);
+            field.Value = exprResult.Result;
+        }
+
+        res = Accept(TokenType.EOL);
+        if (res.Failure)
+            return InvalidTokenErrorStatement("Invalid token in field", res);
+
+        return new ParseResult<Statement>(field);
     }
 
     private ParseResult<Statement> ParseFileModifiableStatement()
@@ -770,7 +808,7 @@ public class Parser
 
                 var exprResult = ParseExpression();
                 if (exprResult.Error && exprResult.Result is ErrorExpression exp)
-                    return ErrorStatement(exp.Value, exp.Position);
+                    return ErrorStatement(exp);
                 propDef.GetStatements.Add(new Return(exprResult.Result.Position) { Value = exprResult.Result });
                 res = Accept(TokenType.EOL);
                 if (res.Failure)
@@ -851,7 +889,7 @@ public class Parser
         var start = Next();
         var condition = ParseExpression();
         if (condition.Error && condition.Result is ErrorExpression ex)
-            return ErrorStatement(ex.Value, ex.Position);
+            return ErrorStatement(ex);
 
         var res = Accept(TokenType.EOL, TokenType.Indent);
         if (res.Failure)
@@ -1015,6 +1053,67 @@ public class Parser
         return new ParseResult<Expression>(isExpr);
     }
 
+    private ParseResult<Statement> ParseLocalConstant()
+    {
+        // val [name] [type] = [expr]
+
+        var res = Accept(TokenType.Value, TokenType.Literal);
+        if (res.Failure)
+            return InvalidTokenErrorStatement("Invalid token in val", res);
+
+        var pos = GetToken(res).Position;
+        var name = GetToken(res, 1).Value;
+
+        var typeRes = ParseType();
+        if (typeRes.Error && typeRes.Result is ErrorExpression ex)
+            return ErrorStatement(ex);
+
+
+        res = Accept(TokenType.Assign);
+        if (res.Failure)
+            return InvalidTokenErrorStatement("Invalid token in val", res);
+
+        var valRes = ParseExpression();
+        if (valRes.Error && valRes.Result is ErrorExpression exp)
+            return ErrorStatement(exp);
+
+        res = Accept(TokenType.EOL);
+        if (res.Failure)
+            return InvalidTokenErrorStatement("Invalid token in val", res);
+
+        return new ParseResult<Statement>(new LocalConstant(pos, name, typeRes.Result, valRes.Result));
+    }
+
+    private ParseResult<Statement> ParseLocalVariable()
+    {
+        // var [name] [type]
+        // var [name] [type] = [expr]
+
+        var res = Accept(TokenType.Variable, TokenType.Literal);
+        if (res.Failure)
+            return InvalidTokenErrorStatement("Invalid token in var", res);
+
+        var typeRes = ParseType();
+        if (typeRes.Error && typeRes.Result is ErrorExpression ex)
+            return ErrorStatement(ex);
+
+        var local = new LocalVariable(GetToken(res).Position, GetToken(res, 1).Value, typeRes.Result);
+
+        if (Accept(TokenType.Assign).Success)
+        {
+            var valRes = ParseExpression();
+            if (valRes.Error && valRes.Result is ErrorExpression exp)
+                return ErrorStatement(exp);
+            local.Value = valRes.Result;
+        }
+
+        res = Accept(TokenType.EOL);
+        if (res.Failure)
+            return InvalidTokenErrorStatement("Invalid token in var", res);
+
+        return new ParseResult<Statement>(local);
+    }
+
     private ParseResult<Expression> ParseMethodCall(Expression expr)
     {
         var methodCall = new MethodCall(expr.Position, expr);
@@ -1092,7 +1191,7 @@ public class Parser
         {
             var typeResult = ParseType();
             if (typeResult.Error && typeResult.Result is ErrorExpression ex)
-                return ErrorStatement(ex.Value, ex.Position);
+                return ErrorStatement(ex);
             methodDef.ReturnType = typeResult.Result;
 
             // [modifiers] fn [name]([params]) [type] is [expr]
@@ -1100,7 +1199,7 @@ public class Parser
             {
                 var exprResult = ParseExpression();
                 if (exprResult.Error && exprResult.Result is ErrorExpression exp)
-                    return ErrorStatement(exp.Value, exp.Position);
+                    return ErrorStatement(exp);
                 methodDef.Statements.Add(new Return(exprResult.Result.Position) { Value = exprResult.Result });
                 res = Accept(TokenType.EOL);
                 if (res.Failure)
@@ -1184,7 +1283,7 @@ public class Parser
         {
             var typeResult = ParseType();
             if (typeResult.Error && typeResult.Result is ErrorExpression ex)
-                return ErrorStatement(ex.Value, ex.Position);
+                return ErrorStatement(ex);
             methodSig.ReturnType = typeResult.Result;
         }
 
@@ -1198,12 +1297,15 @@ public class Parser
     private ParseResult<Statement> ParseMethodStatement(bool acceptEol = true) =>
         Peek.Type switch
         {
-            TokenType.Break => ParseBreak(acceptEol),
+            TokenType.Break => ParseBreak(),
             TokenType.Comment => ParseComment(acceptEol),
-            TokenType.Continue => ParseContinue(acceptEol),
+            TokenType.Continue => ParseContinue(),
             TokenType.EOL => ParseSpace(),
             TokenType.If => ParseIf(),
             TokenType.Return => ParseReturn(acceptEol),
+            TokenType.Use => ParseUsing(),
+            TokenType.Variable => ParseLocalVariable(),
+            TokenType.Value => ParseLocalConstant(),
             _ => ParseExpressionStatement(acceptEol),
         };
 
@@ -1315,7 +1417,7 @@ public class Parser
 
         var typeResult = ParseType();
         if (typeResult.Error && typeResult.Result is ErrorExpression ex)
-            return ErrorStatement(ex.Value, ex.Position);
+            return ErrorStatement(ex);
 
         var propDef = new Property(nameToken.Position, modifiers, nameToken.Value, typeResult.Result);
 
@@ -1347,7 +1449,7 @@ public class Parser
 
             var exprResult = ParseExpression();
             if (exprResult.Error && exprResult.Result is ErrorExpression exp)
-                return ErrorStatement(exp.Value, exp.Position);
+                return ErrorStatement(exp);
             propDef.GetStatements.Add(new Return(exprResult.Result.Position) { Value = exprResult.Result });
             res = Accept(TokenType.EOL);
             if (res.Failure)
@@ -1360,7 +1462,7 @@ public class Parser
         {
             var exprResult = ParseExpression();
             if (exprResult.Error && exprResult.Result is ErrorExpression exp)
-                return ErrorStatement(exp.Value, exp.Position);
+                return ErrorStatement(exp);
             propDef.Value = exprResult.Result;
         }
 
@@ -1424,7 +1526,7 @@ public class Parser
 
         var typeResult = ParseType();
         if (typeResult.Error && typeResult.Result is ErrorExpression ex)
-            return ErrorStatement(ex.Value, ex.Position);
+            return ErrorStatement(ex);
 
         var propSig = new PropertySignature(pos, modifiers, name, typeResult.Result);
 
@@ -1465,7 +1567,7 @@ public class Parser
         {
             var expr = ParseExpression();
             if (expr.Error && expr.Result is ErrorExpression ex)
-                return ErrorStatement(ex.Value, ex.Position);
+                return ErrorStatement(ex);
             ret.Value = expr.Result;
         }
         if (acceptEol)
@@ -1604,37 +1706,44 @@ public class Parser
         return new ParseResult<Expression>(new UnaryOperator(op.Position, op.Type.ToUnaryOperator(), exprResult.Result));
     }
 
-    private ParseResult<Statement> ParseVariable(List<Modifier> modifiers)
+    private ParseResult<Statement> ParseUsing()
     {
-        // [modifiers] var [name] [type]
-        // [modifiers] var [name] [type] = [expr]
+        // use [name] = [expr]
+        // use [name] = [expr]
+        //     [statements]
 
-        var start = Next();     // accept var
-
-        var res = Accept(TokenType.Literal);
+        var res = Accept(TokenType.Use, TokenType.Literal, TokenType.Assign);
         if (res.Failure)
-            return InvalidTokenErrorStatement("Invalid token in variable", res);
+            return InvalidTokenErrorStatement("Invalid token in use", res);
 
-        string name = GetToken(res).Value;
+        var pos = GetToken(res).Position;
+        var name = GetToken(res, 1).Value;
 
-        var typeResult = ParseType();
-        if (typeResult.Error && typeResult.Result is ErrorExpression ex)
-            return ErrorStatement(ex.Value, ex.Position);
-
-        var variable = new Variable(start.Position, modifiers, name, typeResult.Result);
-
-        if (Accept(TokenType.Assign).Success)
-        {
-            var exprResult = ParseExpression();
-            if (exprResult.Error && exprResult.Result is ErrorExpression exp)
-                return ErrorStatement(exp.Value, exp.Position);
-            variable.Value = exprResult.Result;
-        }
+        var exprRes = ParseExpression();
+        if (exprRes.Error && exprRes.Result is ErrorExpression ex)
+            return ErrorStatement(ex);
 
         res = Accept(TokenType.EOL);
         if (res.Failure)
-            return InvalidTokenErrorStatement("Invalid token in variable", res);
+            return InvalidTokenErrorStatement("Invalid token in use", res);
 
-        return new ParseResult<Statement>(variable);
+        var use = new Using(pos, name, exprRes.Result);
+
+        if (Accept(TokenType.Indent).Success)
+        {
+            while (Peek.Type != TokenType.Dedent)
+            {
+                var stmtRes = ParseMethodStatement();
+                if (stmtRes.Error)
+                    return stmtRes;
+                use.Statements.Add(stmtRes.Result);
+            }
+
+            res = Accept(TokenType.Dedent);
+            if (res.Failure)
+                return InvalidTokenErrorStatement("Invalid token in use", res);
+        }
+
+        return new ParseResult<Statement>(use);
     }
 }

@@ -26,6 +26,7 @@ public interface ISyntaxTreeVisitor
     public void Visit(ErrorExpression item);
     public void Visit(ErrorStatement item);
     public void Visit(ExpressionStatement item);
+    public void Visit(Field item);
     public void Visit(Ast.File item);
     public void Visit(For item);
     public void Visit(Generic item);
@@ -35,6 +36,8 @@ public interface ISyntaxTreeVisitor
     public void Visit(Interface item);
     public void Visit(Is item);
     public void Visit(LiteralToken item);
+    public void Visit(LocalConstant item);
+    public void Visit(LocalVariable item);
     public void Visit(MethodCall item);
     public void Visit(MethodDefinition item);
     public void Visit(MethodSignature item);
@@ -48,5 +51,5 @@ public interface ISyntaxTreeVisitor
     public void Visit(Ast.String item);
     public void Visit(StringLiteral item);
     public void Visit(UnaryOperator item);
-    public void Visit(Variable item);
+    public void Visit(Using item);
 }

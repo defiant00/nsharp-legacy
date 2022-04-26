@@ -42,9 +42,9 @@
         * X property def
         * _ attributes
     * method level
-        * _ var
-        * _ const
-        * _ using
+        * X var
+        * X const
+        * X using
         * X assignment
         * X if/else
         * _ switch

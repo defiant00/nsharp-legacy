@@ -238,6 +238,19 @@ public class SyntaxTreePrinterVisitor : ISyntaxTreeVisitor
         WriteLine();
     }
 
+    public void Visit(Field item)
+    {
+        WriteIndented($"Field: {string.Join(" ", item.Modifiers)} ");
+        item.Type.Accept(this);
+        Write($" {item.Name}");
+        if (item.Value != null)
+        {
+            Write(" = ");
+            item.Value.Accept(this);
+        }
+        WriteLine();
+    }
+
     public void Visit(File item)
     {
         WriteLineIndented($"File: {item.Name}");
@@ -346,6 +359,28 @@ public class SyntaxTreePrinterVisitor : ISyntaxTreeVisitor
     }
 
     public void Visit(LiteralToken item) => Console.Write(item.Token);
+
+    public void Visit(LocalConstant item)
+    {
+        WriteIndented($"Const: ");
+        item.Type.Accept(this);
+        Write($" {item.Name} = ");
+        item.Value.Accept(this);
+        WriteLine();
+    }
+
+    public void Visit(LocalVariable item)
+    {
+        WriteIndented($"Var: ");
+        item.Type.Accept(this);
+        Write($" {item.Name}");
+        if (item.Value != null)
+        {
+            Write(" = ");
+            item.Value.Accept(this);
+        }
+        WriteLine();
+    }
 
     public void Visit(MethodCall item)
     {
@@ -495,16 +530,14 @@ public class SyntaxTreePrinterVisitor : ISyntaxTreeVisitor
         item.Expr.Accept(this);
     }
 
-    public void Visit(Variable item)
+    public void Visit(Using item)
     {
-        WriteIndented($"Variable: {string.Join(" ", item.Modifiers)} ");
-        item.Type.Accept(this);
-        Write($" {item.Name}");
-        if (item.Value != null)
-        {
-            Write(" = ");
-            item.Value.Accept(this);
-        }
+        WriteIndented($"Using: {item.Name} = ");
+        item.Expr.Accept(this);
         WriteLine();
+        Indent++;
+        foreach (var stmt in item.Statements)
+            stmt.Accept(this);
+        Indent--;
     }
 }

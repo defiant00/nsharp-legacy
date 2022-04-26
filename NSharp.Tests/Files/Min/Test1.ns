@@ -1,18 +1,9 @@
 class MyClass
     fn Test()
-        fn(x int) is Print(x)
-        fn(x int) int is x * x
-        fn(x int)
-            print(x)
-            x += 1
-        fn
-        fn(x int) int
-            y = x + 2
-            y += 7
-            ret y
-        fn
-        CallThing(1, fn(x int) int is 3, fn(x int, y int)
-            y *= 2
-            x += y
-            ret x
-        fn, 2)
+        var x int
+        var y int = 3
+        val z int = 4
+        use x = new DIsposable()
+        use y = new Disposer()
+            do
+            stuff

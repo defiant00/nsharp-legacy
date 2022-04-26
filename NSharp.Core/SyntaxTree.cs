@@ -281,6 +281,23 @@ public class ExpressionStatement : Statement
     public override void Accept(ISyntaxTreeVisitor visitor) => visitor.Visit(this);
 }
 
+public class Field : Statement
+{
+    public List<Modifier> Modifiers { get; set; }
+    public string Name { get; set; }
+    public Expression Type { get; set; }
+    public Expression? Value { get; set; }
+
+    public Field(Position position, List<Modifier> modifiers, string name, Expression type) : base(position)
+    {
+        Modifiers = modifiers;
+        Name = name;
+        Type = type;
+    }
+
+    public override void Accept(ISyntaxTreeVisitor visitor) => visitor.Visit(this);
+}
+
 public class File : Statement
 {
     public string Name { get; set; }
@@ -396,6 +413,37 @@ public class LiteralToken : Expression
     public LiteralToken(Position position, Literal token) : base(position)
     {
         Token = token;
+    }
+
+    public override void Accept(ISyntaxTreeVisitor visitor) => visitor.Visit(this);
+}
+
+public class LocalConstant : Statement
+{
+    public string Name { get; set; }
+    public Expression Type { get; set; }
+    public Expression Value { get; set; }
+
+    public LocalConstant(Position position, string name, Expression type, Expression value) : base(position)
+    {
+        Name = name;
+        Type = type;
+        Value = value;
+    }
+
+    public override void Accept(ISyntaxTreeVisitor visitor) => visitor.Visit(this);
+}
+
+public class LocalVariable : Statement
+{
+    public string Name { get; set; }
+    public Expression Type { get; set; }
+    public Expression? Value { get; set; }
+
+    public LocalVariable(Position position, string name, Expression type) : base(position)
+    {
+        Name = name;
+        Type = type;
     }
 
     public override void Accept(ISyntaxTreeVisitor visitor) => visitor.Visit(this);
@@ -581,18 +629,16 @@ public class UnaryOperator : Expression
     public override void Accept(ISyntaxTreeVisitor visitor) => visitor.Visit(this);
 }
 
-public class Variable : Statement
+public class Using : Statement
 {
-    public List<Modifier> Modifiers { get; set; }
     public string Name { get; set; }
-    public Expression Type { get; set; }
-    public Expression? Value { get; set; }
+    public Expression Expr { get; set; }
+    public List<Statement> Statements { get; set; } = new();
 
-    public Variable(Position position, List<Modifier> modifiers, string name, Expression type) : base(position)
+    public Using(Position position, string name, Expression expr) : base(position)
     {
-        Modifiers = modifiers;
         Name = name;
-        Type = type;
+        Expr = expr;
     }
 
     public override void Accept(ISyntaxTreeVisitor visitor) => visitor.Visit(this);

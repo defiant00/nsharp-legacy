@@ -81,8 +81,8 @@ public class Decompiler
             case Space space:
                 ProcessSpace(space);
                 break;
-            case Variable variable:
-                ProcessVariable(indent, variable);
+            case Field variable:
+                ProcessField(indent, variable);
                 break;
             default:
                 AppendLineIndented(indent, $"[{currentItem}]");
@@ -610,7 +610,7 @@ public class Decompiler
         Buffer.Append("\"");
     }
 
-    private void ProcessVariable(int indent, Variable variable)
+    private void ProcessField(int indent, Field variable)
     {
         AppendModifiersIndented(indent, variable.Modifiers);
         Buffer.Append("var ");
