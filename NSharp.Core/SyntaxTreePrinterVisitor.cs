@@ -41,6 +41,33 @@ public class SyntaxTreePrinterVisitor : ISyntaxTreeVisitor
         Write("]");
     }
 
+    public void Visit(AnonymousFunction item)
+    {
+        WriteLine();
+        Indent++;
+        WriteIndented($"Anonymous function: ");
+        if (item.ReturnType == null)
+            Write("void");
+        else
+            item.ReturnType.Accept(this);
+        Write(" (");
+        bool first = true;
+        foreach (var par in item.Parameters)
+        {
+            if (!first)
+                Write(", ");
+            par.Accept(this);
+            first = false;
+        }
+        WriteLine(")");
+
+        Indent++;
+        foreach (var statement in item.Statements)
+            statement.Accept(this);
+
+        Indent -= 2;
+    }
+
     public void Visit(Array item)
     {
         Write("[]");

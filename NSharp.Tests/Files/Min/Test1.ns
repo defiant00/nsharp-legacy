@@ -1,4 +1,18 @@
 class MyClass
     fn Test()
-        new Person(){Name = "Me"}
-        new Person(new Name(){First = "First", Last = "Last"}){Age = 42}
+        fn(x int) is Print(x)
+        fn(x int) int is x * x
+        fn(x int)
+            print(x)
+            x += 1
+        fn
+        fn(x int) int
+            y = x + 2
+            y += 7
+            ret y
+        fn
+        CallThing(1, fn(x int) int is 3, fn(x int, y int)
+            y *= 2
+            x += y
+            ret x
+        fn, 2)

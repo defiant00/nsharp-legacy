@@ -37,6 +37,17 @@ public class Accessor : Expression
     public override void Accept(ISyntaxTreeVisitor visitor) => visitor.Visit(this);
 }
 
+public class AnonymousFunction : Expression
+{
+    public Expression? ReturnType { get; set; }
+    public List<Parameter> Parameters { get; set; } = new();
+    public List<Statement> Statements { get; set; } = new();
+
+    public AnonymousFunction(Position position) : base(position) { }
+
+    public override void Accept(ISyntaxTreeVisitor visitor) => visitor.Visit(this);
+}
+
 public class Array : Expression
 {
     public Expression Type { get; set; }
