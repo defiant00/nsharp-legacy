@@ -26,21 +26,6 @@ public class SyntaxTreePrinterVisitor : ISyntaxTreeVisitor
 
     public void Visit(Statement item) => WriteLineIndented($"[{item}]");
 
-    public void Visit(Accessor item)
-    {
-        item.Expr.Accept(this);
-        Write("[");
-        bool first = true;
-        foreach (var arg in item.Arguments)
-        {
-            if (!first)
-                Write(", ");
-            arg.Accept(this);
-            first = false;
-        }
-        Write("]");
-    }
-
     public void Visit(AnonymousFunction item)
     {
         WriteLine();
@@ -98,6 +83,19 @@ public class SyntaxTreePrinterVisitor : ISyntaxTreeVisitor
     {
         WriteIndented($"Case: ");
         item.Expr.Accept(this);
+        WriteLine();
+        Indent++;
+        foreach (var stmt in item.Statements)
+            stmt.Accept(this);
+        Indent--;
+    }
+
+    public void Visit(Catch item)
+    {
+        WriteIndented("Catch: ");
+        item.Type?.Accept(this);
+        if (item.Name != null)
+            Write($" {item.Name}");
         WriteLine();
         Indent++;
         foreach (var stmt in item.Statements)
@@ -340,6 +338,21 @@ public class SyntaxTreePrinterVisitor : ISyntaxTreeVisitor
 
     public void Visit(Import item) => WriteLineIndented($"Import: {string.Join(".", item.Value)}");
 
+    public void Visit(Indexer item)
+    {
+        item.Expr.Accept(this);
+        Write("[");
+        bool first = true;
+        foreach (var arg in item.Arguments)
+        {
+            if (!first)
+                Write(", ");
+            arg.Accept(this);
+            first = false;
+        }
+        Write("]");
+    }
+
     public void Visit(Interface item)
     {
         WriteIndented($"Interface: {string.Join(" ", item.Modifiers)} {item.Name}");
@@ -539,13 +552,32 @@ public class SyntaxTreePrinterVisitor : ISyntaxTreeVisitor
 
     public void Visit(Switch item)
     {
-        WriteIndented($"Switch: ");
+        WriteIndented("Switch: ");
         item.Expr.Accept(this);
         WriteLine();
         Indent++;
         foreach (var stmt in item.Statements)
             stmt.Accept(this);
         Indent--;
+    }
+
+    public void Visit(Try item)
+    {
+        WriteLineIndented("Try: ");
+        Indent++;
+        foreach (var stmt in item.Statements)
+            stmt.Accept(this);
+        Indent--;
+        foreach (var c in item.Catches)
+            c.Accept(this);
+        if (item.FinallyStatements.Any())
+        {
+            WriteLineIndented("Finally:");
+            Indent++;
+            foreach (var stmt in item.FinallyStatements)
+                stmt.Accept(this);
+            Indent--;
+        }
     }
 
     public void Visit(UnaryOperator item)

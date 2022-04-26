@@ -90,33 +90,6 @@ public class Parser
 
     private Token ErrorToken(AcceptResult result) => Tokens[result.StartingIndex + result.Count];
 
-    private ParseResult<Expression> ParseAccessor(Expression expr)
-    {
-        var res = Accept(TokenType.LeftBracket);
-        if (res.Failure)
-            return InvalidTokenErrorExpression("Invalid token in accessor", res);
-
-        var argExpr = ParseExpression();
-        if (argExpr.Error)
-            return argExpr;
-
-        var accessor = new Accessor(expr.Position, expr, argExpr.Result);
-
-        while (Accept(TokenType.Comma).Success)
-        {
-            argExpr = ParseExpression();
-            if (argExpr.Error)
-                return argExpr;
-            accessor.Arguments.Add(argExpr.Result);
-        }
-
-        res = Accept(TokenType.RightBracket);
-        if (res.Failure)
-            return InvalidTokenErrorExpression("Invalid token in accessor", res);
-
-        return new ParseResult<Expression>(accessor);
-    }
-
     private ParseResult<Expression> ParseAnonymouseFunction()
     {
         // fn([params]) is [statement]
@@ -1013,6 +986,33 @@ public class Parser
         return new ParseResult<Statement>(import);
     }
 
+    private ParseResult<Expression> ParseIndexer(Expression expr)
+    {
+        var res = Accept(TokenType.LeftBracket);
+        if (res.Failure)
+            return InvalidTokenErrorExpression("Invalid token in indexer", res);
+
+        var argExpr = ParseExpression();
+        if (argExpr.Error)
+            return argExpr;
+
+        var indexer = new Indexer(expr.Position, expr, argExpr.Result);
+
+        while (Accept(TokenType.Comma).Success)
+        {
+            argExpr = ParseExpression();
+            if (argExpr.Error)
+                return argExpr;
+            indexer.Arguments.Add(argExpr.Result);
+        }
+
+        res = Accept(TokenType.RightBracket);
+        if (res.Failure)
+            return InvalidTokenErrorExpression("Invalid token in indexer", res);
+
+        return new ParseResult<Expression>(indexer);
+    }
+
     private ParseResult<Statement> ParseInterface(List<Modifier> modifiers)
     {
         var res = Accept(TokenType.Interface, TokenType.Literal);
@@ -1351,6 +1351,7 @@ public class Parser
             TokenType.EOL => ParseSpace(),
             TokenType.If => ParseIf(),
             TokenType.Return => ParseReturn(acceptEol),
+            TokenType.Try => ParseTry(),
             TokenType.Use => ParseUsing(),
             TokenType.Variable => ParseLocalVariable(),
             TokenType.Value => ParseLocalConstant(),
@@ -1435,7 +1436,7 @@ public class Parser
             if (Peek.Type == TokenType.LeftParenthesis)
                 leftResult = ParseMethodCall(leftResult.Result);
             else if (Peek.Type == TokenType.LeftBracket)
-                leftResult = ParseAccessor(leftResult.Result);
+                leftResult = ParseIndexer(leftResult.Result);
             else if (Peek.Type == TokenType.LeftCurly)
                 leftResult = ParseGeneric(leftResult.Result);
             else if (Peek.Type == TokenType.Is)
@@ -1686,6 +1687,90 @@ public class Parser
     {
         Next();
         return ErrorStatement("Struct parsing not supported yet", new Position());
+    }
+
+    private ParseResult<Statement> ParseTry()
+    {
+        // try
+        //     [statements]
+        // catch
+        // catch [type]
+        // catch [type] [name]
+        //     [statements]
+        // fin
+        //     [statements]
+
+        var res = Accept(TokenType.Try, TokenType.EOL, TokenType.Indent);
+        if (res.Failure)
+            return InvalidTokenErrorStatement("Invalid token in try", res);
+
+        var tryDef = new Try(GetToken(res).Position);
+
+        while (Peek.Type != TokenType.Dedent)
+        {
+            var stmt = ParseMethodStatement();
+            if (stmt.Error)
+                return stmt;
+            tryDef.Statements.Add(stmt.Result);
+        }
+
+        res = Accept(TokenType.Dedent);
+        if (res.Failure)
+            return InvalidTokenErrorStatement("Invalid token in try", res);
+
+        var catchRes = Accept(TokenType.Catch);
+        while (catchRes.Success)
+        {
+            var catchStmt = new Catch(GetToken(catchRes).Position);
+            tryDef.Catches.Add(catchStmt);
+
+            if (Peek.Type != TokenType.EOL)
+            {
+                var typeRes = ParseType();
+                if (typeRes.Error && typeRes.Result is ErrorExpression ex)
+                    return ErrorStatement(ex);
+
+                catchStmt.Type = typeRes.Result;
+                res = Accept(TokenType.Literal);
+                if (res.Success)
+                    catchStmt.Name = GetToken(res).Value;
+            }
+
+            res = Accept(TokenType.EOL, TokenType.Indent);
+            if (res.Failure)
+                return InvalidTokenErrorStatement("Invalid token in catch", res);
+
+            while (Peek.Type != TokenType.Dedent)
+            {
+                var stmt = ParseMethodStatement();
+                if (stmt.Error)
+                    return stmt;
+                catchStmt.Statements.Add(stmt.Result);
+            }
+
+            res = Accept(TokenType.Dedent);
+            if (res.Failure)
+                return InvalidTokenErrorStatement("Invalid token in catch", res);
+
+            catchRes = Accept(TokenType.Catch);
+        }
+
+        if (Accept(TokenType.Finally, TokenType.EOL, TokenType.Indent).Success)
+        {
+            while (Peek.Type != TokenType.Dedent)
+            {
+                var stmt = ParseMethodStatement();
+                if (stmt.Error)
+                    return stmt;
+                tryDef.FinallyStatements.Add(stmt.Result);
+            }
+
+            res = Accept(TokenType.Dedent);
+            if (res.Failure)
+                return InvalidTokenErrorStatement("Invalid token in finally", res);
+        }
+
+        return new ParseResult<Statement>(tryDef);
     }
 
     private ParseResult<Expression> ParseType()

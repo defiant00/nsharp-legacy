@@ -50,7 +50,7 @@
         * X switch
         * _ for
         * _ foreach
-        * _ try/catch/finally
+        * X try/catch/finally
         * X break
         * X continue
         * X return

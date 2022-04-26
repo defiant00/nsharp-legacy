@@ -1,8 +1,12 @@
 class MyClass
     fn Test()
-        if x
-            is 3
-            is 4
-                Print("hi")
-            is _
-                Print("nah")
+        try
+            DoThing()
+        catch
+            ; whee
+        catch Exception
+            ; whee
+        catch Exception ex
+            ; whee
+        fin
+            Print("done")

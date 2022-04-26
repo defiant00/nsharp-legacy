@@ -158,7 +158,7 @@ public static class Helpers
         ["ret"] = TokenType.Return,
         ["try"] = TokenType.Try,
         ["catch"] = TokenType.Catch,
-        ["finally"] = TokenType.Finally,
+        ["fin"] = TokenType.Finally,
         ["throw"] = TokenType.Throw,
         ["for"] = TokenType.For,
         ["break"] = TokenType.Break,

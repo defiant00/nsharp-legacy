@@ -23,20 +23,6 @@ public abstract class Statement : ISyntaxTreeItem
     public virtual void Accept(ISyntaxTreeVisitor visitor) => visitor.Visit(this);
 }
 
-public class Accessor : Expression
-{
-    public Expression Expr { get; set; }
-    public List<Expression> Arguments { get; set; } = new();
-
-    public Accessor(Position position, Expression expr, Expression arg) : base(position)
-    {
-        Expr = expr;
-        Arguments.Add(arg);
-    }
-
-    public override void Accept(ISyntaxTreeVisitor visitor) => visitor.Visit(this);
-}
-
 public class AnonymousFunction : Expression
 {
     public Expression? ReturnType { get; set; }
@@ -108,6 +94,17 @@ public class Case : Statement
     {
         Expr = expr;
     }
+
+    public override void Accept(ISyntaxTreeVisitor visitor) => visitor.Visit(this);
+}
+
+public class Catch : Statement
+{
+    public Expression? Type { get; set; }
+    public string? Name { get; set; }
+    public List<Statement> Statements { get; set; } = new();
+
+    public Catch(Position position) : base(position) { }
 
     public override void Accept(ISyntaxTreeVisitor visitor) => visitor.Visit(this);
 }
@@ -395,6 +392,20 @@ public class Import : Statement
     public override void Accept(ISyntaxTreeVisitor visitor) => visitor.Visit(this);
 }
 
+public class Indexer : Expression
+{
+    public Expression Expr { get; set; }
+    public List<Expression> Arguments { get; set; } = new();
+
+    public Indexer(Position position, Expression expr, Expression arg) : base(position)
+    {
+        Expr = expr;
+        Arguments.Add(arg);
+    }
+
+    public override void Accept(ISyntaxTreeVisitor visitor) => visitor.Visit(this);
+}
+
 public class Interface : Statement
 {
     public List<Modifier> Modifiers { get; set; }
@@ -644,6 +655,17 @@ public class Switch : Statement
     {
         Expr = expr;
     }
+
+    public override void Accept(ISyntaxTreeVisitor visitor) => visitor.Visit(this);
+}
+
+public class Try : Statement
+{
+    public List<Statement> Statements { get; set; } = new();
+    public List<Statement> Catches { get; set; } = new();
+    public List<Statement> FinallyStatements { get; set; } = new();
+
+    public Try(Position position) : base(position) { }
 
     public override void Accept(ISyntaxTreeVisitor visitor) => visitor.Visit(this);
 }

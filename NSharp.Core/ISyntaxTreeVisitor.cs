@@ -6,13 +6,13 @@ public interface ISyntaxTreeVisitor
 {
     public void Visit(Expression item);
     public void Visit(Statement item);
-    public void Visit(Accessor item);
     public void Visit(AnonymousFunction item);
     public void Visit(Ast.Array item);
     public void Visit(Assignment item);
     public void Visit(BinaryOperator item);
     public void Visit(Break item);
     public void Visit(Case item);
+    public void Visit(Catch item);
     public void Visit(Character item);
     public void Visit(Class item);
     public void Visit(Comment item);
@@ -35,6 +35,7 @@ public interface ISyntaxTreeVisitor
     public void Visit(Identifier item);
     public void Visit(If item);
     public void Visit(Import item);
+    public void Visit(Indexer item);
     public void Visit(Interface item);
     public void Visit(Is item);
     public void Visit(LiteralToken item);
@@ -53,6 +54,7 @@ public interface ISyntaxTreeVisitor
     public void Visit(Ast.String item);
     public void Visit(StringLiteral item);
     public void Visit(Switch item);
+    public void Visit(Try item);
     public void Visit(UnaryOperator item);
     public void Visit(Using item);
 }

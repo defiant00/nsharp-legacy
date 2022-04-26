@@ -94,7 +94,7 @@ public class Decompiler
     {
         switch (expression)
         {
-            case Accessor accessor:
+            case Indexer accessor:
                 ProcessAccessor(indent, accessor);
                 break;
             case Core.Ast.Array array:
@@ -138,7 +138,7 @@ public class Decompiler
         }
     }
 
-    private void ProcessAccessor(int indent, Accessor accessor)
+    private void ProcessAccessor(int indent, Indexer accessor)
     {
         ProcessExpression(indent, accessor.Expr);
         Buffer.Append("[");
