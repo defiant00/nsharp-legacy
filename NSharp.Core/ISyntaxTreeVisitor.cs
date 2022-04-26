@@ -12,6 +12,7 @@ public interface ISyntaxTreeVisitor
     public void Visit(Assignment item);
     public void Visit(BinaryOperator item);
     public void Visit(Break item);
+    public void Visit(Case item);
     public void Visit(Character item);
     public void Visit(Class item);
     public void Visit(Comment item);
@@ -21,6 +22,7 @@ public interface ISyntaxTreeVisitor
     public void Visit(Continue item);
     public void Visit(CurrentObjectInstance item);
     public void Visit(DelegateDefinition item);
+    public void Visit(Discard item);
     public void Visit(Enumeration item);
     public void Visit(EnumerationItem item);
     public void Visit(ErrorExpression item);
@@ -50,6 +52,7 @@ public interface ISyntaxTreeVisitor
     public void Visit(Space item);
     public void Visit(Ast.String item);
     public void Visit(StringLiteral item);
+    public void Visit(Switch item);
     public void Visit(UnaryOperator item);
     public void Visit(Using item);
 }

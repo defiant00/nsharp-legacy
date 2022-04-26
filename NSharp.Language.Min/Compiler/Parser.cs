@@ -895,6 +895,54 @@ public class Parser
         if (res.Failure)
             return InvalidTokenErrorStatement("Invalid token in if", res);
 
+        // if [expr]
+        //     is [expr]
+        //         [statements]
+        //     is [expr]
+        //     is [expr]
+        //         [statements]
+        if (Peek.Type == TokenType.Is && !inElseIf)
+        {
+            var switchStmt = new Switch(start.Position, condition.Result);
+            var isRes = Accept(TokenType.Is);
+            while (isRes.Success)
+            {
+                var exprRes = ParseExpression();
+                if (exprRes.Error && exprRes.Result is ErrorExpression exp)
+                    return ErrorStatement(exp);
+
+                res = Accept(TokenType.EOL);
+                if (res.Failure)
+                    return InvalidTokenErrorStatement("Invalid token in if", res);
+
+                var caseStmt = new Case(GetToken(isRes).Position, exprRes.Result);
+                switchStmt.Statements.Add(caseStmt);
+
+                if (Accept(TokenType.Indent).Success)
+                {
+                    while (Peek.Type != TokenType.Dedent)
+                    {
+                        var stmtRes = ParseMethodStatement();
+                        if (stmtRes.Error)
+                            return stmtRes;
+                        caseStmt.Statements.Add(stmtRes.Result);
+                    }
+
+                    res = Accept(TokenType.Dedent);
+                    if (res.Failure)
+                        return InvalidTokenErrorStatement("Invalid token in if", res);
+                }
+
+                isRes = Accept(TokenType.Is);
+            }
+
+            res = Accept(TokenType.Dedent);
+            if (res.Failure)
+                return InvalidTokenErrorStatement("Invalid token in if", res);
+
+            return new ParseResult<Statement>(switchStmt);
+        }
+
         var ifStatement = new If(start.Position, condition.Result);
 
         while (Peek.Type != TokenType.Dedent)
@@ -1367,6 +1415,7 @@ public class Parser
             leftResult = token.Type switch
             {
                 TokenType.CharacterLiteral => new ParseResult<Expression>(new Character(token.Position, token.Value)),
+                TokenType.Discard => new ParseResult<Expression>(new Discard(token.Position)),
                 TokenType.False => new ParseResult<Expression>(new LiteralToken(token.Position, Literal.False)),
                 TokenType.Null => new ParseResult<Expression>(new LiteralToken(token.Position, Literal.Null)),
                 TokenType.NumberLiteral => new ParseResult<Expression>(new Number(token.Position, token.Value)),

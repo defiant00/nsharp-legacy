@@ -94,6 +94,17 @@ public class SyntaxTreePrinterVisitor : ISyntaxTreeVisitor
 
     public void Visit(Break item) => WriteLineIndented("Break");
 
+    public void Visit(Case item)
+    {
+        WriteIndented($"Case: ");
+        item.Expr.Accept(this);
+        WriteLine();
+        Indent++;
+        foreach (var stmt in item.Statements)
+            stmt.Accept(this);
+        Indent--;
+    }
+
     public void Visit(Character item) => Write($"'{item.Value}'");
 
     public void Visit(Class item)
@@ -203,6 +214,8 @@ public class SyntaxTreePrinterVisitor : ISyntaxTreeVisitor
         }
         WriteLine(")");
     }
+
+    public void Visit(Discard item) => Write($"[discard]");
 
     public void Visit(Enumeration item)
     {
@@ -523,6 +536,17 @@ public class SyntaxTreePrinterVisitor : ISyntaxTreeVisitor
     }
 
     public void Visit(StringLiteral item) => Write(item.Value);
+
+    public void Visit(Switch item)
+    {
+        WriteIndented($"Switch: ");
+        item.Expr.Accept(this);
+        WriteLine();
+        Indent++;
+        foreach (var stmt in item.Statements)
+            stmt.Accept(this);
+        Indent--;
+    }
 
     public void Visit(UnaryOperator item)
     {

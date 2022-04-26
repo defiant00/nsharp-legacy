@@ -99,6 +99,19 @@ public class Break : Statement
     public override void Accept(ISyntaxTreeVisitor visitor) => visitor.Visit(this);
 }
 
+public class Case : Statement
+{
+    public Expression Expr { get; set; }
+    public List<Statement> Statements { get; set; } = new();
+
+    public Case(Position position, Expression expr) : base(position)
+    {
+        Expr = expr;
+    }
+
+    public override void Accept(ISyntaxTreeVisitor visitor) => visitor.Visit(this);
+}
+
 public class Character : Expression
 {
     public string Value { get; set; }
@@ -212,6 +225,13 @@ public class DelegateDefinition : Statement
         Modifiers = modifiers;
         Name = name;
     }
+
+    public override void Accept(ISyntaxTreeVisitor visitor) => visitor.Visit(this);
+}
+
+public class Discard : Expression
+{
+    public Discard(Position position) : base(position) { }
 
     public override void Accept(ISyntaxTreeVisitor visitor) => visitor.Visit(this);
 }
@@ -610,6 +630,19 @@ public class StringLiteral : Expression
     public StringLiteral(Position position, string value) : base(position)
     {
         Value = value;
+    }
+
+    public override void Accept(ISyntaxTreeVisitor visitor) => visitor.Visit(this);
+}
+
+public class Switch : Statement
+{
+    public Expression Expr { get; set; }
+    public List<Statement> Statements { get; set; } = new();
+
+    public Switch(Position position, Expression expr) : base(position)
+    {
+        Expr = expr;
     }
 
     public override void Accept(ISyntaxTreeVisitor visitor) => visitor.Visit(this);

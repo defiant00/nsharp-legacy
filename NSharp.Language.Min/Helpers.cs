@@ -111,6 +111,7 @@ public static class Helpers
         ["use"] = TokenType.Use,
         ["if"] = TokenType.If,
         ["else"] = TokenType.Else,
+        ["_"] = TokenType.Discard,
         ["public"] = TokenType.Public,
         ["protected"] = TokenType.Protected,
         ["internal"] = TokenType.Internal,

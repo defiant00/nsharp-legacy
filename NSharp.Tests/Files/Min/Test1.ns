@@ -1,9 +1,8 @@
 class MyClass
     fn Test()
-        var x int
-        var y int = 3
-        val z int = 4
-        use x = new DIsposable()
-        use y = new Disposer()
-            do
-            stuff
+        if x
+            is 3
+            is 4
+                Print("hi")
+            is _
+                Print("nah")
