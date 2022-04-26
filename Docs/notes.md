@@ -67,16 +67,6 @@ Attributes
 @assembly:Special
 ```
 
-Anonymous Functions
-```
-fn(x) is x * x
-
-fn(x)
-    var y = x * x
-    ret y * 2
-fn
-```
-
 Loops
 ```
 for i in 10
@@ -99,6 +89,5 @@ for i < 7
 
 Access modifiers - sane defaults (protected, final? see kotlin) and only keywords for differences (eg, no `protected`). Maybe `open` to not be `final` but abstract are always open?
 
-[ ] no `break` in a `switch`  
-[ ] each switch case is its own scope
-[ ] implicit types wherever possible
+
+implicit types wherever possible
