@@ -47,7 +47,7 @@
         * X using
         * X assignment
         * X if/else
-        * _ switch
+        * X switch
         * _ for
         * _ foreach
         * _ try/catch/finally
