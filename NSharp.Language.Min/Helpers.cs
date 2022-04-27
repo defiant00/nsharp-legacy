@@ -161,6 +161,8 @@ public static class Helpers
         ["fin"] = TokenType.Finally,
         ["throw"] = TokenType.Throw,
         ["for"] = TokenType.For,
+        ["in"] = TokenType.In,
+        ["bet"] = TokenType.Between,
         ["break"] = TokenType.Break,
         ["continue"] = TokenType.Continue,
         ["true"] = TokenType.True,

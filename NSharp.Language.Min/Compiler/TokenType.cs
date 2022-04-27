@@ -63,6 +63,8 @@ public enum TokenType
     Finally,
     Throw,
     For,
+    In,
+    Between,
     Break,
     Continue,
     True,

@@ -78,11 +78,14 @@ for i in myList
 
 for i in myList
     Console.Write(i)
-between/div/sep
+bet
     Console.Write(", ")
 
 for i = 0, i < 7, i += 1
     ; normal for loop
+
+for
+    ; infinite loop
 
 for i < 7
     ; while loop

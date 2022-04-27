@@ -31,6 +31,7 @@ public interface ISyntaxTreeVisitor
     public void Visit(Field item);
     public void Visit(Ast.File item);
     public void Visit(For item);
+    public void Visit(ForEach item);
     public void Visit(Generic item);
     public void Visit(Identifier item);
     public void Visit(If item);
@@ -54,6 +55,7 @@ public interface ISyntaxTreeVisitor
     public void Visit(Ast.String item);
     public void Visit(StringLiteral item);
     public void Visit(Switch item);
+    public void Visit(Throw item);
     public void Visit(Try item);
     public void Visit(UnaryOperator item);
     public void Visit(Using item);

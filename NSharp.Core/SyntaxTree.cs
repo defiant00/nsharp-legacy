@@ -330,12 +330,30 @@ public class File : Statement
 
 public class For : Statement
 {
-    public Statement? Init { get; set; }
+    public string? Name { get; set; }
+    public Expression? Init { get; set; }
     public Expression? Condition { get; set; }
     public Statement? Post { get; set; }
     public List<Statement> Statements { get; set; } = new();
 
     public For(Position position) : base(position) { }
+
+    public override void Accept(ISyntaxTreeVisitor visitor) => visitor.Visit(this);
+}
+
+public class ForEach : Statement
+{
+    public string Name { get; set; }
+    public Expression? Type { get; set; }
+    public Expression Expr { get; set; }
+    public List<Statement> Statements { get; set; } = new();
+    public List<Statement> BetweenStatements { get; set; } = new();
+
+    public ForEach(Position position, string name, Expression expr) : base(position)
+    {
+        Name = name;
+        Expr = expr;
+    }
 
     public override void Accept(ISyntaxTreeVisitor visitor) => visitor.Visit(this);
 }
@@ -652,6 +670,18 @@ public class Switch : Statement
     public List<Statement> Statements { get; set; } = new();
 
     public Switch(Position position, Expression expr) : base(position)
+    {
+        Expr = expr;
+    }
+
+    public override void Accept(ISyntaxTreeVisitor visitor) => visitor.Visit(this);
+}
+
+public class Throw : Statement
+{
+    public Expression Expr { get; set; }
+
+    public Throw(Position position, Expression expr) : base(position)
     {
         Expr = expr;
     }

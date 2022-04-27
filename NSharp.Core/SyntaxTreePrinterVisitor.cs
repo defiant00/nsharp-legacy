@@ -276,10 +276,9 @@ public class SyntaxTreePrinterVisitor : ISyntaxTreeVisitor
         WriteLineIndented("For");
         if (item.Init != null)
         {
-            WriteLineIndented("Init");
-            Indent++;
+            WriteIndented($"Init: {item.Name} = ");
             item.Init.Accept(this);
-            Indent--;
+            WriteLine();
         }
         if (item.Condition != null)
         {
@@ -298,6 +297,27 @@ public class SyntaxTreePrinterVisitor : ISyntaxTreeVisitor
         foreach (var statement in item.Statements)
             statement.Accept(this);
         Indent--;
+    }
+
+    public void Visit(ForEach item)
+    {
+        WriteIndented("Foreach ");
+        item.Type?.Accept(this);
+        Write($" {item.Name} in ");
+        item.Expr.Accept(this);
+        WriteLine();
+        Indent++;
+        foreach (var stmt in item.Statements)
+            stmt.Accept(this);
+        Indent--;
+        if (item.BetweenStatements.Any())
+        {
+            WriteLineIndented("between");
+            Indent++;
+            foreach (var stmt in item.BetweenStatements)
+                stmt.Accept(this);
+            Indent--;
+        }
     }
 
     public void Visit(Generic item)
@@ -559,6 +579,13 @@ public class SyntaxTreePrinterVisitor : ISyntaxTreeVisitor
         foreach (var stmt in item.Statements)
             stmt.Accept(this);
         Indent--;
+    }
+
+    public void Visit(Throw item)
+    {
+        WriteIndented("Throw: ");
+        item.Expr.Accept(this);
+        WriteLine();
     }
 
     public void Visit(Try item)

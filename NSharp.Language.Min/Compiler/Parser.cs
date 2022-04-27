@@ -742,6 +742,144 @@ public class Parser
         return new ParseResult<Statement>(file, error);
     }
 
+    private ParseResult<Statement> ParseFor()
+    {
+        var res = Accept(TokenType.For);
+        if (res.Failure)
+            return InvalidTokenErrorStatement("Invalid token in for", res);
+
+        var pos = GetToken(res).Position;
+
+        // for [name] in [expr]
+        //     [statements]
+        // div
+        //     [statements]
+        res = Accept(TokenType.Literal, TokenType.In);
+        if (res.Success)
+        {
+            // for [name] in [expr]
+            //     [statements]
+
+            var name = GetToken(res).Value;
+
+            var exprRes = ParseExpression();
+            if (exprRes.Error && exprRes.Result is ErrorExpression ex)
+                return ErrorStatement(ex);
+
+            var foreachDef = new ForEach(pos, name, exprRes.Result);
+
+            res = Accept(TokenType.EOL, TokenType.Indent);
+            if (res.Failure)
+                return InvalidTokenErrorStatement("Invalid token in for", res);
+
+            while (Peek.Type != TokenType.Dedent)
+            {
+                var stmtRes = ParseMethodStatement();
+                if (stmtRes.Error)
+                    return stmtRes;
+                foreachDef.Statements.Add(stmtRes.Result);
+            }
+
+            res = Accept(TokenType.Dedent);
+            if (res.Failure)
+                return InvalidTokenErrorStatement("Invalid token in for", res);
+
+            // div
+            //     [statements]
+            if (Accept(TokenType.Between, TokenType.EOL, TokenType.Indent).Success)
+            {
+                while (Peek.Type != TokenType.Dedent)
+                {
+                    var stmtRes = ParseMethodStatement();
+                    if (stmtRes.Error)
+                        return stmtRes;
+                    foreachDef.BetweenStatements.Add(stmtRes.Result);
+                }
+
+                res = Accept(TokenType.Dedent);
+                if (res.Failure)
+                    return InvalidTokenErrorStatement("Invalid token in for", res);
+            }
+
+            return new ParseResult<Statement>(foreachDef);
+        }
+
+        var forDef = new For(pos);
+
+        res = Accept(TokenType.Literal, TokenType.Assign);
+        if (res.Success)
+        {
+            // for [name] = [expr], [expr], [stmt]
+
+            forDef.Name = GetToken(res).Value;
+            var exprRes = ParseExpression();
+            if (exprRes.Error && exprRes.Result is ErrorExpression ex1)
+                return ErrorStatement(ex1);
+
+            forDef.Init = exprRes.Result;
+
+            res = Accept(TokenType.Comma);
+            if (res.Failure)
+                return InvalidTokenErrorStatement("Invalid token in for", res);
+
+            exprRes = ParseExpression();
+            if (exprRes.Error && exprRes.Result is ErrorExpression ex2)
+                return ErrorStatement(ex2);
+
+            forDef.Condition = exprRes.Result;
+
+            res = Accept(TokenType.Comma);
+            if (res.Failure)
+                return InvalidTokenErrorStatement("Invalid token in for", res);
+
+            var stmtRes = ParseMethodStatement();
+            if (stmtRes.Error)
+                return stmtRes;
+
+            forDef.Post = stmtRes.Result;
+        }
+        else if (Peek.Type != TokenType.EOL)
+        {
+            // for [expr]
+
+            var exprRes = ParseExpression();
+            if (exprRes.Error && exprRes.Result is ErrorExpression ex)
+                return ErrorStatement(ex);
+
+            forDef.Condition = exprRes.Result;
+
+            res = Accept(TokenType.EOL);
+            if (res.Failure)
+                return InvalidTokenErrorStatement("Invalid token in for", res);
+        }
+        else
+        {
+            res = Accept(TokenType.EOL);
+            if (res.Failure)
+                return InvalidTokenErrorStatement("Invalid token in for", res);
+        }
+
+        // for
+        //     [statements]
+        res = Accept(TokenType.Indent);
+        if (res.Failure)
+            return InvalidTokenErrorStatement("Invalid token in for", res);
+
+        while (Peek.Type != TokenType.Dedent)
+        {
+            var stmtRes = ParseMethodStatement();
+            if (stmtRes.Error)
+                return stmtRes;
+            forDef.Statements.Add(stmtRes.Result);
+        }
+
+        res = Accept(TokenType.Dedent);
+        if (res.Failure)
+            return InvalidTokenErrorStatement("Invalid token in for", res);
+
+        return new ParseResult<Statement>(forDef);
+    }
+
     private ParseResult<Expression> ParseGeneric(Expression expr)
     {
         var res = Accept(TokenType.LeftCurly);
@@ -1349,8 +1487,10 @@ public class Parser
             TokenType.Comment => ParseComment(acceptEol),
             TokenType.Continue => ParseContinue(),
             TokenType.EOL => ParseSpace(),
+            TokenType.For => ParseFor(),
             TokenType.If => ParseIf(),
             TokenType.Return => ParseReturn(acceptEol),
+            TokenType.Throw => ParseThrow(acceptEol),
             TokenType.Try => ParseTry(),
             TokenType.Use => ParseUsing(),
             TokenType.Variable => ParseLocalVariable(),
@@ -1687,6 +1827,24 @@ public class Parser
     {
         Next();
         return ErrorStatement("Struct parsing not supported yet", new Position());
+    }
+
+    private ParseResult<Statement> ParseThrow(bool acceptEol)
+    {
+        var start = Next();     // accept throw
+        var expr = ParseExpression();
+        if (expr.Error && expr.Result is ErrorExpression ex)
+            return ErrorStatement(ex);
+
+        var throwDef = new Throw(start.Position, expr.Result);
+
+        if (acceptEol)
+        {
+            var res = Accept(TokenType.EOL);
+            if (res.Failure)
+                return InvalidTokenErrorStatement("Invalid token in throw", res);
+        }
+        return new ParseResult<Statement>(throwDef);
     }
 
     private ParseResult<Statement> ParseTry()

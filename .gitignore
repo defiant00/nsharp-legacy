@@ -5,6 +5,7 @@
 
 # NSharp edit files
 *.ns.edit
+NSharp.Tests/**/*.cs
 
 # User-specific files (NSharp)
 .nsedit
