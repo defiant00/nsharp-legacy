@@ -424,23 +424,18 @@ public class Parser
         {
             while (Peek.Type != TokenType.RightCurly)
             {
-                var left = ParseExpression();
-                if (left.Error)
-                    return left;
-
-                res = Accept(TokenType.Assign);
+                res = Accept(TokenType.Literal, TokenType.Assign);
                 if (res.Failure)
                     return InvalidTokenErrorExpression("Invalid token in constructor call", res);
+
+                var prop = GetToken(res).Value;
 
                 var right = ParseExpression();
                 if (right.Error)
                     return right;
 
-                ctor.Statements.Add(new Assignment(
-                    left.Result.Position,
-                    AssignmentOperator.Assign,
-                    left.Result,
-                    right.Result));
+                ctor.InitProperties.Add(prop);
+                ctor.InitValues.Add(right.Result);
 
                 Accept(TokenType.Comma);
             }
@@ -455,9 +450,11 @@ public class Parser
 
     private ParseResult<Statement> ParseConstructorDefinition(List<Modifier> modifiers, Token start)
     {
-        // constructor
         // [modifiers] fn new([params]) is [statement]
+        // [modifiers] fn new([params]) base([exprs]) is [statement]
         // [modifiers] fn new([params])
+        //     [statements]
+        // [modifiers] fn new([params]) base([exprs])
         //     [statements]
 
         var res = Accept(TokenType.New, TokenType.LeftParenthesis);
@@ -482,6 +479,25 @@ public class Parser
         res = Accept(TokenType.RightParenthesis);
         if (res.Failure)
             return InvalidTokenErrorStatement("Invalid token in ctor", res);
+
+        // base([exprs])
+        if (Accept(TokenType.Base, TokenType.LeftParenthesis).Success)
+        {
+            while (Peek.Type != TokenType.RightParenthesis)
+            {
+                var exprRes = ParseExpression();
+                if (exprRes.Error && exprRes.Result is ErrorExpression ex)
+                    return ErrorStatement(ex);
+
+                ctorDef.BaseArguments.Add(exprRes.Result);
+
+                Accept(TokenType.Comma);
+            }
+
+            res = Accept(TokenType.RightParenthesis);
+            if (res.Failure)
+                return InvalidTokenErrorStatement("Invalid token in ctor", res);
+        }
 
         // [modifiers] fn new([params]) is [statement]
         if (Accept(TokenType.Is).Success)
@@ -1067,8 +1083,6 @@ public class Parser
         res = Accept(TokenType.Dedent, TokenType.Else);
         if (res.Success)
         {
-            ifStatement.Else = new();
-
             if (Peek.Type == TokenType.If)
             {
                 var elseIf = ParseIf(true);

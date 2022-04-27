@@ -161,14 +161,21 @@ public class SyntaxTreePrinterVisitor : ISyntaxTreeVisitor
             first = false;
         }
         Write(")");
-        if (item.Statements.Any())
+        if (item.InitProperties.Any())
         {
-            WriteLine(" {");
+            Write(" {");
             Indent++;
-            foreach (var statement in item.Statements)
-                statement.Accept(this);
+            first = true;
+            for (int i = 0; i < item.InitProperties.Count; i++)
+            {
+                if (!first)
+                    Write(", ");
+                Write($"{item.InitProperties[i]} = ");
+                item.InitValues[i].Accept(this);
+                first = false;
+            }
             Indent--;
-            WriteIndented("}");
+            Write("}");
         }
     }
 
@@ -183,7 +190,21 @@ public class SyntaxTreePrinterVisitor : ISyntaxTreeVisitor
             p.Accept(this);
             first = false;
         }
-        WriteLine(")");
+        Write(")");
+        first = true;
+        if (item.BaseArguments.Any())
+        {
+            Write(" base(");
+            foreach (var ba in item.BaseArguments)
+            {
+                if (!first)
+                    Write(", ");
+                ba.Accept(this);
+                first = false;
+            }
+            Write(")");
+        }
+        WriteLine();
         Indent++;
         foreach (var statement in item.Statements)
             statement.Accept(this);
@@ -346,7 +367,7 @@ public class SyntaxTreePrinterVisitor : ISyntaxTreeVisitor
         foreach (var statement in item.Statements)
             statement.Accept(this);
         Indent--;
-        if (item.Else != null)
+        if (item.Else.Any())
         {
             WriteLineIndented("Else");
             Indent++;

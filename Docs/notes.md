@@ -48,15 +48,16 @@
         * X assignment
         * X if/else
         * X switch
-        * _ for
-        * _ foreach
+        * X for
+        * X foreach
         * X try/catch/finally
         * X break
         * X continue
         * X return
-        * _ base/super
+        * X base
         * _ attributes
-        * _ throw/rethrow
+        * X throw
+        * _ rethrow
 
 ## Min Syntax Notes
 

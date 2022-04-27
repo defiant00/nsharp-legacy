@@ -172,7 +172,8 @@ public class ConstructorCall : Expression
 {
     public Expression Expr { get; set; }
     public List<Expression> Arguments { get; set; } = new();
-    public List<Statement> Statements { get; set; } = new();
+    public List<string> InitProperties { get; set; } = new();
+    public List<Expression> InitValues { get; set; } = new();
 
     public ConstructorCall(Position position, Expression expr) : base(position)
     {
@@ -186,6 +187,7 @@ public class ConstructorDefinition : Statement
 {
     public List<Modifier> Modifiers { get; set; }
     public List<Parameter> Parameters { get; set; } = new();
+    public List<Expression> BaseArguments { get; set; } = new();
     public List<Statement> Statements { get; set; } = new();
 
     public ConstructorDefinition(Position position, List<Modifier> modifiers) : base(position)
@@ -388,7 +390,7 @@ public class If : Statement
 {
     public Expression Condition { get; set; }
     public List<Statement> Statements { get; set; } = new();
-    public List<Statement>? Else { get; set; }
+    public List<Statement> Else { get; set; } = new();
 
     public If(Position position, Expression condition) : base(position)
     {

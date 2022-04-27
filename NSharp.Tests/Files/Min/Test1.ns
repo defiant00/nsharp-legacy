@@ -1,3 +1,8 @@
+ns NSharp.Tests
+
+use System
+
 class MyClass
     fn Test()
-        throw new Exception("oh no")
+        if x is SomeClass s
+            s.DoTheThing()

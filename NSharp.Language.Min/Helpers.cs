@@ -155,6 +155,7 @@ public static class Helpers
         ["is"] = TokenType.Is,
         ["as"] = TokenType.As,
         ["new"] = TokenType.New,
+        ["base"] = TokenType.Base,
         ["ret"] = TokenType.Return,
         ["try"] = TokenType.Try,
         ["catch"] = TokenType.Catch,

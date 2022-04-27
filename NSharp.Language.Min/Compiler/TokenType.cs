@@ -57,6 +57,7 @@ public enum TokenType
     Set,
     From,
     New,
+    Base,
     Return,
     Try,
     Catch,

@@ -371,7 +371,7 @@ public class Decompiler
         ProcessExpression(indent, ifStatement.Condition);
         Buffer.AppendLine();
         ProcessStatements(indent + 1, ifStatement.Statements);
-        if (ifStatement.Else != null)
+        if (ifStatement.Else.Any())
         {
             AppendIndented(indent, "else");
             if (ifStatement.Else.Count == 1 && ifStatement.Else[0] is If ifSt)

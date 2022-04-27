@@ -28,6 +28,7 @@ public static class Program
             Console.WriteLine("    edit [files]          - create a file.ns.edit file per input file for editing per the .nsedit settings");
             Console.WriteLine("    format [files]        - format the specified files per the .nsedit and .nssave settings");
             Console.WriteLine("    save [files]          - save the specified files per the .nssave settings");
+            Console.WriteLine("    tocs [files]          - convert the specified files to C#");
             Console.WriteLine("    validate [files]      - validate the specified files' syntax");
             return;
         }
@@ -51,6 +52,10 @@ public static class Program
             case "save":
                 for (int i = 1; i < args.Length; i++)
                     Save(args[i]);
+                break;
+            case "tocs":
+                for (int i = 1; i < args.Length; i++)
+                    ToCs(args[i]);
                 break;
             case "validate":
                 for (int i = 1; i < args.Length; i++)
@@ -140,6 +145,24 @@ public static class Program
         HandleResult(loadResult);
         if (loadResult.Ast != null)
             HandleResult(saveLang.Save(file[..^5], loadResult.Ast));
+    }
+
+    private static void ToCs(string file)
+    {
+        if (!File.Exists(file))
+            throw new Exception($"File '{file}' does not exist.");
+        if (!file.EndsWith(".ns", StringComparison.OrdinalIgnoreCase))
+            throw new Exception($"File '{file}' does not end with .ns");
+
+        ILanguage loadLang = GetLanguage(SAVE_SETTINGS, file);
+
+        LoadResult loadResult = loadLang.Load(file);
+        HandleResult(loadResult);
+        if (loadResult.Ast != null)
+        {
+            using var visitor = new ToCsVisitor($"{file}.cs");
+            loadResult.Ast.Accept(visitor);
+        }
     }
 
     private static void Validate(string file)
