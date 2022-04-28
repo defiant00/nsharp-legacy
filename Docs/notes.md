@@ -1,3 +1,8 @@
+## TODO
+
+* struct
+* virtual, override, abstract
+
 ## Items
 
 * Expressions
