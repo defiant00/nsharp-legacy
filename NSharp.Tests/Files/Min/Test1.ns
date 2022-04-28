@@ -5,6 +5,7 @@ use System
 abstract class MyClass
     public del TestDelegate(x int, y int) List{str, i8}
     ext{int} fn Print() is WriteLine(this)
+    ext{int} fn Print(x str) is WriteLine(this)
     virtual override fn Test(first int, second int = 3)
         for i in List
             Print(", ")

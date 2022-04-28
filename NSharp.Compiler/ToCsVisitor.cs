@@ -10,6 +10,7 @@ public class ToCsVisitor : ISyntaxTreeVisitor, IDisposable
     private string CurrentClass { get; set; } = string.Empty;
     private Stack<int> BinopParentPrecedence { get; set; } = new();
     private bool InFor { get; set; }
+    private bool InExtension { get; set; }
 
     private void Write(string line) => Buffer.Write(line);
     private void WriteLine() => Buffer.WriteLine();
@@ -338,7 +339,7 @@ public class ToCsVisitor : ISyntaxTreeVisitor, IDisposable
 
     public void Visit(Continue item) => WriteLineIndented("continue;");
 
-    public void Visit(CurrentObjectInstance item) => Write("this");
+    public void Visit(CurrentObjectInstance item) => Write(InExtension ? "__this" : "this");
 
     public void Visit(DelegateDefinition item)
     {
@@ -616,6 +617,15 @@ public class ToCsVisitor : ISyntaxTreeVisitor, IDisposable
             item.ReturnType.Accept(this);
         Write($" {item.Name}(");
         bool first = true;
+        var extension = item.Modifiers.FirstOrDefault(m => (m as Modifier)?.Type == ModifierType.Extension);
+        if (extension is Modifier mod && mod.Arg != null)
+        {
+            first = false;
+            Write("this ");
+            mod.Arg.Accept(this);
+            Write(" __this");
+            InExtension = true;
+        }
         foreach (var param in item.Parameters)
         {
             if (!first)
@@ -625,6 +635,7 @@ public class ToCsVisitor : ISyntaxTreeVisitor, IDisposable
         }
         WriteLine(")");
         WriteStatementBlock(item.Statements);
+        InExtension = false;
     }
 
     public void Visit(MethodSignature item)
