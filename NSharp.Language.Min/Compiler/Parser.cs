@@ -837,7 +837,7 @@ public class Parser
 
         // for [name] in [expr]
         //     [statements]
-        // div
+        // bet
         //     [statements]
         res = Accept(TokenType.Literal, TokenType.In);
         if (res.Success)
@@ -869,16 +869,19 @@ public class Parser
             if (res.Failure)
                 return InvalidTokenErrorStatement("Invalid token in for", res);
 
-            // div
+            // bet
             //     [statements]
             if (Accept(TokenType.Between, TokenType.EOL, TokenType.Indent).Success)
             {
+                foreachDef.BetweenStatements = foreachDef.Statements;
+                foreachDef.Statements = new();
+
                 while (Peek.Type != TokenType.Dedent)
                 {
                     var stmtRes = ParseMethodStatement();
                     if (stmtRes.Error)
                         return stmtRes;
-                    foreachDef.BetweenStatements.Add(stmtRes.Result);
+                    foreachDef.Statements.Add(stmtRes.Result);
                 }
 
                 res = Accept(TokenType.Dedent);

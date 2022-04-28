@@ -3,5 +3,9 @@ ns NSharp.Tests
 use System
 
 class MyClass
+    public del TestDelegate(x int, y int) List{str, i8}
     fn Test(first int, second int = 3)
-        2 ? {2 is First(), 3 is Second(), _ is Other()}
+        for i in List
+            Print(", ")
+        bet
+            Print(i)

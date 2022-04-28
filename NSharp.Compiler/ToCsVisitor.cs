@@ -9,6 +9,7 @@ public class ToCsVisitor : ISyntaxTreeVisitor, IDisposable
     private int Indent { get; set; } = 0;
     private string CurrentClass { get; set; } = string.Empty;
     private Stack<int> BinopParentPrecedence { get; set; } = new();
+    private bool InFor { get; set; }
 
     private void Write(string line) => Buffer.Write(line);
     private void WriteLine() => Buffer.WriteLine();
@@ -45,6 +46,16 @@ public class ToCsVisitor : ISyntaxTreeVisitor, IDisposable
         })));
     }
 
+    private void WriteStatementBlock(List<Statement> statements)
+    {
+        WriteLineIndented("{");
+        Indent++;
+        foreach (var stmt in statements)
+            stmt.Accept(this);
+        Indent--;
+        WriteLineIndented("}");
+    }
+
     public ToCsVisitor(string filename)
     {
         Buffer = new StreamWriter(filename);
@@ -59,7 +70,19 @@ public class ToCsVisitor : ISyntaxTreeVisitor, IDisposable
 
     public void Visit(AnonymousFunction item)
     {
-        throw new NotImplementedException();
+        Write("(");
+        bool first = true;
+        foreach (var param in item.Parameters)
+        {
+            if (!first)
+                Write(", ");
+            param.Accept(this);
+            first = false;
+        }
+        WriteLine(") =>");
+        Indent++;
+        WriteStatementBlock(item.Statements);
+        Indent--;
     }
 
     public void Visit(Argument item)
@@ -71,12 +94,14 @@ public class ToCsVisitor : ISyntaxTreeVisitor, IDisposable
 
     public void Visit(Core.Ast.Array item)
     {
-        throw new NotImplementedException();
+        item.Type.Accept(this);
+        Write("[]");
     }
 
     public void Visit(Assignment item)
     {
-        WriteIndent();
+        if (!InFor)
+            WriteIndent();
         item.Left.Accept(this);
         Write(item.Operator switch
         {
@@ -95,7 +120,8 @@ public class ToCsVisitor : ISyntaxTreeVisitor, IDisposable
             _ => " [none] ",
         });
         item.Right.Accept(this);
-        WriteLine(";");
+        if (!InFor)
+            WriteLine(";");
     }
 
     public void Visit(BinaryOperator item)
@@ -154,12 +180,7 @@ public class ToCsVisitor : ISyntaxTreeVisitor, IDisposable
         if (item.Statements.Any())
         {
             Indent++;
-            WriteLineIndented("{");
-            Indent++;
-            foreach (var stmt in item.Statements)
-                stmt.Accept(this);
-            Indent--;
-            WriteLineIndented("}");
+            WriteStatementBlock(item.Statements);
             WriteLineIndented("break;");
             Indent--;
         }
@@ -167,7 +188,17 @@ public class ToCsVisitor : ISyntaxTreeVisitor, IDisposable
 
     public void Visit(Catch item)
     {
-        throw new NotImplementedException();
+        WriteIndented("catch");
+        if (item.Type != null)
+        {
+            Write(" (");
+            item.Type.Accept(this);
+            if (item.Name != null)
+                Write($" {item.Name}");
+            Write(")");
+        }
+        WriteLine();
+        WriteStatementBlock(item.Statements);
     }
 
     public void Visit(Character item) => Write($"'{item.Value}'");
@@ -201,12 +232,7 @@ public class ToCsVisitor : ISyntaxTreeVisitor, IDisposable
             }
         }
         WriteLine();
-        WriteLineIndented("{");
-        Indent++;
-        foreach (var stmt in item.Statements)
-            stmt.Accept(this);
-        Indent--;
-        WriteLineIndented("}");
+        WriteStatementBlock(item.Statements);
     }
 
     public void Visit(Comment item) => WriteLineIndented($"//{(item.IsDocumentation ? "/" : "")}{item.Value}");
@@ -301,24 +327,31 @@ public class ToCsVisitor : ISyntaxTreeVisitor, IDisposable
             Write(")");
         }
         WriteLine();
-        WriteLineIndented("{");
-        Indent++;
-        foreach (var stmt in item.Statements)
-            stmt.Accept(this);
-        Indent--;
-        WriteLineIndented("}");
+        WriteStatementBlock(item.Statements);
     }
 
     public void Visit(Continue item) => WriteLineIndented("continue;");
 
-    public void Visit(CurrentObjectInstance item)
-    {
-        throw new NotImplementedException();
-    }
+    public void Visit(CurrentObjectInstance item) => Write("this");
 
     public void Visit(DelegateDefinition item)
     {
-        throw new NotImplementedException();
+        WriteModifiersIndented(item.Modifiers);
+        Write(" delegate ");
+        if (item.ReturnType == null)
+            Write("void");
+        else
+            item.ReturnType.Accept(this);
+        Write($" {item.Name}(");
+        bool first = true;
+        foreach (var par in item.Parameters)
+        {
+            if (!first)
+                Write(", ");
+            par.Accept(this);
+            first = false;
+        }
+        WriteLine(");");
     }
 
     public void Visit(Discard item) => Write("_");
@@ -382,17 +415,73 @@ public class ToCsVisitor : ISyntaxTreeVisitor, IDisposable
 
     public void Visit(For item)
     {
-        throw new NotImplementedException();
+        if (item.Init == null && item.Post == null)
+        {
+            if (item.Condition == null)
+                WriteLineIndented("while (true)");
+            else
+            {
+                WriteIndented("while (");
+                item.Condition.Accept(this);
+                WriteLine(")");
+            }
+            WriteStatementBlock(item.Statements);
+        }
+        else
+        {
+            WriteIndented($"for (var {item.Name} = ");
+            item.Init?.Accept(this);
+            Write("; ");
+            item.Condition?.Accept(this);
+            Write("; ");
+            InFor = true;
+            item.Post?.Accept(this);
+            InFor = false;
+            WriteLine(")");
+            WriteStatementBlock(item.Statements);
+        }
     }
 
     public void Visit(ForEach item)
     {
-        throw new NotImplementedException();
+        bool between = item.BetweenStatements.Any();
+        WriteLineIndented("{");
+        Indent++;
+        if (between)
+            WriteLineIndented("bool __first = true;");
+        WriteIndented($"foreach (var {item.Name} in ");
+        item.Expr.Accept(this);
+        WriteLine(")");
+        WriteLineIndented("{");
+        Indent++;
+        if (between)
+        {
+            WriteLineIndented("if (!__first)");
+            WriteStatementBlock(item.BetweenStatements);
+        }
+        foreach (var stmt in item.Statements)
+            stmt.Accept(this);
+        if (between)
+            WriteLineIndented("__first = false;");
+        Indent--;
+        WriteLineIndented("}");
+        Indent--;
+        WriteLineIndented("}");
     }
 
     public void Visit(Generic item)
     {
-        throw new NotImplementedException();
+        item.Expr.Accept(this);
+        Write("<");
+        bool first = true;
+        foreach (var arg in item.Arguments)
+        {
+            if (!first)
+                Write(", ");
+            arg.Accept(this);
+            first = false;
+        }
+        Write(">");
     }
 
     public void Visit(Identifier item) => Write(item.Value);
@@ -402,21 +491,11 @@ public class ToCsVisitor : ISyntaxTreeVisitor, IDisposable
         WriteIndented("if (");
         item.Condition.Accept(this);
         WriteLine(")");
-        WriteLineIndented("{");
-        Indent++;
-        foreach (var stmt in item.Statements)
-            stmt.Accept(this);
-        Indent--;
-        WriteLineIndented("}");
+        WriteStatementBlock(item.Statements);
         if (item.Else.Any())
         {
             WriteLineIndented("else");
-            WriteLineIndented("{");
-            Indent++;
-            foreach (var stmt in item.Else)
-                stmt.Accept(this);
-            Indent--;
-            WriteLineIndented("}");
+            WriteStatementBlock(item.Else);
         }
     }
 
@@ -439,7 +518,22 @@ public class ToCsVisitor : ISyntaxTreeVisitor, IDisposable
 
     public void Visit(Interface item)
     {
-        throw new NotImplementedException();
+        WriteModifiersIndented(item.Modifiers);
+        Write($" interface {item.Name}");
+        if (item.Interfaces.Any())
+        {
+            Write(": ");
+            bool first = true;
+            foreach (var intf in item.Interfaces)
+            {
+                if (!first)
+                    Write(", ");
+                intf.Accept(this);
+                first = false;
+            }
+        }
+        WriteLine();
+        WriteStatementBlock(item.Statements);
     }
 
     public void Visit(Is item)
@@ -451,10 +545,14 @@ public class ToCsVisitor : ISyntaxTreeVisitor, IDisposable
             Write($" {item.Name}");
     }
 
-    public void Visit(LiteralToken item)
-    {
-        throw new NotImplementedException();
-    }
+    public void Visit(LiteralToken item) =>
+        Write(item.Token switch
+        {
+            Literal.False => "false",
+            Literal.Null => "null",
+            Literal.True => "true",
+            _ => "[literal]",
+        });
 
     public void Visit(LocalConstant item)
     {
@@ -518,17 +616,27 @@ public class ToCsVisitor : ISyntaxTreeVisitor, IDisposable
             first = false;
         }
         WriteLine(")");
-        WriteLineIndented("{");
-        Indent++;
-        foreach (var stmt in item.Statements)
-            stmt.Accept(this);
-        Indent--;
-        WriteLineIndented("}");
+        WriteStatementBlock(item.Statements);
     }
 
     public void Visit(MethodSignature item)
     {
-        throw new NotImplementedException();
+        WriteModifiersIndented(item.Modifiers);
+        Write(" ");
+        if (item.ReturnType == null)
+            Write("void");
+        else
+            item.ReturnType.Accept(this);
+        Write($" {item.Name}(");
+        bool first = true;
+        foreach (var par in item.Parameters)
+        {
+            if (!first)
+                Write(", ");
+            par.Accept(this);
+            first = false;
+        }
+        WriteLine(");");
     }
 
     public void Visit(Namespace item) => WriteLineIndented($"namespace {string.Join(".", item.Value)};");
@@ -557,24 +665,14 @@ public class ToCsVisitor : ISyntaxTreeVisitor, IDisposable
         if (item.GetStatements.Any())
         {
             WriteLineIndented("get");
-            WriteLineIndented("{");
-            Indent++;
-            foreach (var stmt in item.GetStatements)
-                stmt.Accept(this);
-            Indent--;
-            WriteLineIndented("}");
+            WriteStatementBlock(item.GetStatements);
         }
         else if (item.Get)
             WriteLineIndented("get;");
         if (item.SetStatements.Any())
         {
             WriteLineIndented("set");
-            WriteLineIndented("{");
-            Indent++;
-            foreach (var stmt in item.SetStatements)
-                stmt.Accept(this);
-            Indent--;
-            WriteLineIndented("}");
+            WriteStatementBlock(item.SetStatements);
         }
         else if (item.Set)
             WriteLineIndented("set;");
@@ -591,7 +689,15 @@ public class ToCsVisitor : ISyntaxTreeVisitor, IDisposable
 
     public void Visit(PropertySignature item)
     {
-        throw new NotImplementedException();
+        WriteModifiersIndented(item.Modifiers);
+        Write(" ");
+        item.Type.Accept(this);
+        Write($" {item.Name} {{");
+        if (item.Get)
+            Write("get;");
+        if (item.Set)
+            Write("set;");
+        WriteLine("}");
     }
 
     public void Visit(Return item)
@@ -609,25 +715,34 @@ public class ToCsVisitor : ISyntaxTreeVisitor, IDisposable
 
     public void Visit(Core.Ast.String item)
     {
-        throw new NotImplementedException();
+        Write("$\"");
+        bool first = true;
+        foreach (var line in item.Lines)
+        {
+            if (!first)
+                Write("{System.Environment.NewLine}");
+            foreach (var expr in line)
+            {
+                bool curlies = expr is not StringLiteral;
+                if (curlies)
+                    Write("{");
+                expr.Accept(this);
+                if (curlies)
+                    Write("}");
+            }
+            first = false;
+        }
+        Write("\"");
     }
 
-    public void Visit(StringLiteral item)
-    {
-        throw new NotImplementedException();
-    }
+    public void Visit(StringLiteral item) => Write(item.Value);
 
     public void Visit(Switch item)
     {
         WriteIndented("switch (");
         item.Expr.Accept(this);
         WriteLine(")");
-        WriteLineIndented("{");
-        Indent++;
-        foreach (var stmt in item.Statements)
-            stmt.Accept(this);
-        Indent--;
-        WriteLineIndented("}");
+        WriteStatementBlock(item.Statements);
     }
 
     public void Visit(Throw item)
@@ -639,16 +754,43 @@ public class ToCsVisitor : ISyntaxTreeVisitor, IDisposable
 
     public void Visit(Try item)
     {
-        throw new NotImplementedException();
+        WriteLineIndented("try");
+        WriteStatementBlock(item.Statements);
+        foreach (var cat in item.Catches)
+            cat.Accept(this);
+        if (item.FinallyStatements.Any())
+        {
+            WriteLineIndented("finally");
+            WriteStatementBlock(item.FinallyStatements);
+        }
     }
 
     public void Visit(UnaryOperator item)
     {
-        throw new NotImplementedException();
+        Write(item.Operator switch
+        {
+            UnaryOperatorType.BitwiseNot => "~",
+            UnaryOperatorType.Negate => "-",
+            UnaryOperatorType.Not => "!",
+            _ => "[unary op]",
+        });
+        item.Expr.Accept(this);
     }
 
     public void Visit(Using item)
     {
-        throw new NotImplementedException();
+        if (item.Statements.Any())
+        {
+            WriteIndented($"using (var {item.Name} = ");
+            item.Expr.Accept(this);
+            WriteLine(")");
+            WriteStatementBlock(item.Statements);
+        }
+        else
+        {
+            WriteIndented($"using var {item.Name} = ");
+            item.Expr.Accept(this);
+            WriteLine(";");
+        }
     }
 }

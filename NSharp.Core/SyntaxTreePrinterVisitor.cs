@@ -352,9 +352,7 @@ public class SyntaxTreePrinterVisitor : ISyntaxTreeVisitor
 
     public void Visit(ForEach item)
     {
-        WriteIndented("Foreach ");
-        item.Type?.Accept(this);
-        Write($" {item.Name} in ");
+        WriteIndented($"Foreach {item.Name} in ");
         item.Expr.Accept(this);
         WriteLine();
         Indent++;
