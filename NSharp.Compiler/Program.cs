@@ -71,28 +71,28 @@ public static class Program
 
     private static void Compile(IEnumerable<string> files)
     {
-        var compiler = new Compiler();
-        foreach (string file in files)
-        {
-            if (!File.Exists(file))
-                throw new Exception($"File '{file}' does not exist.");
+        // var compiler = new Compiler();
+        // foreach (string file in files)
+        // {
+        //     if (!File.Exists(file))
+        //         throw new Exception($"File '{file}' does not exist.");
 
-            ILanguage language;
+        //     ILanguage language;
 
-            if (file.EndsWith(".ns", StringComparison.OrdinalIgnoreCase))
-                language = GetLanguage(SAVE_SETTINGS, file);
-            else if (file.EndsWith(".ns.edit", StringComparison.OrdinalIgnoreCase))
-                language = GetLanguage(EDIT_SETTINGS, file);
-            else
-                throw new Exception($"File '{file}' does not end with .ns or .ns.edit");
+        //     if (file.EndsWith(".ns", StringComparison.OrdinalIgnoreCase))
+        //         language = GetLanguage(SAVE_SETTINGS, file);
+        //     else if (file.EndsWith(".ns.edit", StringComparison.OrdinalIgnoreCase))
+        //         language = GetLanguage(EDIT_SETTINGS, file);
+        //     else
+        //         throw new Exception($"File '{file}' does not end with .ns or .ns.edit");
 
-            LoadResult loadResult = language.Load(file);
-            HandleResult(loadResult);
-            if (loadResult.Ast != null)
-                compiler.Add(loadResult.Ast);
-        }
-        HandleCompileResult(compiler.Compile());
-        compiler.Save();
+        //     LoadResult loadResult = language.Load(file);
+        //     HandleResult(loadResult);
+        //     if (loadResult.Ast != null)
+        //         compiler.Add(loadResult.Ast);
+        // }
+        // HandleCompileResult(compiler.Compile());
+        // compiler.Save();
     }
 
     private static void Edit(string file)

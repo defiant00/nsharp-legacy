@@ -189,7 +189,7 @@ public class Decompiler
 
     private void ProcessClass(int indent, Class cl)
     {
-        AppendModifiersIndented(indent, cl.Modifiers);
+        // AppendModifiersIndented(indent, cl.Modifiers);
         Buffer.Append($"class ");
         Buffer.Append(cl.Name.GetLiteral());
         if (cl.Parent != null)
@@ -221,7 +221,7 @@ public class Decompiler
 
     private void ProcessConstant(int indent, Constant constant)
     {
-        AppendModifiersIndented(indent, constant.Modifiers);
+        // AppendModifiersIndented(indent, constant.Modifiers);
         Buffer.Append("val ");
         Buffer.Append(constant.Name);
         Buffer.Append(" ");
@@ -236,7 +236,7 @@ public class Decompiler
 
     private void ProcessConstructorDefinition(int indent, ConstructorDefinition ctorDef)
     {
-        AppendModifiersIndented(indent, ctorDef.Modifiers);
+        // AppendModifiersIndented(indent, ctorDef.Modifiers);
         Buffer.Append("fn new(");
         bool paramMultiline = Settings.ParamMultiline && ctorDef.Parameters.Count > 1;
         if (paramMultiline)
@@ -423,7 +423,7 @@ public class Decompiler
 
     private void ProcessMethodDefinition(int indent, MethodDefinition methodDef)
     {
-        AppendModifiersIndented(indent, methodDef.Modifiers);
+        // AppendModifiersIndented(indent, methodDef.Modifiers);
         Buffer.Append("fn ");
         Buffer.Append(methodDef.Name.GetLiteral());
         Buffer.Append("(");
@@ -494,7 +494,7 @@ public class Decompiler
 
     private void ProcessProperty(int indent, Property property)
     {
-        AppendModifiersIndented(indent, property.Modifiers);
+        // AppendModifiersIndented(indent, property.Modifiers);
         Buffer.Append("fn ");
         Buffer.Append(property.Name.GetLiteral());
         Buffer.Append(" ");
@@ -612,7 +612,7 @@ public class Decompiler
 
     private void ProcessField(int indent, Field variable)
     {
-        AppendModifiersIndented(indent, variable.Modifiers);
+        // AppendModifiersIndented(indent, variable.Modifiers);
         Buffer.Append("var ");
         Buffer.Append(variable.Name);
         Buffer.Append(" ");

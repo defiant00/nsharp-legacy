@@ -22,6 +22,15 @@ public class SyntaxTreePrinterVisitor : ISyntaxTreeVisitor
         Console.WriteLine(line);
     }
 
+    private void WriteModifiers(List<Expression> modifiers)
+    {
+        foreach (var mod in modifiers)
+        {
+            mod.Accept(this);
+            Write(" ");
+        }
+    }
+
     public void Visit(Expression item) => WriteLineIndented($"[{item}]");
 
     public void Visit(Statement item) => WriteLineIndented($"[{item}]");
@@ -114,7 +123,9 @@ public class SyntaxTreePrinterVisitor : ISyntaxTreeVisitor
 
     public void Visit(Class item)
     {
-        WriteIndented($"Class: {string.Join(" ", item.Modifiers)} {item.Name}");
+        WriteIndented($"Class: ");
+        WriteModifiers(item.Modifiers);
+        Write(item.Name);
         if (item.Parent != null)
         {
             Write(" inherits ");
@@ -166,7 +177,8 @@ public class SyntaxTreePrinterVisitor : ISyntaxTreeVisitor
 
     public void Visit(Constant item)
     {
-        WriteIndented($"Constant: {string.Join(" ", item.Modifiers)} ");
+        WriteIndented($"Constant: ");
+        WriteModifiers(item.Modifiers);
         item.Type.Accept(this);
         Write($" {item.Name}");
         if (item.Value != null)
@@ -211,7 +223,9 @@ public class SyntaxTreePrinterVisitor : ISyntaxTreeVisitor
 
     public void Visit(ConstructorDefinition item)
     {
-        WriteIndented($"Constructor: {string.Join(" ", item.Modifiers)} .ctor(");
+        WriteIndented($"Constructor: ");
+        WriteModifiers(item.Modifiers);
+        Write(".ctor(");
         bool first = true;
         foreach (var p in item.Parameters)
         {
@@ -247,7 +261,8 @@ public class SyntaxTreePrinterVisitor : ISyntaxTreeVisitor
 
     public void Visit(DelegateDefinition item)
     {
-        WriteIndented($"Delegate: {string.Join(" ", item.Modifiers)} ");
+        WriteIndented($"Delegate: ");
+        WriteModifiers(item.Modifiers);
         if (item.ReturnType == null)
             Write("void");
         else
@@ -268,7 +283,9 @@ public class SyntaxTreePrinterVisitor : ISyntaxTreeVisitor
 
     public void Visit(Enumeration item)
     {
-        WriteLineIndented($"Enum: {string.Join(" ", item.Modifiers)} {item.Name}");
+        WriteLineIndented($"Enum: ");
+        WriteModifiers(item.Modifiers);
+        Write(item.Name);
         Indent++;
         foreach (var val in item.Values)
             val.Accept(this);
@@ -302,7 +319,8 @@ public class SyntaxTreePrinterVisitor : ISyntaxTreeVisitor
 
     public void Visit(Field item)
     {
-        WriteIndented($"Field: {string.Join(" ", item.Modifiers)} ");
+        WriteIndented($"Field: ");
+        WriteModifiers(item.Modifiers);
         item.Type.Accept(this);
         Write($" {item.Name}");
         if (item.Value != null)
@@ -424,7 +442,9 @@ public class SyntaxTreePrinterVisitor : ISyntaxTreeVisitor
 
     public void Visit(Interface item)
     {
-        WriteIndented($"Interface: {string.Join(" ", item.Modifiers)} {item.Name}");
+        WriteIndented($"Interface: ");
+        WriteModifiers(item.Modifiers);
+        Write(item.Name);
         if (item.Interfaces.Any())
         {
             Write(" is ");
@@ -497,7 +517,8 @@ public class SyntaxTreePrinterVisitor : ISyntaxTreeVisitor
 
     public void Visit(MethodDefinition item)
     {
-        WriteIndented($"Method: {string.Join(" ", item.Modifiers)} ");
+        WriteIndented($"Method: ");
+        WriteModifiers(item.Modifiers);
         if (item.ReturnType == null)
             Write("void");
         else
@@ -521,7 +542,8 @@ public class SyntaxTreePrinterVisitor : ISyntaxTreeVisitor
 
     public void Visit(MethodSignature item)
     {
-        WriteIndented($"Method Sig: {string.Join(" ", item.Modifiers)} ");
+        WriteIndented($"Method Sig: ");
+        WriteModifiers(item.Modifiers);
         if (item.ReturnType == null)
             Write("void");
         else
@@ -536,6 +558,17 @@ public class SyntaxTreePrinterVisitor : ISyntaxTreeVisitor
             first = false;
         }
         WriteLine(")");
+    }
+
+    public void Visit(Modifier item)
+    {
+        Write(item.Type.ToString());
+        if (item.Arg != null)
+        {
+            Write("{");
+            item.Arg.Accept(this);
+            Write("}");
+        }
     }
 
     public void Visit(Namespace item) => WriteLineIndented($"Namespace: {string.Join(".", item.Value)}");
@@ -555,7 +588,8 @@ public class SyntaxTreePrinterVisitor : ISyntaxTreeVisitor
 
     public void Visit(Property item)
     {
-        WriteIndented($"Property: {string.Join(" ", item.Modifiers)} ");
+        WriteIndented($"Property: ");
+        WriteModifiers(item.Modifiers);
         item.Type.Accept(this);
         Write($" {item.Name}{(item.Get ? " get" : "")}{(item.Set ? " set" : "")}");
         if (item.Value != null)
@@ -586,7 +620,8 @@ public class SyntaxTreePrinterVisitor : ISyntaxTreeVisitor
 
     public void Visit(PropertySignature item)
     {
-        WriteIndented($"Property Sig: {string.Join(" ", item.Modifiers)} ");
+        WriteIndented($"Property Sig: ");
+        WriteModifiers(item.Modifiers);
         item.Type.Accept(this);
         WriteLine($" {item.Name}{(item.Get ? " get" : "")}{(item.Set ? " set" : "")}");
     }

@@ -48,6 +48,7 @@ public interface ISyntaxTreeVisitor
     public void Visit(MethodCall item);
     public void Visit(MethodDefinition item);
     public void Visit(MethodSignature item);
+    public void Visit(Modifier item);
     public void Visit(Namespace item);
     public void Visit(Number item);
     public void Visit(Parameter item);

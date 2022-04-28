@@ -33,9 +33,9 @@ public class ToCsVisitor : ISyntaxTreeVisitor, IDisposable
         WriteLine(line);
     }
 
-    private void WriteModifiersIndented(List<ModifierType> modifiers)
+    private void WriteModifiersIndented(List<Expression> modifiers)
     {
-        WriteIndented(string.Join(" ", modifiers.Select(m => m switch
+        WriteIndented(string.Join(" ", modifiers.Select(m => (m as Modifier)?.Type switch
         {
             ModifierType.Abstract => "abstract",
             ModifierType.Internal => "internal",
@@ -646,6 +646,8 @@ public class ToCsVisitor : ISyntaxTreeVisitor, IDisposable
         }
         WriteLine(");");
     }
+
+    public void Visit(Modifier item) => Write("/* modifier */");
 
     public void Visit(Namespace item) => WriteLineIndented($"namespace {string.Join(".", item.Value)};");
 
