@@ -1,8 +1,10 @@
 ## TODO
 
 * struct
-* virtual, override, abstract
+* virtual, override, abstract, ext{type} for extension methods and properties
 * tocs directory (recursively compile all *.ns)
+* Strings and chars unescape on parse, escape on output
+* for/bet, update __first in an else
 
 ## Items
 
