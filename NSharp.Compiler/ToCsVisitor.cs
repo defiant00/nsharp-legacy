@@ -33,15 +33,21 @@ public class ToCsVisitor : ISyntaxTreeVisitor, IDisposable
         WriteLine(line);
     }
 
-    private void WriteModifiersIndented(List<Modifier> modifiers)
+    private void WriteModifiersIndented(List<ModifierType> modifiers)
     {
         WriteIndented(string.Join(" ", modifiers.Select(m => m switch
         {
-            Modifier.Internal => "internal",
-            Modifier.Private => "private",
-            Modifier.Protected => "protected",
-            Modifier.Public => "public",
-            Modifier.Static => "static",
+            ModifierType.Abstract => "abstract",
+            ModifierType.Internal => "internal",
+            ModifierType.Override => "override",
+            ModifierType.Private => "private",
+            ModifierType.Protected => "protected",
+            ModifierType.Public => "public",
+            ModifierType.Static => "static",
+            ModifierType.Virtual => "virtual",
+
+            ModifierType.Extension => "",
+
             _ => " [modifier] ",
         })));
     }
@@ -456,13 +462,15 @@ public class ToCsVisitor : ISyntaxTreeVisitor, IDisposable
         Indent++;
         if (between)
         {
-            WriteLineIndented("if (!__first)");
+            WriteLineIndented("if (__first)");
+            Indent++;
+            WriteLineIndented("__first = false;");
+            Indent--;
+            WriteLineIndented("else");
             WriteStatementBlock(item.BetweenStatements);
         }
         foreach (var stmt in item.Statements)
             stmt.Accept(this);
-        if (between)
-            WriteLineIndented("__first = false;");
         Indent--;
         WriteLineIndented("}");
         Indent--;

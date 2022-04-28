@@ -25,7 +25,7 @@ public class Decompiler
     private void Indent(int indent) => Buffer.Indent(Settings.Indentation, indent);
     private void AppendIndented(int indent, string content) => Buffer.AppendIndented(Settings.Indentation, indent, content);
     private void AppendLineIndented(int indent, string content) => Buffer.AppendLineIndented(Settings.Indentation, indent, content);
-    private void AppendModifiersIndented(int indent, List<Modifier> modifiers) => Buffer.AppendModifiersIndented(Settings.Indentation, indent, modifiers);
+    private void AppendModifiersIndented(int indent, List<ModifierType> modifiers) => Buffer.AppendModifiersIndented(Settings.Indentation, indent, modifiers);
 
     private void Process(int indent, ISyntaxTreeItem? currentItem, ISyntaxTreeItem? priorItem)
     {

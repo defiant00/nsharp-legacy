@@ -24,7 +24,7 @@ public static class Helpers
         sb.AppendLine(content);
     }
 
-    public static void AppendModifiersIndented(this StringBuilder sb, string indentStr, int indent, List<Modifier> modifiers)
+    public static void AppendModifiersIndented(this StringBuilder sb, string indentStr, int indent, List<ModifierType> modifiers)
     {
         sb.Indent(indentStr, indent);
         foreach (var modifier in modifiers)
@@ -36,14 +36,20 @@ public static class Helpers
 
     public static string GetLiteral(this string val) => KeywordTokens.ContainsKey(val) ? Constants.LITERAL_INDICATOR + val : val;
 
-    public static string StringVal(this Modifier modifier) =>
+    public static string StringVal(this ModifierType modifier) =>
         modifier switch
         {
-            Modifier.Public => "public",
-            Modifier.Protected => "protected",
-            Modifier.Internal => "internal",
-            Modifier.Private => "private",
-            Modifier.Static => "static",
+            ModifierType.Public => "public",
+            ModifierType.Protected => "protected",
+            ModifierType.Internal => "internal",
+            ModifierType.Private => "private",
+            ModifierType.Static => "static",
+            ModifierType.Abstract => "abstract",
+            ModifierType.Virtual => "virtual",
+            ModifierType.Override => "override",
+
+            ModifierType.Extension => "",
+
             _ => $"[{modifier}]",
         };
 
@@ -117,6 +123,10 @@ public static class Helpers
         ["internal"] = TokenType.Internal,
         ["private"] = TokenType.Private,
         ["static"] = TokenType.Static,
+        ["abstract"] = TokenType.Abstract,
+        ["virtual"] = TokenType.Virtual,
+        ["override"] = TokenType.Override,
+        ["ext"] = TokenType.Extension,
         ["this"] = TokenType.This,
         ["str"] = TokenType.String,
         ["char"] = TokenType.Character,

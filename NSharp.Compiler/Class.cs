@@ -9,7 +9,7 @@ public class Class
     public bool Emitting { get; set; }
     public EntityHandle? Handle { get; set; }
     public string Namespace { get; set; }
-    public List<Modifier> Modifiers { get; set; }
+    public List<ModifierType> Modifiers { get; set; }
     public string Name { get; set; }
     public Expression? Parent { get; set; }
     public List<Class> Classes { get; set; } = new();

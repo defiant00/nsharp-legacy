@@ -136,13 +136,13 @@ public class Character : Expression
 
 public class Class : Statement
 {
-    public List<Modifier> Modifiers { get; set; }
+    public List<ModifierType> Modifiers { get; set; }
     public string Name { get; set; }
     public Expression? Parent { get; set; }
     public List<Expression> Interfaces { get; set; } = new();
     public List<Statement> Statements { get; set; } = new();
 
-    public Class(Position position, List<Modifier> modifiers, string name) : base(position)
+    public Class(Position position, List<ModifierType> modifiers, string name) : base(position)
     {
         Modifiers = modifiers;
         Name = name;
@@ -193,12 +193,12 @@ public class Conditional : Expression
 
 public class Constant : Statement
 {
-    public List<Modifier> Modifiers { get; set; }
+    public List<ModifierType> Modifiers { get; set; }
     public string Name { get; set; }
     public Expression Type { get; set; }
     public Expression? Value { get; set; }
 
-    public Constant(Position position, List<Modifier> modifiers, string name, Expression type) : base(position)
+    public Constant(Position position, List<ModifierType> modifiers, string name, Expression type) : base(position)
     {
         Modifiers = modifiers;
         Name = name;
@@ -225,12 +225,12 @@ public class ConstructorCall : Expression
 
 public class ConstructorDefinition : Statement
 {
-    public List<Modifier> Modifiers { get; set; }
+    public List<ModifierType> Modifiers { get; set; }
     public List<Parameter> Parameters { get; set; } = new();
     public List<Expression> BaseArguments { get; set; } = new();
     public List<Statement> Statements { get; set; } = new();
 
-    public ConstructorDefinition(Position position, List<Modifier> modifiers) : base(position)
+    public ConstructorDefinition(Position position, List<ModifierType> modifiers) : base(position)
     {
         Modifiers = modifiers;
     }
@@ -254,12 +254,12 @@ public class CurrentObjectInstance : Expression
 
 public class DelegateDefinition : Statement
 {
-    public List<Modifier> Modifiers { get; set; }
+    public List<ModifierType> Modifiers { get; set; }
     public Expression? ReturnType { get; set; }
     public string Name { get; set; }
     public List<Parameter> Parameters { get; set; } = new();
 
-    public DelegateDefinition(Position position, List<Modifier> modifiers, string name) : base(position)
+    public DelegateDefinition(Position position, List<ModifierType> modifiers, string name) : base(position)
     {
         Modifiers = modifiers;
         Name = name;
@@ -277,11 +277,11 @@ public class Discard : Expression
 
 public class Enumeration : Statement
 {
-    public List<Modifier> Modifiers { get; set; }
+    public List<ModifierType> Modifiers { get; set; }
     public string Name { get; set; }
     public List<EnumerationItem> Values { get; set; } = new();
 
-    public Enumeration(Position position, List<Modifier> modifiers, string name) : base(position)
+    public Enumeration(Position position, List<ModifierType> modifiers, string name) : base(position)
     {
         Modifiers = modifiers;
         Name = name;
@@ -342,12 +342,12 @@ public class ExpressionStatement : Statement
 
 public class Field : Statement
 {
-    public List<Modifier> Modifiers { get; set; }
+    public List<ModifierType> Modifiers { get; set; }
     public string Name { get; set; }
     public Expression Type { get; set; }
     public Expression? Value { get; set; }
 
-    public Field(Position position, List<Modifier> modifiers, string name, Expression type) : base(position)
+    public Field(Position position, List<ModifierType> modifiers, string name, Expression type) : base(position)
     {
         Modifiers = modifiers;
         Name = name;
@@ -467,12 +467,12 @@ public class Indexer : Expression
 
 public class Interface : Statement
 {
-    public List<Modifier> Modifiers { get; set; }
+    public List<ModifierType> Modifiers { get; set; }
     public string Name { get; set; }
     public List<Expression> Interfaces { get; set; } = new();
     public List<Statement> Statements { get; set; } = new();
 
-    public Interface(Position position, List<Modifier> modifiers, string name) : base(position)
+    public Interface(Position position, List<ModifierType> modifiers, string name) : base(position)
     {
         Modifiers = modifiers;
         Name = name;
@@ -553,13 +553,13 @@ public class MethodCall : Expression
 
 public class MethodDefinition : Statement
 {
-    public List<Modifier> Modifiers { get; set; }
+    public List<ModifierType> Modifiers { get; set; }
     public Expression? ReturnType { get; set; }
     public string Name { get; set; }
     public List<Parameter> Parameters { get; set; } = new();
     public List<Statement> Statements { get; set; } = new();
 
-    public MethodDefinition(Position position, List<Modifier> modifiers, string name) : base(position)
+    public MethodDefinition(Position position, List<ModifierType> modifiers, string name) : base(position)
     {
         Modifiers = modifiers;
         Name = name;
@@ -570,12 +570,12 @@ public class MethodDefinition : Statement
 
 public class MethodSignature : Statement
 {
-    public List<Modifier> Modifiers { get; set; }
+    public List<ModifierType> Modifiers { get; set; }
     public Expression? ReturnType { get; set; }
     public string Name { get; set; }
     public List<Parameter> Parameters { get; set; } = new();
 
-    public MethodSignature(Position position, List<Modifier> modifiers, string name) : base(position)
+    public MethodSignature(Position position, List<ModifierType> modifiers, string name) : base(position)
     {
         Modifiers = modifiers;
         Name = name;
@@ -625,7 +625,7 @@ public class Parameter : Expression
 
 public class Property : Statement
 {
-    public List<Modifier> Modifiers { get; set; }
+    public List<ModifierType> Modifiers { get; set; }
     public string Name { get; set; }
     public Expression Type { get; set; }
     public Expression? Value { get; set; }
@@ -635,7 +635,7 @@ public class Property : Statement
     public List<Statement> GetStatements { get; set; } = new();
     public List<Statement> SetStatements { get; set; } = new();
 
-    public Property(Position position, List<Modifier> modifiers, string name, Expression type) : base(position)
+    public Property(Position position, List<ModifierType> modifiers, string name, Expression type) : base(position)
     {
         Modifiers = modifiers;
         Name = name;
@@ -647,13 +647,13 @@ public class Property : Statement
 
 public class PropertySignature : Statement
 {
-    public List<Modifier> Modifiers { get; set; }
+    public List<ModifierType> Modifiers { get; set; }
     public string Name { get; set; }
     public Expression Type { get; set; }
     public bool Get { get; set; } = true;
     public bool Set { get; set; } = true;
 
-    public PropertySignature(Position position, List<Modifier> modifiers, string name, Expression type) : base(position)
+    public PropertySignature(Position position, List<ModifierType> modifiers, string name, Expression type) : base(position)
     {
         Modifiers = modifiers;
         Name = name;

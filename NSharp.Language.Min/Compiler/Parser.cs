@@ -279,7 +279,7 @@ public class Parser
         return new ParseResult<Statement>(new Break(GetToken(res).Position));
     }
 
-    private ParseResult<Statement> ParseClass(List<Modifier> modifiers)
+    private ParseResult<Statement> ParseClass(List<ModifierType> modifiers)
     {
         var res = Accept(TokenType.Class, TokenType.Literal);
 
@@ -343,7 +343,7 @@ public class Parser
         if (Peek.Type == TokenType.Comment)
             return ParseComment();
 
-        var modifiers = new List<Modifier>();
+        var modifiers = new List<ModifierType>();
         while (Peek.Type.IsModifier())
             modifiers.Add(Next().Type.ToModifier());
 
@@ -430,7 +430,7 @@ public class Parser
         return new ParseResult<Expression>(conditional);
     }
 
-    private ParseResult<Statement> ParseConstant(List<Modifier> modifiers)
+    private ParseResult<Statement> ParseConstant(List<ModifierType> modifiers)
     {
         // [modifiers] val [name] [type]
         // [modifiers] val [name] [type] = [expr]
@@ -506,7 +506,7 @@ public class Parser
         return new ParseResult<Expression>(ctor);
     }
 
-    private ParseResult<Statement> ParseConstructorDefinition(List<Modifier> modifiers, Token start)
+    private ParseResult<Statement> ParseConstructorDefinition(List<ModifierType> modifiers, Token start)
     {
         // [modifiers] fn new([params]) is [statement]
         // [modifiers] fn new([params]) base([exprs]) is [statement]
@@ -607,7 +607,7 @@ public class Parser
         return new ParseResult<Statement>(new Continue(GetToken(res).Position));
     }
 
-    private ParseResult<Statement> ParseDelegate(List<Modifier> modifiers)
+    private ParseResult<Statement> ParseDelegate(List<ModifierType> modifiers)
     {
         // [modifiers] del [name]([params])
         // [modifiers] del [name]([params]) [type]
@@ -653,7 +653,7 @@ public class Parser
         return new ParseResult<Statement>(delegateDef);
     }
 
-    private ParseResult<Statement> ParseEnum(List<Modifier> modifiers)
+    private ParseResult<Statement> ParseEnum(List<ModifierType> modifiers)
     {
         // [modifiers] enum [name]
         //     Val
@@ -729,7 +729,7 @@ public class Parser
         return new ParseResult<Statement>(new ExpressionStatement(expr.Result.Position, expr.Result));
     }
 
-    private ParseResult<Statement> ParseField(List<Modifier> modifiers)
+    private ParseResult<Statement> ParseField(List<ModifierType> modifiers)
     {
         // [modifiers] var [name] [type]
         // [modifiers] var [name] [type] = [expr]
@@ -765,7 +765,7 @@ public class Parser
 
     private ParseResult<Statement> ParseFileModifiableStatement()
     {
-        var modifiers = new List<Modifier>();
+        var modifiers = new List<ModifierType>();
         while (Peek.Type.IsModifier())
             modifiers.Add(Next().Type.ToModifier());
 
@@ -1237,7 +1237,7 @@ public class Parser
         return new ParseResult<Expression>(indexer);
     }
 
-    private ParseResult<Statement> ParseInterface(List<Modifier> modifiers)
+    private ParseResult<Statement> ParseInterface(List<ModifierType> modifiers)
     {
         var res = Accept(TokenType.Interface, TokenType.Literal);
 
@@ -1294,7 +1294,7 @@ public class Parser
         if (Peek.Type == TokenType.Comment)
             return ParseComment();
 
-        var modifiers = new List<Modifier>();
+        var modifiers = new List<ModifierType>();
         while (Peek.Type.IsModifier())
             modifiers.Add(Next().Type.ToModifier());
 
@@ -1409,7 +1409,7 @@ public class Parser
         return new ParseResult<Expression>(methodCall);
     }
 
-    private ParseResult<Statement> ParseMethodDefinition(List<Modifier> modifiers, Token nameToken)
+    private ParseResult<Statement> ParseMethodDefinition(List<ModifierType> modifiers, Token nameToken)
     {
         // method
         // [modifiers] fn [name]([params]) is [statement]
@@ -1508,7 +1508,7 @@ public class Parser
         return new ParseResult<Statement>(methodDef);
     }
 
-    private ParseResult<Statement> ParseMethodOrProperty(List<Modifier> modifiers)
+    private ParseResult<Statement> ParseMethodOrProperty(List<ModifierType> modifiers)
     {
         var start = Next();     // accept fn
 
@@ -1527,7 +1527,7 @@ public class Parser
         return ParseProperty(modifiers, nameToken);
     }
 
-    private ParseResult<Statement> ParseMethodSignature(List<Modifier> modifiers, Position pos, string name)
+    private ParseResult<Statement> ParseMethodSignature(List<ModifierType> modifiers, Position pos, string name)
     {
         // [modifiers] fn [name]([params])
         // [modifiers] fn [name]([params]) [type]
@@ -1680,7 +1680,7 @@ public class Parser
         return leftResult;
     }
 
-    private ParseResult<Statement> ParseProperty(List<Modifier> modifiers, Token nameToken)
+    private ParseResult<Statement> ParseProperty(List<ModifierType> modifiers, Token nameToken)
     {
         // property
         // [modifiers] fn [name] [type] [= [expr]]
@@ -1801,7 +1801,7 @@ public class Parser
         return new ParseResult<Statement>(propDef);
     }
 
-    private ParseResult<Statement> ParsePropertySignature(List<Modifier> modifiers, Position pos, string name)
+    private ParseResult<Statement> ParsePropertySignature(List<ModifierType> modifiers, Position pos, string name)
     {
         // [modifiers] fn [name] [type]
         // [modifiers] fn [name] [type] [get and/or set]
@@ -1917,7 +1917,7 @@ public class Parser
         return new ParseResult<Expression>(stringResult);
     }
 
-    private ParseResult<Statement> ParseStruct(List<Modifier> modifiers)
+    private ParseResult<Statement> ParseStruct(List<ModifierType> modifiers)
     {
         Next();
         return ErrorStatement("Struct parsing not supported yet", new Position());

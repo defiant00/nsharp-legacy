@@ -12,14 +12,18 @@ public static class TokenHelper
     public static bool IsType(this TokenType type) => type > TokenType.Type_Start && type < TokenType.Type_End;
     public static bool IsUnaryOperator(this TokenType type) => type > TokenType.Unary_Operator_Start && type < TokenType.Unary_Operator_End;
 
-    public static Modifier ToModifier(this TokenType type) =>
+    public static ModifierType ToModifier(this TokenType type) =>
         type switch
         {
-            TokenType.Public => Modifier.Public,
-            TokenType.Protected => Modifier.Protected,
-            TokenType.Internal => Modifier.Internal,
-            TokenType.Private => Modifier.Private,
-            TokenType.Static => Modifier.Static,
+            TokenType.Public => ModifierType.Public,
+            TokenType.Protected => ModifierType.Protected,
+            TokenType.Internal => ModifierType.Internal,
+            TokenType.Private => ModifierType.Private,
+            TokenType.Static => ModifierType.Static,
+            TokenType.Abstract => ModifierType.Abstract,
+            TokenType.Virtual => ModifierType.Virtual,
+            TokenType.Override => ModifierType.Override,
+            TokenType.Extension => ModifierType.Extension,
             _ => throw new Exception($"Could not match token type {type} to a modifier."),
         };
 

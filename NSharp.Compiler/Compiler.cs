@@ -271,7 +271,7 @@ public class Compiler
         cl.Emitting = true;
 
         var attrs = TypeAttributes.Class | TypeAttributes.AutoLayout | TypeAttributes.BeforeFieldInit;
-        if (cl.Modifiers.Contains(Modifier.Public))
+        if (cl.Modifiers.Contains(ModifierType.Public))
             attrs |= TypeAttributes.Public;
 
         cl.Handle = MetadataBuilder.AddTypeDefinition(
@@ -308,15 +308,15 @@ public class Compiler
             .Parameters(0, returnType, parameters => { });
 
         var attrs = MethodAttributes.HideBySig;
-        if (methodDefinition.Modifiers.Contains(Modifier.Static))
+        if (methodDefinition.Modifiers.Contains(ModifierType.Static))
         {
             attrs |= MethodAttributes.Static;
             isEntryPoint = methodDefinition.Name == "Main";
         }
 
-        if (methodDefinition.Modifiers.Contains(Modifier.Public))
+        if (methodDefinition.Modifiers.Contains(ModifierType.Public))
             attrs |= MethodAttributes.Public;
-        else if (methodDefinition.Modifiers.Contains(Modifier.Private))
+        else if (methodDefinition.Modifiers.Contains(ModifierType.Private))
             attrs |= MethodAttributes.Private;
 
         foreach (var statement in methodDefinition.Statements)
