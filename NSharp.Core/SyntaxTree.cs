@@ -34,6 +34,19 @@ public class AnonymousFunction : Expression
     public override void Accept(ISyntaxTreeVisitor visitor) => visitor.Visit(this);
 }
 
+public class Argument : Expression
+{
+    public string? Name { get; set; }
+    public Expression Expr { get; set; }
+
+    public Argument(Position position, Expression expr) : base(position)
+    {
+        Expr = expr;
+    }
+
+    public override void Accept(ISyntaxTreeVisitor visitor) => visitor.Visit(this);
+}
+
 public class Array : Expression
 {
     public Expression Type { get; set; }
@@ -146,6 +159,33 @@ public class Comment : Statement
     public Comment(Position position, string value) : base(position)
     {
         Value = value;
+    }
+
+    public override void Accept(ISyntaxTreeVisitor visitor) => visitor.Visit(this);
+}
+
+public class Condition : Expression
+{
+    public Expression Value { get; set; }
+    public Expression Result { get; set; }
+
+    public Condition(Position position, Expression value, Expression result) : base(position)
+    {
+        Value = value;
+        Result = result;
+    }
+
+    public override void Accept(ISyntaxTreeVisitor visitor) => visitor.Visit(this);
+}
+
+public class Conditional : Expression
+{
+    public Expression Expr { get; set; }
+    public List<Expression> Conditions { get; set; } = new();
+
+    public Conditional(Position position, Expression expr) : base(position)
+    {
+        Expr = expr;
     }
 
     public override void Accept(ISyntaxTreeVisitor visitor) => visitor.Visit(this);
@@ -488,13 +528,12 @@ public class LocalConstant : Statement
 public class LocalVariable : Statement
 {
     public string Name { get; set; }
-    public Expression Type { get; set; }
+    public Expression? Type { get; set; }
     public Expression? Value { get; set; }
 
-    public LocalVariable(Position position, string name, Expression type) : base(position)
+    public LocalVariable(Position position, string name) : base(position)
     {
         Name = name;
-        Type = type;
     }
 
     public override void Accept(ISyntaxTreeVisitor visitor) => visitor.Visit(this);
@@ -574,6 +613,7 @@ public class Parameter : Expression
 {
     public Expression Type { get; set; }
     public string Name { get; set; }
+    public Expression? Value { get; set; }
 
     public Parameter(Position position, Expression type, string name) : base(position)
     {

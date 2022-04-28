@@ -42,7 +42,7 @@ public static class TokenHelper
 
             TokenType.Multiply => BinaryOperatorType.Multiply,
             TokenType.Divide => BinaryOperatorType.Divide,
-            TokenType.Modulo => BinaryOperatorType.Modulo,
+            TokenType.Modulus => BinaryOperatorType.Modulus,
 
             TokenType.Add => BinaryOperatorType.Add,
             TokenType.Subtract => BinaryOperatorType.Subtract,
@@ -82,7 +82,7 @@ public static class TokenHelper
             TokenType.SubtractAssign => AssignmentOperator.Subtract,
             TokenType.MultiplyAssign => AssignmentOperator.Multiply,
             TokenType.DivideAssign => AssignmentOperator.Divide,
-            TokenType.ModuloAssign => AssignmentOperator.Modulo,
+            TokenType.ModulusAssign => AssignmentOperator.Modulus,
             TokenType.BitwiseAndAssign => AssignmentOperator.BitwiseAnd,
             TokenType.BitwiseOrAssign => AssignmentOperator.BitwiseOr,
             TokenType.BitwiseXorAssign => AssignmentOperator.BitwiseXor,

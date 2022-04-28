@@ -15,7 +15,7 @@
     * X binary op
     * X unary op
     * X is op
-    * _ ternary
+    * X conditional
     * X anonymous fn
     * _ default
     * _ typeof?

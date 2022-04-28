@@ -8,7 +8,7 @@ public enum AssignmentOperator
     Subtract,
     Multiply,
     Divide,
-    Modulo,
+    Modulus,
     BitwiseAnd,
     BitwiseOr,
     BitwiseXor,

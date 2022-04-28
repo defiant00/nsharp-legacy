@@ -62,6 +62,13 @@ public class ToCsVisitor : ISyntaxTreeVisitor, IDisposable
         throw new NotImplementedException();
     }
 
+    public void Visit(Argument item)
+    {
+        if (item.Name != null)
+            Write($"{item.Name}: ");
+        item.Expr.Accept(this);
+    }
+
     public void Visit(Core.Ast.Array item)
     {
         throw new NotImplementedException();
@@ -80,7 +87,7 @@ public class ToCsVisitor : ISyntaxTreeVisitor, IDisposable
             AssignmentOperator.BitwiseXor => " ^= ",
             AssignmentOperator.Divide => " /= ",
             AssignmentOperator.LeftShift => " <<= ",
-            AssignmentOperator.Modulo => " %= ",
+            AssignmentOperator.Modulus => " %= ",
             AssignmentOperator.Multiply => " *= ",
             AssignmentOperator.NullCoalesce => " ??= ",
             AssignmentOperator.RightShift => " >>= ",
@@ -115,7 +122,7 @@ public class ToCsVisitor : ISyntaxTreeVisitor, IDisposable
             BinaryOperatorType.LeftShift => " << ",
             BinaryOperatorType.LessThan => " < ",
             BinaryOperatorType.LessThanOrEqual => " <= ",
-            BinaryOperatorType.Modulo => " % ",
+            BinaryOperatorType.Modulus => " % ",
             BinaryOperatorType.Multiply => " * ",
             BinaryOperatorType.NotEqual => " != ",
             BinaryOperatorType.NullCoalesce => " ?? ",
@@ -203,6 +210,27 @@ public class ToCsVisitor : ISyntaxTreeVisitor, IDisposable
     }
 
     public void Visit(Comment item) => WriteLineIndented($"//{(item.IsDocumentation ? "/" : "")}{item.Value}");
+
+    public void Visit(Condition item)
+    {
+        WriteIndent();
+        item.Value.Accept(this);
+        Write(" => ");
+        item.Result.Accept(this);
+        WriteLine(",");
+    }
+
+    public void Visit(Conditional item)
+    {
+        item.Expr.Accept(this);
+        WriteLine(" switch");
+        WriteLineIndented("{");
+        Indent++;
+        foreach (var cond in item.Conditions)
+            cond.Accept(this);
+        Indent--;
+        WriteIndented("}");
+    }
 
     public void Visit(Constant item)
     {
@@ -293,10 +321,7 @@ public class ToCsVisitor : ISyntaxTreeVisitor, IDisposable
         throw new NotImplementedException();
     }
 
-    public void Visit(Discard item)
-    {
-        throw new NotImplementedException();
-    }
+    public void Visit(Discard item) => Write("_");
 
     public void Visit(Enumeration item)
     {
@@ -447,7 +472,10 @@ public class ToCsVisitor : ISyntaxTreeVisitor, IDisposable
     public void Visit(LocalVariable item)
     {
         WriteIndent();
-        item.Type.Accept(this);
+        if (item.Type == null)
+            Write("var");
+        else
+            item.Type.Accept(this);
         Write($" {item.Name}");
         if (item.Value != null)
         {
@@ -511,6 +539,11 @@ public class ToCsVisitor : ISyntaxTreeVisitor, IDisposable
     {
         item.Type.Accept(this);
         Write($" {item.Name}");
+        if (item.Value != null)
+        {
+            Write(" = ");
+            item.Value.Accept(this);
+        }
     }
 
     public void Visit(Property item)
@@ -546,7 +579,14 @@ public class ToCsVisitor : ISyntaxTreeVisitor, IDisposable
         else if (item.Set)
             WriteLineIndented("set;");
         Indent--;
-        WriteLineIndented("}");
+        WriteIndented("}");
+        if (item.Value != null)
+        {
+            Write(" = ");
+            item.Value.Accept(this);
+            Write(";");
+        }
+        WriteLine();
     }
 
     public void Visit(PropertySignature item)

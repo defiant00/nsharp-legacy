@@ -53,6 +53,13 @@ public class SyntaxTreePrinterVisitor : ISyntaxTreeVisitor
         Indent -= 2;
     }
 
+    public void Visit(Argument item)
+    {
+        if (item.Name != null)
+            Write($"{item.Name} = ");
+        item.Expr.Accept(this);
+    }
+
     public void Visit(Array item)
     {
         Write("[]");
@@ -133,6 +140,29 @@ public class SyntaxTreePrinterVisitor : ISyntaxTreeVisitor
     }
 
     public void Visit(Comment item) => WriteLineIndented($"Comment{(item.IsDocumentation ? " (doc)" : "")}: {item.Value}");
+
+    public void Visit(Condition item)
+    {
+        item.Value.Accept(this);
+        Write(" => ");
+        item.Result.Accept(this);
+    }
+
+    public void Visit(Conditional item)
+    {
+        item.Expr.Accept(this);
+        WriteLine(" ?");
+        WriteLineIndented("{");
+        Indent++;
+        foreach (var cond in item.Conditions)
+        {
+            WriteIndented("");
+            cond.Accept(this);
+            WriteLine();
+        }
+        Indent--;
+        WriteLineIndented("}");
+    }
 
     public void Visit(Constant item)
     {
@@ -439,7 +469,10 @@ public class SyntaxTreePrinterVisitor : ISyntaxTreeVisitor
     public void Visit(LocalVariable item)
     {
         WriteIndented($"Var: ");
-        item.Type.Accept(this);
+        if (item.Type == null)
+            Write("var");
+        else
+            item.Type.Accept(this);
         Write($" {item.Name}");
         if (item.Value != null)
         {
@@ -515,6 +548,11 @@ public class SyntaxTreePrinterVisitor : ISyntaxTreeVisitor
     {
         item.Type.Accept(this);
         Write($" {item.Name}");
+        if (item.Value != null)
+        {
+            Write(" = ");
+            item.Value.Accept(this);
+        }
     }
 
     public void Visit(Property item)

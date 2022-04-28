@@ -3,6 +3,5 @@ ns NSharp.Tests
 use System
 
 class MyClass
-    fn Test()
-        if x is SomeClass s
-            s.DoTheThing()
+    fn Test(first int, second int = 3)
+        2 ? {2 is First(), 3 is Second(), _ is Other()}

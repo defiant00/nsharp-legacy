@@ -176,6 +176,45 @@ public class Parser
         return new ParseResult<Expression>(anonFn);
     }
 
+    // Returns null on success, or the error if there is one.
+    private ParseResult<Expression>? ParseArguments(List<Expression> args)
+    {
+        var res = Accept(TokenType.LeftParenthesis);
+        if (res.Failure)
+            return InvalidTokenErrorExpression("Invalid token in args", res);
+
+        if (Peek.Type != TokenType.RightParenthesis)
+        {
+            string? name = null;
+            res = Accept(TokenType.Literal, TokenType.Assign);
+            if (res.Success)
+                name = GetToken(res).Value;
+
+            var argExpr = ParseExpression();
+            if (argExpr.Error)
+                return argExpr;
+            args.Add(new Argument(argExpr.Result.Position, argExpr.Result) { Name = name });
+            while (Accept(TokenType.Comma).Success)
+            {
+                name = null;
+                res = Accept(TokenType.Literal, TokenType.Assign);
+                if (res.Success)
+                    name = GetToken(res).Value;
+
+                argExpr = ParseExpression();
+                if (argExpr.Error)
+                    return argExpr;
+                args.Add(new Argument(argExpr.Result.Position, argExpr.Result) { Name = name });
+            }
+        }
+
+        res = Accept(TokenType.RightParenthesis);
+        if (res.Failure)
+            return InvalidTokenErrorExpression("Invalid token in args", res);
+
+        return null;
+    }
+
     private ParseResult<Expression> ParseArray()
     {
         var start = Peek;
@@ -202,7 +241,7 @@ public class Parser
         return new ParseResult<Statement>(new Assignment(left.Position, op, left, right.Result));
     }
 
-    private ParseResult<Expression> ParseBinaryOperatorRightSide(int leftPrecedence, Expression left)
+    private ParseResult<Expression> ParseBinaryOperatorRightSide(int leftPrecedence, Expression left, bool acceptIs)
     {
         while (true)
         {
@@ -214,7 +253,7 @@ public class Parser
                 return new ParseResult<Expression>(left);
 
             var op = Next();
-            var right = ParsePrimaryExpression();
+            var right = ParsePrimaryExpression(acceptIs);
             if (right.Error)
                 return right;
 
@@ -222,7 +261,7 @@ public class Parser
             // after the right, let the pending operator take the right as its left.
             if (tokenPrecedence < Peek.Precedence())
             {
-                right = ParseBinaryOperatorRightSide(tokenPrecedence + 1, right.Result);
+                right = ParseBinaryOperatorRightSide(tokenPrecedence + 1, right.Result, acceptIs);
                 if (right.Error)
                     return right;
             }
@@ -355,6 +394,42 @@ public class Parser
         return commentResult;
     }
 
+    private ParseResult<Expression> ParseConditional(Expression expr)
+    {
+        // [expr] ? {[value] is [result], [value] is [result]}
+
+        var res = Accept(TokenType.Conditional, TokenType.LeftCurly);
+        if (res.Failure)
+            return InvalidTokenErrorExpression("Invalid token in conditional", res);
+
+        var conditional = new Conditional(expr.Position, expr);
+
+        while (Peek.Type != TokenType.RightCurly)
+        {
+            var valRes = ParseExpression(false);
+            if (valRes.Error)
+                return valRes;
+
+            res = Accept(TokenType.Is);
+            if (res.Failure)
+                return InvalidTokenErrorExpression("Invalid token in condition", res);
+
+            var resRes = ParseExpression();
+            if (resRes.Error)
+                return resRes;
+
+            conditional.Conditions.Add(new Condition(valRes.Result.Position, valRes.Result, resRes.Result));
+
+            Accept(TokenType.Comma);
+        }
+
+        res = Accept(TokenType.RightCurly);
+        if (res.Failure)
+            return InvalidTokenErrorExpression("Invalid token in conditional", res);
+
+        return new ParseResult<Expression>(conditional);
+    }
+
     private ParseResult<Statement> ParseConstant(List<Modifier> modifiers)
     {
         // [modifiers] val [name] [type]
@@ -397,29 +472,12 @@ public class Parser
             return typeResult;
 
         var ctor = new ConstructorCall(start.Position, typeResult.Result);
-        var res = Accept(TokenType.LeftParenthesis);
-        if (res.Failure)
-            return InvalidTokenErrorExpression("Invalid token in constructor call", res);
 
-        if (Peek.Type != TokenType.RightParenthesis)
-        {
-            var argExpr = ParseExpression();
-            if (argExpr.Error)
-                return argExpr;
-            ctor.Arguments.Add(argExpr.Result);
-            while (Accept(TokenType.Comma).Success)
-            {
-                argExpr = ParseExpression();
-                if (argExpr.Error)
-                    return argExpr;
-                ctor.Arguments.Add(argExpr.Result);
-            }
-        }
+        var argsRes = ParseArguments(ctor.Arguments);
+        if (argsRes != null)
+            return argsRes;
 
-        res = Accept(TokenType.RightParenthesis);
-        if (res.Failure)
-            return InvalidTokenErrorExpression("Invalid token in constructor call", res);
-
+        AcceptResult res;
         if (Accept(TokenType.LeftCurly).Success)
         {
             while (Peek.Type != TokenType.RightCurly)
@@ -470,8 +528,19 @@ public class Parser
                 return InvalidTokenErrorStatement("Invalid token in parameter", res);
             var paramNameToken = GetToken(res);
             var paramType = ParseType();
-            if (!paramType.Error)
-                ctorDef.Parameters.Add(new Parameter(paramType.Result.Position, paramType.Result, paramNameToken.Value));
+            if (paramType.Error && paramType.Result is ErrorExpression ex)
+                return ErrorStatement(ex);
+
+            var par = new Parameter(paramType.Result.Position, paramType.Result, paramNameToken.Value);
+            ctorDef.Parameters.Add(par);
+
+            if (Accept(TokenType.Assign).Success)
+            {
+                var exprRes = ParseExpression();
+                if (exprRes.Error && exprRes.Result is ErrorExpression exp)
+                    return ErrorStatement(exp);
+                par.Value = exprRes.Result;
+            }
 
             Accept(TokenType.Comma);
         }
@@ -633,12 +702,12 @@ public class Parser
         return new ParseResult<Statement>(enumDef);
     }
 
-    private ParseResult<Expression> ParseExpression()
+    private ParseResult<Expression> ParseExpression(bool acceptIs = true)
     {
-        var left = ParsePrimaryExpression();
+        var left = ParsePrimaryExpression(acceptIs);
         if (left.Error)
             return left;
-        return ParseBinaryOperatorRightSide(0, left.Result);
+        return ParseBinaryOperatorRightSide(0, left.Result, acceptIs);
     }
 
     private ParseResult<Statement> ParseExpressionStatement(bool acceptEol)
@@ -1287,17 +1356,14 @@ public class Parser
     private ParseResult<Statement> ParseLocalVariable()
     {
         // var [name] [type]
+        // var [name] = [expr]
         // var [name] [type] = [expr]
 
         var res = Accept(TokenType.Variable, TokenType.Literal);
         if (res.Failure)
             return InvalidTokenErrorStatement("Invalid token in var", res);
 
-        var typeRes = ParseType();
-        if (typeRes.Error && typeRes.Result is ErrorExpression ex)
-            return ErrorStatement(ex);
-
-        var local = new LocalVariable(GetToken(res).Position, GetToken(res, 1).Value, typeRes.Result);
+        var local = new LocalVariable(GetToken(res).Position, GetToken(res, 1).Value);
 
         if (Accept(TokenType.Assign).Success)
         {
@@ -1305,6 +1371,21 @@ public class Parser
             if (valRes.Error && valRes.Result is ErrorExpression exp)
                 return ErrorStatement(exp);
             local.Value = valRes.Result;
+        }
+        else
+        {
+            var typeRes = ParseType();
+            if (typeRes.Error && typeRes.Result is ErrorExpression ex)
+                return ErrorStatement(ex);
+            local.Type = typeRes.Result;
+
+            if (Accept(TokenType.Assign).Success)
+            {
+                var valRes = ParseExpression();
+                if (valRes.Error && valRes.Result is ErrorExpression exp)
+                    return ErrorStatement(exp);
+                local.Value = valRes.Result;
+            }
         }
 
         res = Accept(TokenType.EOL);
@@ -1317,28 +1398,10 @@ public class Parser
     private ParseResult<Expression> ParseMethodCall(Expression expr)
     {
         var methodCall = new MethodCall(expr.Position, expr);
-        var res = Accept(TokenType.LeftParenthesis);
-        if (res.Failure)
-            return InvalidTokenErrorExpression("Invalid token in method call", res);
 
-        if (Peek.Type != TokenType.RightParenthesis)
-        {
-            var paramExpr = ParseExpression();
-            if (paramExpr.Error)
-                return paramExpr;
-            methodCall.Arguments.Add(paramExpr.Result);
-            while (Accept(TokenType.Comma).Success)
-            {
-                paramExpr = ParseExpression();
-                if (paramExpr.Error)
-                    return paramExpr;
-                methodCall.Arguments.Add(paramExpr.Result);
-            }
-        }
-
-        res = Accept(TokenType.RightParenthesis);
-        if (res.Failure)
-            return InvalidTokenErrorExpression("Invalid token in method call", res);
+        var argsRes = ParseArguments(methodCall.Arguments);
+        if (argsRes != null)
+            return argsRes;
 
         return new ParseResult<Expression>(methodCall);
     }
@@ -1366,8 +1429,19 @@ public class Parser
                 return InvalidTokenErrorStatement("Invalid token in parameter", res);
             var paramNameToken = GetToken(res);
             var paramType = ParseType();
-            if (!paramType.Error)
-                methodDef.Parameters.Add(new Parameter(paramType.Result.Position, paramType.Result, paramNameToken.Value));
+            if (paramType.Error && paramType.Result is ErrorExpression ex)
+                return ErrorStatement(ex);
+
+            var par = new Parameter(paramType.Result.Position, paramType.Result, paramNameToken.Value);
+            methodDef.Parameters.Add(par);
+
+            if (Accept(TokenType.Assign).Success)
+            {
+                var exprRes = ParseExpression();
+                if (exprRes.Error && exprRes.Result is ErrorExpression exp)
+                    return ErrorStatement(exp);
+                par.Value = exprRes.Result;
+            }
 
             Accept(TokenType.Comma);
         }
@@ -1545,7 +1619,7 @@ public class Parser
         return expression;
     }
 
-    private ParseResult<Expression> ParsePrimaryExpression()
+    private ParseResult<Expression> ParsePrimaryExpression(bool acceptIs)
     {
         ParseResult<Expression> leftResult;
         if (Peek.Type == TokenType.LeftParenthesis)
@@ -1585,7 +1659,8 @@ public class Parser
         while (Peek.Type == TokenType.LeftParenthesis ||
             Peek.Type == TokenType.LeftBracket ||
             Peek.Type == TokenType.LeftCurly ||
-            Peek.Type == TokenType.Is)
+            (acceptIs && Peek.Type == TokenType.Is) ||
+            Peek.Type == TokenType.Conditional)
         {
             if (Peek.Type == TokenType.LeftParenthesis)
                 leftResult = ParseMethodCall(leftResult.Result);
@@ -1593,8 +1668,10 @@ public class Parser
                 leftResult = ParseIndexer(leftResult.Result);
             else if (Peek.Type == TokenType.LeftCurly)
                 leftResult = ParseGeneric(leftResult.Result);
-            else if (Peek.Type == TokenType.Is)
+            else if (acceptIs && Peek.Type == TokenType.Is)
                 leftResult = ParseIs(leftResult.Result);
+            else if (Peek.Type == TokenType.Conditional)
+                leftResult = ParseConditional(leftResult.Result);
         }
 
         return leftResult;

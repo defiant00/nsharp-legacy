@@ -11,7 +11,7 @@ public enum BinaryOperatorType
     Subtract,
     Multiply,
     Divide,
-    Modulo,
+    Modulus,
     Equal,
     NotEqual,
     LessThan,
@@ -39,7 +39,7 @@ public static class BinaryOperatorHelpers
 
             BinaryOperatorType.Multiply => 10,
             BinaryOperatorType.Divide => 10,
-            BinaryOperatorType.Modulo => 10,
+            BinaryOperatorType.Modulus => 10,
 
             BinaryOperatorType.Add => 9,
             BinaryOperatorType.Subtract => 9,
