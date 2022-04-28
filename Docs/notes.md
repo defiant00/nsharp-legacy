@@ -2,6 +2,7 @@
 
 * struct
 * virtual, override, abstract
+* tocs directory (recursively compile all *.ns)
 
 ## Items
 
