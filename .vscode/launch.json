@@ -13,7 +13,7 @@
             "program": "${workspaceFolder}/NSharp.Compiler/bin/Debug/net6.0/nsc-legacy.dll",
             "args": [
                 "tocs",
-                "../NSharp.Tests/Files/Min/Test1.ns"
+                "../NSharp.Tests/Files/"
             ],
             "cwd": "${workspaceFolder}/NSharp.Compiler",
             // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console

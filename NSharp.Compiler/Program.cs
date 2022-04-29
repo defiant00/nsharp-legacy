@@ -12,7 +12,7 @@ public static class Program
 
     public static void Main(string[] args)
     {
-        Console.WriteLine("N# Compiler v0.1.0");
+        Console.WriteLine("N# Compiler v0.2.0");
 
         var stopwatch = new Stopwatch();
         stopwatch.Start();
@@ -28,7 +28,7 @@ public static class Program
             Console.WriteLine("    edit [files]          - create a file.ns.edit file per input file for editing per the .nsedit settings");
             Console.WriteLine("    format [files]        - format the specified files per the .nsedit and .nssave settings");
             Console.WriteLine("    save [files]          - save the specified files per the .nssave settings");
-            Console.WriteLine("    tocs [files]          - convert the specified files to C#");
+            Console.WriteLine("    tocs [paths]          - convert all N# files recursively in the paths to C#");
             Console.WriteLine("    validate [files]      - validate the specified files' syntax");
             return;
         }
@@ -55,7 +55,10 @@ public static class Program
                 break;
             case "tocs":
                 for (int i = 1; i < args.Length; i++)
-                    ToCs(args[i]);
+                {
+                    foreach (string file in Directory.EnumerateFiles(args[i], "*.ns", SearchOption.AllDirectories))
+                        ToCs(file);
+                }
                 break;
             case "validate":
                 for (int i = 1; i < args.Length; i++)

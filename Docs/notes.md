@@ -1,7 +1,6 @@
 ## TODO
 
 * struct
-* tocs directory (recursively compile all *.ns)
 * Strings and chars unescape on parse, escape on output
 
 ## Items
