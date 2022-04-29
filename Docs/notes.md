@@ -1,6 +1,5 @@
 ## TODO
 
-* struct
 * Strings and chars unescape on parse, escape on output
 
 ## Items
@@ -30,14 +29,14 @@
         * X import
         * X class def
         * X interface def
-        * _ struct def
+        * X struct def
         * X enum def
         * X delegate def
         * _ attributes
     * class level
         * X class def
         * X interface def
-        * _ struct def
+        * X struct def
         * X enum def
         * X method def
         * X constructor def
@@ -72,29 +71,6 @@ Attributes
 @SpecialAttribute
 @Special("val")
 @assembly:Special
-```
-
-Loops
-```
-for i in 10
-    ; 0-9
-
-for i in myList
-    ; iterate over myList
-
-for i in myList
-    Console.Write(i)
-bet
-    Console.Write(", ")
-
-for i = 0, i < 7, i += 1
-    ; normal for loop
-
-for
-    ; infinite loop
-
-for i < 7
-    ; while loop
 ```
 
 Access modifiers - sane defaults (protected, final? see kotlin) and only keywords for differences (eg, no `protected`). Maybe `open` to not be `final` but abstract are always open?

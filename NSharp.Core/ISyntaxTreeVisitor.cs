@@ -58,6 +58,7 @@ public interface ISyntaxTreeVisitor
     public void Visit(Space item);
     public void Visit(Ast.String item);
     public void Visit(StringLiteral item);
+    public void Visit(Struct item);
     public void Visit(Switch item);
     public void Visit(Throw item);
     public void Visit(Try item);

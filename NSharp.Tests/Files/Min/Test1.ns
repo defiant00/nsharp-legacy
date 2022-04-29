@@ -2,6 +2,10 @@ ns NSharp.Tests
 
 use System
 
+public struct MyStruct
+    fn x int
+    fn y str
+
 abstract class MyClass
     public del TestDelegate(x int, y int) List{str, i8}
     ext{int} fn Print() is WriteLine(this)

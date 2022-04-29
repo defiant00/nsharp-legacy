@@ -1946,8 +1946,44 @@ public class Parser
 
     private ParseResult<Statement> ParseStruct(List<Expression> modifiers)
     {
-        Next();
-        return ErrorStatement("Struct parsing not supported yet", new Position());
+        var res = Accept(TokenType.Struct, TokenType.Literal);
+
+        if (res.Failure)
+            return InvalidTokenErrorStatement("Invalid token in struct", res);
+
+        var structRes = new Struct(GetToken(res, 1).Position, modifiers, GetToken(res, 1).Value);
+
+        if (Accept(TokenType.Is).Success)
+        {
+            var interfaceType = ParseType();
+            if (!interfaceType.Error)
+                structRes.Interfaces.Add(interfaceType.Result);
+
+            while (Accept(TokenType.Comma).Success)
+            {
+                interfaceType = ParseType();
+                if (!interfaceType.Error)
+                    structRes.Interfaces.Add(interfaceType.Result);
+            }
+        }
+
+        res = Accept(TokenType.EOL, TokenType.Indent);
+        if (res.Failure)
+            return InvalidTokenErrorStatement("Invalid token in struct", res);
+
+        while (Peek.Type != TokenType.Dedent)
+        {
+            var stmt = ParseClassStatement();
+            if (stmt.Error)
+                return stmt;
+            structRes.Statements.Add(stmt.Result);
+        }
+
+        res = Accept(TokenType.Dedent);
+        if (res.Failure)
+            return InvalidTokenErrorStatement($"Invalid token in struct {structRes.Name}", res);
+
+        return new ParseResult<Statement>(structRes);
     }
 
     private ParseResult<Statement> ParseThrow(bool acceptEol)

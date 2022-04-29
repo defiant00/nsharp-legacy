@@ -662,6 +662,30 @@ public class SyntaxTreePrinterVisitor : ISyntaxTreeVisitor
 
     public void Visit(StringLiteral item) => Write(item.Value);
 
+    public void Visit(Struct item)
+    {
+        WriteIndented($"Struct: ");
+        WriteModifiers(item.Modifiers);
+        Write(item.Name);
+        if (item.Interfaces.Any())
+        {
+            Write(" implements ");
+            bool first = true;
+            foreach (var intf in item.Interfaces)
+            {
+                if (!first)
+                    Write(", ");
+                intf.Accept(this);
+                first = false;
+            }
+        }
+        WriteLine();
+        Indent++;
+        foreach (var statement in item.Statements)
+            statement.Accept(this);
+        Indent--;
+    }
+
     public void Visit(Switch item)
     {
         WriteIndented("Switch: ");

@@ -7,7 +7,7 @@ public class ToCsVisitor : ISyntaxTreeVisitor, IDisposable
 {
     private StreamWriter Buffer { get; set; }
     private int Indent { get; set; } = 0;
-    private string CurrentClass { get; set; } = string.Empty;
+    private string CurrentObject { get; set; } = string.Empty;
     private Stack<int> BinopParentPrecedence { get; set; } = new();
     private bool InFor { get; set; }
     private bool InExtension { get; set; }
@@ -210,9 +210,9 @@ public class ToCsVisitor : ISyntaxTreeVisitor, IDisposable
 
     public void Visit(Character item) => Write($"'{item.Value}'");
 
-    public void Visit(Core.Ast.Class item)
+    public void Visit(Class item)
     {
-        CurrentClass = item.Name;
+        CurrentObject = item.Name;
 
         WriteModifiersIndented(item.Modifiers);
         Write($" class {item.Name}");
@@ -310,7 +310,7 @@ public class ToCsVisitor : ISyntaxTreeVisitor, IDisposable
     public void Visit(ConstructorDefinition item)
     {
         WriteModifiersIndented(item.Modifiers);
-        Write($" {CurrentClass}(");
+        Write($" {CurrentObject}(");
         bool first = true;
         foreach (var param in item.Parameters)
         {
@@ -757,6 +757,28 @@ public class ToCsVisitor : ISyntaxTreeVisitor, IDisposable
     }
 
     public void Visit(StringLiteral item) => Write(item.Value);
+
+    public void Visit(Struct item)
+    {
+        CurrentObject = item.Name;
+
+        WriteModifiersIndented(item.Modifiers);
+        Write($" struct {item.Name}");
+        if (item.Interfaces.Any())
+        {
+            Write(" : ");
+            bool first = true;
+            foreach (var intf in item.Interfaces)
+            {
+                if (!first)
+                    Write(", ");
+                intf.Accept(this);
+                first = false;
+            }
+        }
+        WriteLine();
+        WriteStatementBlock(item.Statements);
+    }
 
     public void Visit(Switch item)
     {

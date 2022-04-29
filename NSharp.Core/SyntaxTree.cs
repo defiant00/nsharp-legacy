@@ -718,6 +718,22 @@ public class StringLiteral : Expression
     public override void Accept(ISyntaxTreeVisitor visitor) => visitor.Visit(this);
 }
 
+public class Struct : Statement
+{
+    public List<Expression> Modifiers { get; set; }
+    public string Name { get; set; }
+    public List<Expression> Interfaces { get; set; } = new();
+    public List<Statement> Statements { get; set; } = new();
+
+    public Struct(Position position, List<Expression> modifiers, string name) : base(position)
+    {
+        Modifiers = modifiers;
+        Name = name;
+    }
+
+    public override void Accept(ISyntaxTreeVisitor visitor) => visitor.Visit(this);
+}
+
 public class Switch : Statement
 {
     public Expression Expr { get; set; }
