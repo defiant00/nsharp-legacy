@@ -407,6 +407,12 @@ public class SyntaxTreePrinterVisitor : ISyntaxTreeVisitor
     public void Visit(If item)
     {
         WriteIndented("If ");
+        if (item.Name != null && item.AssignExpr != null)
+        {
+            Write($"{item.Name} = ");
+            item.AssignExpr.Accept(this);
+            Write(", ");
+        }
         item.Condition.Accept(this);
         WriteLine();
         Indent++;
@@ -689,6 +695,12 @@ public class SyntaxTreePrinterVisitor : ISyntaxTreeVisitor
     public void Visit(Switch item)
     {
         WriteIndented("Switch: ");
+        if (item.Name != null && item.AssignExpr != null)
+        {
+            Write($"{item.Name} = ");
+            item.AssignExpr.Accept(this);
+            Write(", ");
+        }
         item.Expr.Accept(this);
         WriteLine();
         Indent++;

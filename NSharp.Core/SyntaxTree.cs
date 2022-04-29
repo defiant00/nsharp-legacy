@@ -427,6 +427,8 @@ public class Identifier : Expression
 
 public class If : Statement
 {
+    public string? Name { get; set; }
+    public Expression? AssignExpr { get; set; }
     public Expression Condition { get; set; }
     public List<Statement> Statements { get; set; } = new();
     public List<Statement> Else { get; set; } = new();
@@ -736,6 +738,8 @@ public class Struct : Statement
 
 public class Switch : Statement
 {
+    public string? Name { get; set; }
+    public Expression? AssignExpr { get; set; }
     public Expression Expr { get; set; }
     public List<Statement> Statements { get; set; } = new();
 

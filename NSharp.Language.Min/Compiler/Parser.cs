@@ -875,15 +875,12 @@ public class Parser
             //     [statements]
             if (Accept(TokenType.Between, TokenType.EOL, TokenType.Indent).Success)
             {
-                foreachDef.BetweenStatements = foreachDef.Statements;
-                foreachDef.Statements = new();
-
                 while (Peek.Type != TokenType.Dedent)
                 {
                     var stmtRes = ParseMethodStatement();
                     if (stmtRes.Error)
                         return stmtRes;
-                    foreachDef.Statements.Add(stmtRes.Result);
+                    foreachDef.BetweenStatements.Add(stmtRes.Result);
                 }
 
                 res = Accept(TokenType.Dedent);
@@ -1088,11 +1085,25 @@ public class Parser
     {
         // accept if
         var start = Next();
+        // if [name] = [expr], [expr]
+        var res = Accept(TokenType.Literal, TokenType.Assign);
+        string? name = null;
+        ParseResult<Expression>? assignmentExpr = null;
+        if (res.Success)
+        {
+            name = GetToken(res).Value;
+            assignmentExpr = ParseExpression();
+            if (assignmentExpr.Error && assignmentExpr.Result is ErrorExpression exp)
+                return ErrorStatement(exp);
+            res = Accept(TokenType.Comma);
+            if (res.Failure)
+                return InvalidTokenErrorStatement("Invalid token in if", res);
+        }
         var condition = ParseExpression();
         if (condition.Error && condition.Result is ErrorExpression ex)
             return ErrorStatement(ex);
 
-        var res = Accept(TokenType.EOL, TokenType.Indent);
+        res = Accept(TokenType.EOL, TokenType.Indent);
         if (res.Failure)
             return InvalidTokenErrorStatement("Invalid token in if", res);
 
@@ -1104,7 +1115,7 @@ public class Parser
         //         [statements]
         if (Peek.Type == TokenType.Is && !inElseIf)
         {
-            var switchStmt = new Switch(start.Position, condition.Result);
+            var switchStmt = new Switch(start.Position, condition.Result) { Name = name, AssignExpr = assignmentExpr?.Result };
             var isRes = Accept(TokenType.Is);
             while (isRes.Success)
             {
@@ -1144,7 +1155,7 @@ public class Parser
             return new ParseResult<Statement>(switchStmt);
         }
 
-        var ifStatement = new If(start.Position, condition.Result);
+        var ifStatement = new If(start.Position, condition.Result) { Name = name, AssignExpr = assignmentExpr?.Result };
 
         while (Peek.Type != TokenType.Dedent)
         {

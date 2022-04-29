@@ -497,6 +497,14 @@ public class ToCsVisitor : ISyntaxTreeVisitor, IDisposable
 
     public void Visit(If item)
     {
+        WriteLineIndented("{");
+        Indent++;
+        if (item.Name != null && item.AssignExpr != null)
+        {
+            WriteIndented($"var {item.Name} = ");
+            item.AssignExpr.Accept(this);
+            WriteLine(";");
+        }
         WriteIndented("if (");
         item.Condition.Accept(this);
         WriteLine(")");
@@ -506,6 +514,8 @@ public class ToCsVisitor : ISyntaxTreeVisitor, IDisposable
             WriteLineIndented("else");
             WriteStatementBlock(item.Else);
         }
+        Indent--;
+        WriteLineIndented("}");
     }
 
     public void Visit(Import item) => WriteLineIndented($"using {string.Join(".", item.Value)};");
@@ -782,10 +792,20 @@ public class ToCsVisitor : ISyntaxTreeVisitor, IDisposable
 
     public void Visit(Switch item)
     {
+        WriteLineIndented("{");
+        Indent++;
+        if (item.Name != null && item.AssignExpr != null)
+        {
+            WriteIndented($"var {item.Name} = ");
+            item.AssignExpr.Accept(this);
+            WriteLine(";");
+        }
         WriteIndented("switch (");
         item.Expr.Accept(this);
         WriteLine(")");
         WriteStatementBlock(item.Statements);
+        Indent--;
+        WriteLineIndented("}");
     }
 
     public void Visit(Throw item)
