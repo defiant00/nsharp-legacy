@@ -8,6 +8,11 @@ public struct MyStruct
 
 abstract class MyClass
     fn Test()
+        x if
+        {
+            2 is true,
+            3 is false
+        }
         if true
             Console.WriteLine("always")
         

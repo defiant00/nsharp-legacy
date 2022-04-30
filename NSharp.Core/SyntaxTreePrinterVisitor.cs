@@ -162,7 +162,7 @@ public class SyntaxTreePrinterVisitor : ISyntaxTreeVisitor
     public void Visit(Conditional item)
     {
         item.Expr.Accept(this);
-        WriteLine(" ?");
+        WriteLine(" if");
         WriteLineIndented("{");
         Indent++;
         foreach (var cond in item.Conditions)
