@@ -1,8 +1,3 @@
-## TODO
-
-* Strings and chars unescape on parse, escape on output
-* Creating generics on classes/methods/etc?
-
 ## Items
 
 * Expressions
