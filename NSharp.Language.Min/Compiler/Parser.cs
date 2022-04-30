@@ -397,9 +397,9 @@ public class Parser
 
     private ParseResult<Expression> ParseConditional(Expression expr)
     {
-        // [expr] if {[value] is [result], [value] is [result]}
+        // [expr] ? {[value] is [result], [value] is [result]}
 
-        var res = Accept(TokenType.If, TokenType.LeftCurly);
+        var res = Accept(TokenType.Question, TokenType.LeftCurly);
         if (res.Failure)
             return InvalidTokenErrorExpression("Invalid token in conditional", res);
 
@@ -1649,13 +1649,18 @@ public class Parser
         return new ParseResult<Statement>(ns);
     }
 
-    private ParseResult<Expression> ParseNullable(Expression expr)
+    private ParseResult<Expression> ParseNullable()
     {
+        var start = Peek;
         var res = Accept(TokenType.Question);
         if (res.Failure)
-            return InvalidTokenErrorExpression("Invalid token in nullable", res);
+            return InvalidTokenErrorExpression("Invalid token in nullable type declaration", res);
 
-        return new ParseResult<Expression>(new Core.Ast.Nullable(expr.Position, expr));
+        var typeResult = ParseType();
+        if (typeResult.Error)
+            return typeResult;
+
+        return new ParseResult<Expression>(new Core.Ast.Nullable(start.Position, typeResult.Result));
     }
 
     private ParseResult<Expression> ParseParenthesizedExpression()
@@ -1688,6 +1693,8 @@ public class Parser
             leftResult = ParseTypeToken();
         else if (Peek.Type == TokenType.LeftBracket)
             leftResult = ParseArray();
+        else if (Peek.Type == TokenType.Question)
+            leftResult = ParseNullable();
         else
         {
             var token = Next();
@@ -1710,7 +1717,7 @@ public class Parser
             Peek.Type == TokenType.LeftBracket ||
             Peek.Type == TokenType.LeftCurly ||
             (acceptIs && Peek.Type == TokenType.Is) ||
-            Peek.Type == TokenType.If)
+            Peek.Type == TokenType.Question)
         {
             if (Peek.Type == TokenType.LeftParenthesis)
                 leftResult = ParseMethodCall(leftResult.Result);
@@ -1720,7 +1727,7 @@ public class Parser
                 leftResult = ParseGeneric(leftResult.Result);
             else if (acceptIs && Peek.Type == TokenType.Is)
                 leftResult = ParseIs(leftResult.Result);
-            else if (Peek.Type == TokenType.If)
+            else if (Peek.Type == TokenType.Question)
                 leftResult = ParseConditional(leftResult.Result);
         }
 
@@ -2113,6 +2120,8 @@ public class Parser
         ParseResult<Expression> leftResult;
         if (Peek.Type == TokenType.LeftBracket)
             return ParseArray();
+        else if (Peek.Type == TokenType.Question)
+            return ParseNullable();
         else if (Peek.Type.IsType())
             leftResult = ParseTypeToken();
         else if (Peek.Type == TokenType.Literal)
@@ -2123,12 +2132,10 @@ public class Parser
         if (leftResult.Error)
             return leftResult;
 
-        while (Peek.Type == TokenType.LeftCurly || Peek.Type == TokenType.Dot || Peek.Type == TokenType.Question)
+        while (Peek.Type == TokenType.LeftCurly || Peek.Type == TokenType.Dot)
         {
             if (Peek.Type == TokenType.LeftCurly)
                 leftResult = ParseGeneric(leftResult.Result);
-            else if (Peek.Type == TokenType.Question)
-                leftResult = ParseNullable(leftResult.Result);
 
             var res = Accept(TokenType.Dot, TokenType.Literal);
             if (res.Success)

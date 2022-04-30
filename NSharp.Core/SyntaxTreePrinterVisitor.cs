@@ -71,8 +71,9 @@ public class SyntaxTreePrinterVisitor : ISyntaxTreeVisitor
 
     public void Visit(Array item)
     {
-        Write("[]");
+        Write("Array(");
         item.Type.Accept(this);
+        Write(")");
     }
 
     public void Visit(Assignment item)
@@ -162,7 +163,7 @@ public class SyntaxTreePrinterVisitor : ISyntaxTreeVisitor
     public void Visit(Conditional item)
     {
         item.Expr.Accept(this);
-        WriteLine(" if");
+        WriteLine(" ?");
         WriteLineIndented("{");
         Indent++;
         foreach (var cond in item.Conditions)
@@ -581,8 +582,9 @@ public class SyntaxTreePrinterVisitor : ISyntaxTreeVisitor
 
     public void Visit(Nullable item)
     {
+        Write("Nullable(");
         item.Type.Accept(this);
-        Write("?");
+        Write(")");
     }
 
     public void Visit(Number item) => Write(item.Value);

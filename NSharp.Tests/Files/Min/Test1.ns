@@ -4,32 +4,13 @@ use System
 
 public struct MyStruct
     fn x int
-    fn y str?
-
-class c1 is parent has IEnumerable, IDisposable
-    ; class
+    fn y []?str
+    fn z ?[]str
 
 abstract class MyClass
     fn Test()
-        x if
+        x ?
         {
             2 is true,
             3 is false
         }
-        if true
-            Console.WriteLine("always")
-        
-        if res = Accept(TokenType.Comma), res.Success
-            Console.WriteLine("success")
-        
-        if x
-            is 1
-                Console.WriteLine("one")
-            is 2
-                Console.WriteLine("two")
-        
-        if x = Calculate(), x
-            is 1
-                Console.WriteLine("one")
-            is 2
-                Console.WriteLine("two")
