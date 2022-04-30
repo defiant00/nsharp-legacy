@@ -288,14 +288,14 @@ public class Parser
 
         var classResult = new Class(GetToken(res, 1).Position, modifiers, GetToken(res, 1).Value);
 
-        if (Accept(TokenType.From).Success)
+        if (Accept(TokenType.Is).Success)
         {
             var parentType = ParseType();
             if (!parentType.Error)
                 classResult.Parent = parentType.Result;
         }
 
-        if (Accept(TokenType.Is).Success)
+        if (Accept(TokenType.Has).Success)
         {
             var interfaceType = ParseType();
             if (!interfaceType.Error)
@@ -1259,7 +1259,7 @@ public class Parser
 
         var intf = new Interface(GetToken(res, 1).Position, modifiers, GetToken(res, 1).Value);
 
-        if (Accept(TokenType.Is).Success)
+        if (Accept(TokenType.Has).Success)
         {
             var interfaceType = ParseType();
             if (!interfaceType.Error)
@@ -1973,7 +1973,7 @@ public class Parser
 
         var structRes = new Struct(GetToken(res, 1).Position, modifiers, GetToken(res, 1).Value);
 
-        if (Accept(TokenType.Is).Success)
+        if (Accept(TokenType.Has).Success)
         {
             var interfaceType = ParseType();
             if (!interfaceType.Error)

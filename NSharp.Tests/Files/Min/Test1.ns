@@ -6,6 +6,9 @@ public struct MyStruct
     fn x int
     fn y str?
 
+class c1 is parent has IEnumerable, IDisposable
+    ; class
+
 abstract class MyClass
     fn Test()
         x if
