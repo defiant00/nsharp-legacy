@@ -229,6 +229,37 @@ public class Parser
         return new ParseResult<Expression>(new Core.Ast.Array(start.Position, typeResult.Result));
     }
 
+    private ParseResult<Expression> ParseArrayLiteral()
+    {
+        var res = Accept(TokenType.LeftBracket);
+        if (res.Failure)
+            return InvalidTokenErrorExpression("Invalid token in array literal", res);
+
+        var arrayRes = new ArrayLiteral(GetToken(res).Position);
+
+        if (Peek.Type != TokenType.RightBracket)
+        {
+            var exprRes = ParseExpression();
+            if (exprRes.Error)
+                return exprRes;
+            arrayRes.Values.Add(exprRes.Result);
+
+            while (Accept(TokenType.Comma).Success)
+            {
+                exprRes = ParseExpression();
+                if (exprRes.Error)
+                    return exprRes;
+                arrayRes.Values.Add(exprRes.Result);
+            }
+        }
+
+        res = Accept(TokenType.RightBracket);
+        if (res.Failure)
+            return InvalidTokenErrorExpression("Invalid token in array literal", res);
+
+        return new ParseResult<Expression>(arrayRes);
+    }
+
     private ParseResult<Statement> ParseAssignment(Expression left)
     {
         var op = Next().Type.ToAssignmentOperator();
@@ -1729,6 +1760,8 @@ public class Parser
         ParseResult<Expression> leftResult;
         if (Peek.Type == TokenType.LeftParenthesis)
             leftResult = ParseParenthesizedExpression();
+        else if (Peek.Type == TokenType.LeftBracket)
+            leftResult = ParseArrayLiteral();
         else if (Peek.Type == TokenType.Literal)
             leftResult = ParseIdentifier();
         else if (Peek.Type == TokenType.StringStart)

@@ -59,6 +59,15 @@ public class Array : Expression
     public override void Accept(ISyntaxTreeVisitor visitor) => visitor.Visit(this);
 }
 
+public class ArrayLiteral : Expression
+{
+    public List<Expression> Values { get; set; } = new();
+
+    public ArrayLiteral(Position position) : base(position) { }
+
+    public override void Accept(ISyntaxTreeVisitor visitor) => visitor.Visit(this);
+}
+
 public class Assignment : Statement
 {
     public AssignmentOperator Operator { get; set; }

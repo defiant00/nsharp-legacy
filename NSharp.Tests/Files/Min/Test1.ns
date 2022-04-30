@@ -13,10 +13,5 @@ interface ITest{D}
     fn Tester{X}(z D)
 
 class MyClass{T, V}
-    fn new() is ; empty
-    fn Test{W}(x W)
-        x ?
-        {
-            2 is true,
-            3 is false
-        }
+    var delims []char = [' ', '\t']
+    var tests []char = []

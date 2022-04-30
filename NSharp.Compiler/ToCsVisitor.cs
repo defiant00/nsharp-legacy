@@ -105,6 +105,21 @@ public class ToCsVisitor : ISyntaxTreeVisitor, IDisposable
         Write("[]");
     }
 
+    public void Visit(ArrayLiteral item)
+    {
+        Write("{");
+        bool first = true;
+        foreach (var val in item.Values)
+        {
+            if (first)
+                first = false;
+            else
+                Write(", ");
+            val.Accept(this);
+        }
+        Write("}");
+    }
+
     public void Visit(Assignment item)
     {
         if (!InFor)

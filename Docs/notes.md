@@ -4,7 +4,7 @@
     * X str literal
     * X char literal
     * X number literal
-    * _ array literal
+    * X array literal
     * X null literal
     * X bool literal
     * X field/property

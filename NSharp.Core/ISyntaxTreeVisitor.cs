@@ -9,6 +9,7 @@ public interface ISyntaxTreeVisitor
     public void Visit(AnonymousFunction item);
     public void Visit(Argument item);
     public void Visit(Ast.Array item);
+    public void Visit(ArrayLiteral item);
     public void Visit(Assignment item);
     public void Visit(BinaryOperator item);
     public void Visit(Break item);
