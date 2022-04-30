@@ -611,6 +611,18 @@ public class Namespace : Statement
     public override void Accept(ISyntaxTreeVisitor visitor) => visitor.Visit(this);
 }
 
+public class Nullable : Expression
+{
+    public Expression Type { get; set; }
+
+    public Nullable(Position position, Expression type) : base(position)
+    {
+        Type = type;
+    }
+
+    public override void Accept(ISyntaxTreeVisitor visitor) => visitor.Visit(this);
+}
+
 public class Number : Expression
 {
     public string Value { get; set; }

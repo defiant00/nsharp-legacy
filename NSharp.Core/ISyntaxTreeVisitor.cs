@@ -50,6 +50,7 @@ public interface ISyntaxTreeVisitor
     public void Visit(MethodSignature item);
     public void Visit(Modifier item);
     public void Visit(Namespace item);
+    public void Visit(Ast.Nullable item);
     public void Visit(Number item);
     public void Visit(Parameter item);
     public void Visit(Property item);

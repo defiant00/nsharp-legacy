@@ -4,7 +4,7 @@ use System
 
 public struct MyStruct
     fn x int
-    fn y str
+    fn y str?
 
 abstract class MyClass
     fn Test()

@@ -197,7 +197,7 @@ public static class Helpers
         ["?."] = TokenType.NullDot,
         ["??"] = TokenType.NullCoalesce,
         [","] = TokenType.Comma,
-        ["?"] = TokenType.Conditional,
+        ["?"] = TokenType.Question,
         ["("] = TokenType.LeftParenthesis,
         [")"] = TokenType.RightParenthesis,
         ["["] = TokenType.LeftBracket,

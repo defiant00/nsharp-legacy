@@ -579,6 +579,12 @@ public class SyntaxTreePrinterVisitor : ISyntaxTreeVisitor
 
     public void Visit(Namespace item) => WriteLineIndented($"Namespace: {string.Join(".", item.Value)}");
 
+    public void Visit(Nullable item)
+    {
+        item.Type.Accept(this);
+        Write("?");
+    }
+
     public void Visit(Number item) => Write(item.Value);
 
     public void Visit(Parameter item)

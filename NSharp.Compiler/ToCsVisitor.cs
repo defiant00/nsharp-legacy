@@ -416,6 +416,8 @@ public class ToCsVisitor : ISyntaxTreeVisitor, IDisposable
 
     public void Visit(Core.Ast.File item)
     {
+        WriteLineIndented($"// {DateTime.Now}");
+        WriteLine();
         foreach (var stmt in item.Statements)
             stmt.Accept(this);
     }
@@ -671,6 +673,12 @@ public class ToCsVisitor : ISyntaxTreeVisitor, IDisposable
     public void Visit(Modifier item) => Write("/* modifier */");
 
     public void Visit(Namespace item) => WriteLineIndented($"namespace {string.Join(".", item.Value)};");
+
+    public void Visit(Core.Ast.Nullable item)
+    {
+        item.Type.Accept(this);
+        Write("?");
+    }
 
     public void Visit(Number item) => Write(item.Value);
 
