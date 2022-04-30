@@ -2,13 +2,19 @@ ns NSharp.Tests
 
 use System
 
-public struct MyStruct
-    fn x int
+public struct MyStruct{M}
+    fn x M
     fn y []?str
     fn z ?[]str
 
-abstract class MyClass
-    fn Test()
+del Test{C}(x C)
+
+interface ITest{D}
+    fn Tester{X}(z D)
+
+class MyClass{T, V}
+    fn new() is ; empty
+    fn Test{W}(x W)
         x ?
         {
             2 is true,

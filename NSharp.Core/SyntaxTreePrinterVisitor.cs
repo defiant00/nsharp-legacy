@@ -127,6 +127,8 @@ public class SyntaxTreePrinterVisitor : ISyntaxTreeVisitor
         WriteIndented($"Class: ");
         WriteModifiers(item.Modifiers);
         Write(item.Name);
+        if (item.GenericNames.Any())
+            Write($"<{string.Join(", ", item.GenericNames)}>");
         if (item.Parent != null)
         {
             Write(" inherits ");
@@ -268,7 +270,10 @@ public class SyntaxTreePrinterVisitor : ISyntaxTreeVisitor
             Write("void");
         else
             item.ReturnType.Accept(this);
-        Write($" {item.Name}(");
+        Write($" {item.Name}");
+        if (item.GenericNames.Any())
+            Write($"<{string.Join(", ", item.GenericNames)}>");
+        Write("(");
         bool first = true;
         foreach (var par in item.Parameters)
         {
@@ -452,6 +457,8 @@ public class SyntaxTreePrinterVisitor : ISyntaxTreeVisitor
         WriteIndented($"Interface: ");
         WriteModifiers(item.Modifiers);
         Write(item.Name);
+        if (item.GenericNames.Any())
+            Write($"<{string.Join(", ", item.GenericNames)}>");
         if (item.Interfaces.Any())
         {
             Write(" is ");
@@ -530,7 +537,10 @@ public class SyntaxTreePrinterVisitor : ISyntaxTreeVisitor
             Write("void");
         else
             item.ReturnType.Accept(this);
-        Write($" {item.Name}(");
+        Write($" {item.Name}");
+        if (item.GenericNames.Any())
+            Write($"<{string.Join(", ", item.GenericNames)}>");
+        Write("(");
         bool first = true;
         foreach (var par in item.Parameters)
         {
@@ -555,7 +565,10 @@ public class SyntaxTreePrinterVisitor : ISyntaxTreeVisitor
             Write("void");
         else
             item.ReturnType.Accept(this);
-        Write($" {item.Name}(");
+        Write($" {item.Name}");
+        if (item.GenericNames.Any())
+            Write($"<{string.Join(", ", item.GenericNames)}>");
+        Write("(");
         bool first = true;
         foreach (var par in item.Parameters)
         {
@@ -681,6 +694,8 @@ public class SyntaxTreePrinterVisitor : ISyntaxTreeVisitor
         WriteIndented($"Struct: ");
         WriteModifiers(item.Modifiers);
         Write(item.Name);
+        if (item.GenericNames.Any())
+            Write($"<{string.Join(", ", item.GenericNames)}>");
         if (item.Interfaces.Any())
         {
             Write(" implements ");

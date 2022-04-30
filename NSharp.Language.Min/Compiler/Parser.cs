@@ -288,6 +288,10 @@ public class Parser
 
         var classResult = new Class(GetToken(res, 1).Position, modifiers, GetToken(res, 1).Value);
 
+        var genericRes = ParseGenericNames(classResult.GenericNames);
+        if (genericRes != null)
+            return genericRes;
+
         if (Accept(TokenType.Is).Success)
         {
             var parentType = ParseType();
@@ -615,13 +619,21 @@ public class Parser
 
         Next();     // accept del
 
-        var res = Accept(TokenType.Literal, TokenType.LeftParenthesis);
+        var res = Accept(TokenType.Literal);
         if (res.Failure)
             return InvalidTokenErrorStatement("Invalid token in delegate", res);
 
         var nameToken = GetToken(res);
 
         var delegateDef = new DelegateDefinition(nameToken.Position, modifiers, nameToken.Value);
+
+        var genericRes = ParseGenericNames(delegateDef.GenericNames);
+        if (genericRes != null)
+            return genericRes;
+
+        res = Accept(TokenType.LeftParenthesis);
+        if (res.Failure)
+            return InvalidTokenErrorStatement("Invalid token in delegate", res);
 
         while (Peek.Type != TokenType.RightParenthesis)
         {
@@ -995,6 +1007,32 @@ public class Parser
     }
 
     // Returns the error parse result, or null on success.
+    private ParseResult<Statement>? ParseGenericNames(List<string> genericNames)
+    {
+        if (Peek.Type != TokenType.LeftCurly)
+            return null;
+
+        var res = Accept(TokenType.LeftCurly, TokenType.Literal);
+        if (res.Failure)
+            return InvalidTokenErrorStatement("Invalid token in generic", res);
+
+        genericNames.Add(GetToken(res, 1).Value);
+
+        res = Accept(TokenType.Comma, TokenType.Literal);
+        while (res.Success)
+        {
+            genericNames.Add(GetToken(res, 1).Value);
+            res = Accept(TokenType.Comma, TokenType.Literal);
+        }
+
+        res = Accept(TokenType.RightCurly);
+        if (res.Failure)
+            return InvalidTokenErrorStatement("Invalid token in generic", res);
+
+        return null;
+    }
+
+    // Returns the error parse result, or null on success.
     private ParseResult<Statement>? ParseGetSet(Property propDef)
     {
         AcceptResult res;
@@ -1259,6 +1297,10 @@ public class Parser
 
         var intf = new Interface(GetToken(res, 1).Position, modifiers, GetToken(res, 1).Value);
 
+        var genericRes = ParseGenericNames(intf.GenericNames);
+        if (genericRes != null)
+            return genericRes;
+
         if (Accept(TokenType.Has).Success)
         {
             var interfaceType = ParseType();
@@ -1319,7 +1361,7 @@ public class Parser
         var fnPos = GetToken(res).Position;
         string name = GetToken(res, 1).Value;
 
-        if (Peek.Type == TokenType.LeftParenthesis)
+        if (Peek.Type == TokenType.LeftParenthesis || Peek.Type == TokenType.LeftCurly)
             return ParseMethodSignature(modifiers, fnPos, name);
 
         return ParsePropertySignature(modifiers, fnPos, name);
@@ -1433,11 +1475,15 @@ public class Parser
         // [modifiers] fn [name]([params]) [type]
         //     [statements]
 
+        var methodDef = new MethodDefinition(nameToken.Position, modifiers, nameToken.Value);
+
+        var genericRes = ParseGenericNames(methodDef.GenericNames);
+        if (genericRes != null)
+            return genericRes;
+
         var res = Accept(TokenType.LeftParenthesis);
         if (res.Failure)
             return InvalidTokenErrorStatement("Invalid token in method", res);
-
-        var methodDef = new MethodDefinition(nameToken.Position, modifiers, nameToken.Value);
 
         while (Peek.Type != TokenType.RightParenthesis)
         {
@@ -1535,7 +1581,7 @@ public class Parser
 
         var nameToken = GetToken(res);
 
-        if (Peek.Type == TokenType.LeftParenthesis)
+        if (Peek.Type == TokenType.LeftParenthesis || Peek.Type == TokenType.LeftCurly)
             return ParseMethodDefinition(modifiers, nameToken);
 
         return ParseProperty(modifiers, nameToken);
@@ -1546,11 +1592,15 @@ public class Parser
         // [modifiers] fn [name]([params])
         // [modifiers] fn [name]([params]) [type]
 
+        var methodSig = new MethodSignature(pos, modifiers, name);
+
+        var genericRes = ParseGenericNames(methodSig.GenericNames);
+        if (genericRes != null)
+            return genericRes;
+
         var res = Accept(TokenType.LeftParenthesis);
         if (res.Failure)
             return InvalidTokenErrorStatement("Invalid token in method signature", res);
-
-        var methodSig = new MethodSignature(pos, modifiers, name);
 
         while (Peek.Type != TokenType.RightParenthesis)
         {
@@ -1979,6 +2029,10 @@ public class Parser
             return InvalidTokenErrorStatement("Invalid token in struct", res);
 
         var structRes = new Struct(GetToken(res, 1).Position, modifiers, GetToken(res, 1).Value);
+
+        var genericRes = ParseGenericNames(structRes.GenericNames);
+        if (genericRes != null)
+            return genericRes;
 
         if (Accept(TokenType.Has).Success)
         {

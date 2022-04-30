@@ -138,6 +138,7 @@ public class Class : Statement
 {
     public List<Expression> Modifiers { get; set; }
     public string Name { get; set; }
+    public List<string> GenericNames { get; set; } = new();
     public Expression? Parent { get; set; }
     public List<Expression> Interfaces { get; set; } = new();
     public List<Statement> Statements { get; set; } = new();
@@ -257,6 +258,7 @@ public class DelegateDefinition : Statement
     public List<Expression> Modifiers { get; set; }
     public Expression? ReturnType { get; set; }
     public string Name { get; set; }
+    public List<string> GenericNames { get; set; } = new();
     public List<Parameter> Parameters { get; set; } = new();
 
     public DelegateDefinition(Position position, List<Expression> modifiers, string name) : base(position)
@@ -471,6 +473,7 @@ public class Interface : Statement
 {
     public List<Expression> Modifiers { get; set; }
     public string Name { get; set; }
+    public List<string> GenericNames { get; set; } = new();
     public List<Expression> Interfaces { get; set; } = new();
     public List<Statement> Statements { get; set; } = new();
 
@@ -558,6 +561,7 @@ public class MethodDefinition : Statement
     public List<Expression> Modifiers { get; set; }
     public Expression? ReturnType { get; set; }
     public string Name { get; set; }
+    public List<string> GenericNames { get; set; } = new();
     public List<Parameter> Parameters { get; set; } = new();
     public List<Statement> Statements { get; set; } = new();
 
@@ -575,6 +579,7 @@ public class MethodSignature : Statement
     public List<Expression> Modifiers { get; set; }
     public Expression? ReturnType { get; set; }
     public string Name { get; set; }
+    public List<string> GenericNames { get; set; } = new();
     public List<Parameter> Parameters { get; set; } = new();
 
     public MethodSignature(Position position, List<Expression> modifiers, string name) : base(position)
@@ -736,6 +741,7 @@ public class Struct : Statement
 {
     public List<Expression> Modifiers { get; set; }
     public string Name { get; set; }
+    public List<string> GenericNames { get; set; } = new();
     public List<Expression> Interfaces { get; set; } = new();
     public List<Statement> Statements { get; set; } = new();
 

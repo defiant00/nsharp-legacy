@@ -216,6 +216,8 @@ public class ToCsVisitor : ISyntaxTreeVisitor, IDisposable
 
         WriteModifiersIndented(item.Modifiers);
         Write($" class {item.Name}");
+        if (item.GenericNames.Any())
+            Write($"<{string.Join(", ", item.GenericNames)}>");
         if (item.Parent != null)
         {
             Write(" : ");
@@ -349,7 +351,10 @@ public class ToCsVisitor : ISyntaxTreeVisitor, IDisposable
             Write("void");
         else
             item.ReturnType.Accept(this);
-        Write($" {item.Name}(");
+        Write($" {item.Name}");
+        if (item.GenericNames.Any())
+            Write($"<{string.Join(", ", item.GenericNames)}>");
+        Write("(");
         bool first = true;
         foreach (var par in item.Parameters)
         {
@@ -541,6 +546,8 @@ public class ToCsVisitor : ISyntaxTreeVisitor, IDisposable
     {
         WriteModifiersIndented(item.Modifiers);
         Write($" interface {item.Name}");
+        if (item.GenericNames.Any())
+            Write($"<{string.Join(", ", item.GenericNames)}>");
         if (item.Interfaces.Any())
         {
             Write(": ");
@@ -627,7 +634,10 @@ public class ToCsVisitor : ISyntaxTreeVisitor, IDisposable
             Write("void");
         else
             item.ReturnType.Accept(this);
-        Write($" {item.Name}(");
+        Write($" {item.Name}");
+        if (item.GenericNames.Any())
+            Write($"<{string.Join(", ", item.GenericNames)}>");
+        Write("(");
         bool first = true;
         var extension = item.Modifiers.FirstOrDefault(m => (m as Modifier)?.Type == ModifierType.Extension);
         if (extension is Modifier mod && mod.Arg != null)
@@ -658,7 +668,10 @@ public class ToCsVisitor : ISyntaxTreeVisitor, IDisposable
             Write("void");
         else
             item.ReturnType.Accept(this);
-        Write($" {item.Name}(");
+        Write($" {item.Name}");
+        if (item.GenericNames.Any())
+            Write($"<{string.Join(", ", item.GenericNames)}>");
+        Write("(");
         bool first = true;
         foreach (var par in item.Parameters)
         {
@@ -782,6 +795,8 @@ public class ToCsVisitor : ISyntaxTreeVisitor, IDisposable
 
         WriteModifiersIndented(item.Modifiers);
         Write($" struct {item.Name}");
+        if (item.GenericNames.Any())
+            Write($"<{string.Join(", ", item.GenericNames)}>");
         if (item.Interfaces.Any())
         {
             Write(" : ");
