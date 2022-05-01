@@ -86,9 +86,15 @@ public class ToCsVisitor : ISyntaxTreeVisitor, IDisposable
             param.Accept(this);
             first = false;
         }
-        WriteLine(") =>");
+        Write(") => ");
         Indent++;
-        WriteStatementBlock(item.Statements);
+        if (item.Statements.Count == 1 && item.Statements[0] is ExpressionStatement es)
+            es.Expression.Accept(this);
+        else
+        {
+            WriteLine();
+            WriteStatementBlock(item.Statements);
+        }
         Indent--;
     }
 

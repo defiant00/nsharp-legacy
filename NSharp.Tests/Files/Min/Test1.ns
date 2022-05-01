@@ -4,4 +4,4 @@ class MyClass
     fn Test2 SomeClass = new(4){Prop1 = "hi", Prop2 = "yo"}
     fn Test()
         x = fn(z) is z * z
-        y = fn(z int) is z + z
+        y = fn(z int) int is z + z

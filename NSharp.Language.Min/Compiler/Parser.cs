@@ -93,7 +93,7 @@ public class Parser
     private ParseResult<Expression> ParseAnonymouseFunction()
     {
         // fn([params]) is [statement]
-        // fn([params]) [type] is [expression]
+        // fn([params]) [type] is [statement]
         // fn([params])
         //     [statements]
         // fn
@@ -124,8 +124,16 @@ public class Parser
         res = Accept(TokenType.RightParenthesis);
         if (res.Failure)
             return InvalidTokenErrorExpression("Invalid token in anonymous function", res);
+        
+        // return type
+        if (Peek.Type != TokenType.EOL && Peek.Type != TokenType.Is){
+            var typeResult = ParseType();
+            if (typeResult.Error)
+                return typeResult;
+            anonFn.ReturnType = typeResult.Result;
+        }
 
-        // fn([params]) is [statement]
+        // is [statement]
         if (Accept(TokenType.Is).Success)
         {
             var stmtResult = ParseMethodStatement(false);
@@ -133,25 +141,6 @@ public class Parser
                 return ErrorExpression(es);
             anonFn.Statements.Add(stmtResult.Result);
             return new ParseResult<Expression>(anonFn);
-        }
-
-        // return type
-        if (Peek.Type != TokenType.EOL)
-        {
-            var typeResult = ParseType();
-            if (typeResult.Error)
-                return typeResult;
-            anonFn.ReturnType = typeResult.Result;
-
-            // fn([params]) [type] is [expression]
-            if (Accept(TokenType.Is).Success)
-            {
-                var exprResult = ParseExpression();
-                if (exprResult.Error)
-                    return exprResult;
-                anonFn.Statements.Add(new Return(exprResult.Result.Position) { Value = exprResult.Result });
-                return new ParseResult<Expression>(anonFn);
-            }
         }
 
         // [modifiers] fn [name]([params])
