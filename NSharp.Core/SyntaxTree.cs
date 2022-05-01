@@ -452,6 +452,17 @@ public class If : Statement
     public override void Accept(ISyntaxTreeVisitor visitor) => visitor.Visit(this);
 }
 
+public class ImplicitConstructorCall : Expression
+{
+    public List<Expression> Arguments { get; set; } = new();
+    public List<string> InitProperties { get; set; } = new();
+    public List<Expression> InitValues { get; set; } = new();
+
+    public ImplicitConstructorCall(Position position) : base(position) { }
+
+    public override void Accept(ISyntaxTreeVisitor visitor) => visitor.Visit(this);
+}
+
 public class Import : Statement
 {
     public List<string> Value { get; set; } = new();
@@ -651,13 +662,12 @@ public class Number : Expression
 
 public class Parameter : Expression
 {
-    public Expression Type { get; set; }
+    public Expression? Type { get; set; }
     public string Name { get; set; }
     public Expression? Value { get; set; }
 
-    public Parameter(Position position, Expression type, string name) : base(position)
+    public Parameter(Position position, string name) : base(position)
     {
-        Type = type;
         Name = name;
     }
 

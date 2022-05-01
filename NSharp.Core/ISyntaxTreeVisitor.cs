@@ -39,6 +39,7 @@ public interface ISyntaxTreeVisitor
     public void Visit(Generic item);
     public void Visit(Identifier item);
     public void Visit(If item);
+    public void Visit(ImplicitConstructorCall item);
     public void Visit(Import item);
     public void Visit(Indexer item);
     public void Visit(Interface item);

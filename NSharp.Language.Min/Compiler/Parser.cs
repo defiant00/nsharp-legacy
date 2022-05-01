@@ -113,9 +113,10 @@ public class Parser
             if (res.Failure)
                 return InvalidTokenErrorExpression("Invalid token in parameter", res);
             var paramNameToken = GetToken(res);
-            var paramType = ParseType();
-            if (!paramType.Error)
-                anonFn.Parameters.Add(new Parameter(paramType.Result.Position, paramType.Result, paramNameToken.Value));
+            ParseResult<Expression>? paramType = null;
+            if (Peek.Type != TokenType.RightParenthesis && Peek.Type != TokenType.Comma)
+                paramType = ParseType();
+            anonFn.Parameters.Add(new Parameter(paramNameToken.Position, paramNameToken.Value) { Type = paramType?.Result });
 
             Accept(TokenType.Comma);
         }
@@ -503,6 +504,9 @@ public class Parser
     private ParseResult<Expression> ParseConstructorCall()
     {
         var start = Next();     // accept new
+        if (Peek.Type == TokenType.LeftParenthesis || Peek.Type == TokenType.LeftCurly)
+            return ParseImplicitConstructorCall(start);
+
         var typeResult = ParseType();
         if (typeResult.Error)
             return typeResult;
@@ -567,7 +571,7 @@ public class Parser
             if (paramType.Error && paramType.Result is ErrorExpression ex)
                 return ErrorStatement(ex);
 
-            var par = new Parameter(paramType.Result.Position, paramType.Result, paramNameToken.Value);
+            var par = new Parameter(paramType.Result.Position, paramNameToken.Value) { Type = paramType.Result };
             ctorDef.Parameters.Add(par);
 
             if (Accept(TokenType.Assign).Success)
@@ -674,7 +678,7 @@ public class Parser
             var paramNameToken = GetToken(res);
             var paramType = ParseType();
             if (!paramType.Error)
-                delegateDef.Parameters.Add(new Parameter(paramType.Result.Position, paramType.Result, paramNameToken.Value));
+                delegateDef.Parameters.Add(new Parameter(paramType.Result.Position, paramNameToken.Value) { Type = paramType.Result });
 
             Accept(TokenType.Comma);
         }
@@ -1270,6 +1274,48 @@ public class Parser
         return new ParseResult<Statement>(ifStatement);
     }
 
+    private ParseResult<Expression> ParseImplicitConstructorCall(Token start)
+    {
+        // new([args])
+        // new{[type args]}([args])
+        // new([args]){[initializers]}
+        // new{[type args]}([args]){[initializers]}
+
+        AcceptResult res;
+        var ctorDef = new ImplicitConstructorCall(start.Position);
+
+        var argsRes = ParseArguments(ctorDef.Arguments);
+        if (argsRes != null)
+            return argsRes;
+
+        if (Accept(TokenType.LeftCurly).Success)
+        {
+            while (Peek.Type != TokenType.RightCurly)
+            {
+                res = Accept(TokenType.Literal, TokenType.Assign);
+                if (res.Failure)
+                    return InvalidTokenErrorExpression("Invalid token in implicit constructor", res);
+
+                var prop = GetToken(res).Value;
+
+                var right = ParseExpression();
+                if (right.Error)
+                    return right;
+
+                ctorDef.InitProperties.Add(prop);
+                ctorDef.InitValues.Add(right.Result);
+
+                Accept(TokenType.Comma);
+            }
+
+            res = Accept(TokenType.RightCurly);
+            if (res.Failure)
+                return InvalidTokenErrorExpression("Invalid token in implicit constructor", res);
+        }
+
+        return new ParseResult<Expression>(ctorDef);
+    }
+
     private ParseResult<Statement> ParseImport()
     {
         var res = Accept(TokenType.Use, TokenType.Literal);
@@ -1526,7 +1572,7 @@ public class Parser
             if (paramType.Error && paramType.Result is ErrorExpression ex)
                 return ErrorStatement(ex);
 
-            var par = new Parameter(paramType.Result.Position, paramType.Result, paramNameToken.Value);
+            var par = new Parameter(paramType.Result.Position, paramNameToken.Value) { Type = paramType.Result };
             methodDef.Parameters.Add(par);
 
             if (Accept(TokenType.Assign).Success)
@@ -1641,7 +1687,7 @@ public class Parser
             var paramNameToken = GetToken(res);
             var paramType = ParseType();
             if (!paramType.Error)
-                methodSig.Parameters.Add(new Parameter(paramType.Result.Position, paramType.Result, paramNameToken.Value));
+                methodSig.Parameters.Add(new Parameter(paramType.Result.Position, paramNameToken.Value) { Type = paramType.Result });
 
             Accept(TokenType.Comma);
         }

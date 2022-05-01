@@ -450,6 +450,33 @@ public class SyntaxTreePrinterVisitor : ISyntaxTreeVisitor
         }
     }
 
+    public void Visit(ImplicitConstructorCall item)
+    {
+        Write("new(");
+        bool first = true;
+        foreach (var arg in item.Arguments)
+        {
+            if (first)
+                first = false;
+            else
+                Write(", ");
+            arg.Accept(this);
+        }
+        Write(")");
+        if (item.InitProperties.Any())
+        {
+            Write("{");
+            for (int i = 0; i < item.InitProperties.Count; i++)
+            {
+                if (i > 0)
+                    Write(", ");
+                Write($"{item.InitProperties[i]} = ");
+                item.InitValues[i].Accept(this);
+            }
+            Write("}");
+        }
+    }
+
     public void Visit(Import item) => WriteLineIndented($"Import: {string.Join(".", item.Value)}");
 
     public void Visit(Indexer item)
@@ -619,7 +646,7 @@ public class SyntaxTreePrinterVisitor : ISyntaxTreeVisitor
 
     public void Visit(Parameter item)
     {
-        item.Type.Accept(this);
+        item.Type?.Accept(this);
         Write($" {item.Name}");
         if (item.Value != null)
         {
