@@ -1,4 +1,8 @@
 
 class MyClass
     fn Test()
-        var x = """Hello,"" he said, ""these are curlies..."" {{}}\t\tYay"
+        First.Second.Third
+        My.Test ? 1, 2
+        My.Test[3]
+        "hello".Print()
+        str.Empty

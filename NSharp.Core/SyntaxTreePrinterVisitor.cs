@@ -481,6 +481,7 @@ public class SyntaxTreePrinterVisitor : ISyntaxTreeVisitor
 
     public void Visit(Indexer item)
     {
+        Write("(");
         item.Expr.Accept(this);
         Write("[");
         bool first = true;
@@ -492,6 +493,7 @@ public class SyntaxTreePrinterVisitor : ISyntaxTreeVisitor
             first = false;
         }
         Write("]");
+        Write(")");
     }
 
     public void Visit(Interface item)

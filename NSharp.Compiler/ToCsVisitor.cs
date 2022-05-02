@@ -941,7 +941,9 @@ public class ToCsVisitor : ISyntaxTreeVisitor, IDisposable
             UnaryOperatorType.Not => "!",
             _ => "[unary op]",
         });
+        Write("(");
         item.Expr.Accept(this);
+        Write(")");
     }
 
     public void Visit(Using item)

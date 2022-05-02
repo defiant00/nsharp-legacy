@@ -1859,23 +1859,46 @@ public class Parser
         if (leftResult.Error)
             return leftResult;
 
-        while (Peek.Type == TokenType.LeftParenthesis ||
-            Peek.Type == TokenType.LeftBracket ||
-            Peek.Type == TokenType.LeftCurly ||
-            (acceptIs && Peek.Type == TokenType.Is) ||
-            Peek.Type == TokenType.Question)
+        bool loop;
+        do
         {
-            if (Peek.Type == TokenType.LeftParenthesis)
-                leftResult = ParseMethodCall(leftResult.Result);
-            else if (Peek.Type == TokenType.LeftBracket)
-                leftResult = ParseIndexer(leftResult.Result);
-            else if (Peek.Type == TokenType.LeftCurly)
-                leftResult = ParseGeneric(leftResult.Result);
-            else if (acceptIs && Peek.Type == TokenType.Is)
-                leftResult = ParseIs(leftResult.Result);
-            else if (Peek.Type == TokenType.Question)
-                leftResult = ParseConditional(leftResult.Result);
-        }
+            loop = true;
+            var res = Accept(TokenType.Dot, TokenType.Literal);
+            if (res.Success)
+            {
+                leftResult = new ParseResult<Expression>(new BinaryOperator(
+                    leftResult.Result.Position,
+                    BinaryOperatorType.Dot,
+                    leftResult.Result,
+                    new Identifier(GetToken(res, 1).Position, GetToken(res, 1).Value)
+                ));
+            }
+            else
+            {
+                res = Accept(TokenType.NullDot, TokenType.Literal);
+                if (res.Success)
+                {
+                    leftResult = new ParseResult<Expression>(new BinaryOperator(
+                        leftResult.Result.Position,
+                        BinaryOperatorType.NullDot,
+                        leftResult.Result,
+                        new Identifier(GetToken(res, 1).Position, GetToken(res, 1).Value)
+                    ));
+                }
+                else if (Peek.Type == TokenType.LeftParenthesis)
+                    leftResult = ParseMethodCall(leftResult.Result);
+                else if (Peek.Type == TokenType.LeftBracket)
+                    leftResult = ParseIndexer(leftResult.Result);
+                else if (Peek.Type == TokenType.LeftCurly)
+                    leftResult = ParseGeneric(leftResult.Result);
+                else if (acceptIs && Peek.Type == TokenType.Is)
+                    leftResult = ParseIs(leftResult.Result);
+                else if (Peek.Type == TokenType.Question)
+                    leftResult = ParseConditional(leftResult.Result);
+                else
+                    loop = false;
+            }
+        } while (loop);
 
         return leftResult;
     }
