@@ -935,23 +935,6 @@ public class Parser
             if (res.Failure)
                 return InvalidTokenErrorStatement("Invalid token in for", res);
 
-            // bet
-            //     [statements]
-            if (Accept(TokenType.Between, TokenType.EOL, TokenType.Indent).Success)
-            {
-                while (Peek.Type != TokenType.Dedent)
-                {
-                    var stmtRes = ParseMethodStatement();
-                    if (stmtRes.Error)
-                        return stmtRes;
-                    foreachDef.BetweenStatements.Add(stmtRes.Result);
-                }
-
-                res = Accept(TokenType.Dedent);
-                if (res.Failure)
-                    return InvalidTokenErrorStatement("Invalid token in for", res);
-            }
-
             return new ParseResult<Statement>(foreachDef);
         }
 

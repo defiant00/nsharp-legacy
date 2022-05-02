@@ -512,29 +512,13 @@ public class ToCsVisitor : ISyntaxTreeVisitor, IDisposable
 
     public void Visit(ForEach item)
     {
-        bool between = item.BetweenStatements.Any();
-        WriteLineIndented("{");
-        Indent++;
-        if (between)
-            WriteLineIndented("bool __first = true;");
         WriteIndented($"foreach (var {item.Name} in ");
         item.Expr.Accept(this);
         WriteLine(")");
         WriteLineIndented("{");
         Indent++;
-        if (between)
-        {
-            WriteLineIndented("if (__first)");
-            Indent++;
-            WriteLineIndented("__first = false;");
-            Indent--;
-            WriteLineIndented("else");
-            WriteStatementBlock(item.BetweenStatements);
-        }
         foreach (var stmt in item.Statements)
             stmt.Accept(this);
-        Indent--;
-        WriteLineIndented("}");
         Indent--;
         WriteLineIndented("}");
     }

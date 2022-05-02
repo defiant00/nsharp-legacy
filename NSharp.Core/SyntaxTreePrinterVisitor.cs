@@ -398,14 +398,6 @@ public class SyntaxTreePrinterVisitor : ISyntaxTreeVisitor
         foreach (var stmt in item.Statements)
             stmt.Accept(this);
         Indent--;
-        if (item.BetweenStatements.Any())
-        {
-            WriteLineIndented("between");
-            Indent++;
-            foreach (var stmt in item.BetweenStatements)
-                stmt.Accept(this);
-            Indent--;
-        }
     }
 
     public void Visit(Generic item)

@@ -399,7 +399,6 @@ public class ForEach : Statement
     public string Name { get; set; }
     public Expression Expr { get; set; }
     public List<Statement> Statements { get; set; } = new();
-    public List<Statement> BetweenStatements { get; set; } = new();
 
     public ForEach(Position position, string name, Expression expr) : base(position)
     {
