@@ -124,9 +124,10 @@ public class Parser
         res = Accept(TokenType.RightParenthesis);
         if (res.Failure)
             return InvalidTokenErrorExpression("Invalid token in anonymous function", res);
-        
+
         // return type
-        if (Peek.Type != TokenType.EOL && Peek.Type != TokenType.Is){
+        if (Peek.Type != TokenType.EOL && Peek.Type != TokenType.Is)
+        {
             var typeResult = ParseType();
             if (typeResult.Error)
                 return typeResult;
@@ -422,13 +423,40 @@ public class Parser
 
     private ParseResult<Expression> ParseConditional(Expression expr)
     {
+        // [expr] ? [true expr], [false expr]
         // [expr] ? {[value] is [result], [value] is [result]}
 
-        var res = Accept(TokenType.Question, TokenType.LeftCurly);
+        var res = Accept(TokenType.Question);
         if (res.Failure)
             return InvalidTokenErrorExpression("Invalid token in conditional", res);
 
         var conditional = new Conditional(expr.Position, expr);
+
+        if (Peek.Type != TokenType.LeftCurly)
+        {
+            var exprRes = ParseExpression();
+            if (exprRes.Error)
+                return exprRes;
+            conditional.Conditions.Add(new Condition(
+                exprRes.Result.Position,
+                new LiteralToken(exprRes.Result.Position, Literal.True),
+                exprRes.Result));
+            res = Accept(TokenType.Comma);
+            if (res.Failure)
+                return InvalidTokenErrorExpression("Invalid token in conditional", res);
+            exprRes = ParseExpression();
+            if (exprRes.Error)
+                return exprRes;
+            conditional.Conditions.Add(new Condition(
+                exprRes.Result.Position,
+                new LiteralToken(exprRes.Result.Position, Literal.False),
+                exprRes.Result));
+            return new ParseResult<Expression>(conditional);
+        }
+
+        res = Accept(TokenType.LeftCurly);
+        if (res.Failure)
+            return InvalidTokenErrorExpression("Invalid token in conditional", res);
 
         while (Peek.Type != TokenType.RightCurly)
         {

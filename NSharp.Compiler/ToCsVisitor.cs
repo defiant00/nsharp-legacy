@@ -279,13 +279,30 @@ public class ToCsVisitor : ISyntaxTreeVisitor, IDisposable
     public void Visit(Conditional item)
     {
         item.Expr.Accept(this);
-        WriteLine(" switch");
-        WriteLineIndented("{");
-        Indent++;
-        foreach (var cond in item.Conditions)
-            cond.Accept(this);
-        Indent--;
-        WriteIndented("}");
+        if (item.Conditions.Count == 2 &&
+            item.Conditions[0] is Condition c1 &&
+            c1.Value is LiteralToken lt1 &&
+            lt1.Token == Literal.True &&
+            item.Conditions[1] is Condition c2 &&
+            c2.Value is LiteralToken lt2 &&
+            lt2.Token == Literal.False)
+        {
+            // Ternary
+            Write(" ? ");
+            c1.Result.Accept(this);
+            Write(" : ");
+            c2.Result.Accept(this);
+        }
+        else
+        {
+            WriteLine(" switch");
+            WriteLineIndented("{");
+            Indent++;
+            foreach (var cond in item.Conditions)
+                cond.Accept(this);
+            Indent--;
+            WriteIndented("}");
+        }
     }
 
     public void Visit(Constant item)
