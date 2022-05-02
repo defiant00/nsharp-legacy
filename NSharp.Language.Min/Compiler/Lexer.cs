@@ -6,6 +6,7 @@ public class Lexer
 {
     const char EOL = '\0';
     const string OPERATOR_CHARACTERS = "()[]{}<>?!=+-*/%,.&|^~";
+    const string REPEATED_ESCAPE_STRING_CHARACTERS = "{}\"";
 
     private delegate StateFunction? StateFunction();
 
@@ -75,6 +76,8 @@ public class Lexer
     }
 
     private char Peek => (LineCurrentIndex >= Line.Length) ? EOL : Line[LineCurrentIndex];
+
+    private char PeekNext => ((LineCurrentIndex + 1) >= Line.Length) ? EOL : Line[LineCurrentIndex + 1];
 
     private void Backup() => LineCurrentIndex--;
 
@@ -171,7 +174,10 @@ public class Lexer
                 StringTerminators.Pop();
 
             // Emit the current token.
-            Tokens.Add(new Token(token, CurrentPosition, CurrentValue));
+            string val = CurrentValue;
+            if (token == TokenType.StringLiteral)
+                val = val.Unescape();
+            Tokens.Add(new Token(token, CurrentPosition, val));
 
             LastEmittedWasLineContinuation = token.IsLineContinuationPostfix();
         }
@@ -366,7 +372,11 @@ public class Lexer
         while (StringTerminators.Any() && StringTerminators.Peek() == TokenType.StringEnd)
         {
             char c = Peek;
-            if (c == '"')
+            
+            // Repeated '"', '{', '}' are accepted as literals
+            if (REPEATED_ESCAPE_STRING_CHARACTERS.IndexOf(c) > -1 && c == PeekNext)
+                Next();
+            else if (c == '"')
             {
                 if (CurrentLength > 0)
                     Emit(TokenType.StringLiteral);

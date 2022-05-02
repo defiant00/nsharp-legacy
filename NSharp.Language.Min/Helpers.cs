@@ -6,6 +6,34 @@ namespace NSharp.Language.Min;
 
 public static class Helpers
 {
+    public static string Unescape(this string val)
+    {
+        var sb = new StringBuilder(val);
+
+        // Replace doubled '{', '}', and '"'
+        sb.Replace("{{", "{")
+            .Replace("}}", "}")
+            .Replace("\"\"", "\"");
+
+        for (int i = 1; i < sb.Length; i++)
+        {
+            if (sb[i - 1] == '\\')
+            {
+                char escaped = sb[i];
+                sb.Remove(i - 1, 2);
+                sb.Insert(i - 1, escaped switch
+                {
+                    'n' => '\n',
+                    'r' => '\r',
+                    't' => '\t',
+                    _ => escaped,
+                });
+            }
+        }
+
+        return sb.ToString();
+    }
+
     public static void Indent(this StringBuilder sb, string indentStr, int indent)
     {
         for (int i = 0; i < indent; i++)
