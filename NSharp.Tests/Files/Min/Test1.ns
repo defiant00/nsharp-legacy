@@ -1,7 +1,4 @@
 
 class MyClass
-    fn Test1 SomeClass = new(1, 2)
-    fn Test2 SomeClass = new(4){Prop1 = "hi", Prop2 = "yo"}
     fn Test()
-        x = true ? 1, 2
-        x = y ? {1 is "one", 2 is "two", 3 is "three"}
+        var x = """Hello,"" he said, ""these are curlies..."" {{}}\t\tYay"

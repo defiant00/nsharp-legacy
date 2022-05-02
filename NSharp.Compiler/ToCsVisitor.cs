@@ -1,3 +1,4 @@
+using System.Text;
 using NSharp.Core;
 using NSharp.Core.Ast;
 
@@ -61,6 +62,21 @@ public class ToCsVisitor : ISyntaxTreeVisitor, IDisposable
             stmt.Accept(this);
         Indent--;
         WriteLineIndented("}");
+    }
+
+    private string Escape(string val)
+    {
+        var sb = new StringBuilder(val);
+
+        sb.Replace("{", "{{")
+            .Replace("}", "}}")
+            .Replace("\\", "\\\\")
+            .Replace("\"", "\\\"")
+            .Replace("\n", "\\n")
+            .Replace("\r", "\\r")
+            .Replace("\t", "\\t");
+
+        return sb.ToString();
     }
 
     public ToCsVisitor(string filename)
@@ -852,7 +868,7 @@ public class ToCsVisitor : ISyntaxTreeVisitor, IDisposable
         Write("\"");
     }
 
-    public void Visit(StringLiteral item) => Write(item.Value);
+    public void Visit(StringLiteral item) => Write(Escape(item.Value));
 
     public void Visit(Struct item)
     {
