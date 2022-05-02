@@ -32,6 +32,9 @@ public static class BinaryOperatorHelpers
     public static int Precedence(this BinaryOperatorType operatorType) =>
         operatorType switch
         {
+            BinaryOperatorType.Dot => 12,
+            BinaryOperatorType.NullDot => 12,
+
             BinaryOperatorType.As => 11,
 
             BinaryOperatorType.Multiply => 10,
