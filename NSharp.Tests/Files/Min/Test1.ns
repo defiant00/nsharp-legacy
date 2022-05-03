@@ -1,6 +1,6 @@
 
 class MyClass
-    fn Val str is "hello"
-    fn Test str
-    fn Test2 str get
-    fn Test3 str set
+    fn Test()
+        if x
+            is 3
+                ret "yay"

@@ -234,7 +234,8 @@ public class ToCsVisitor : ISyntaxTreeVisitor, IDisposable
         {
             Indent++;
             WriteStatementBlock(item.Statements);
-            WriteLineIndented("break;");
+            if (item.Statements[^1] is not Return)
+                WriteLineIndented("break;");
             Indent--;
         }
     }
