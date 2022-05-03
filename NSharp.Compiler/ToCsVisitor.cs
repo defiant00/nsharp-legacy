@@ -793,14 +793,14 @@ public class ToCsVisitor : ISyntaxTreeVisitor, IDisposable
             WriteLineIndented("get");
             WriteStatementBlock(item.GetStatements);
         }
-        else if (item.Get)
+        else if (item.Get && !item.SetStatements.Any())
             WriteLineIndented("get;");
         if (item.SetStatements.Any())
         {
             WriteLineIndented("set");
             WriteStatementBlock(item.SetStatements);
         }
-        else if (item.Set)
+        else if (item.Set && !item.GetStatements.Any())
             WriteLineIndented("set;");
         Indent--;
         WriteIndented("}");

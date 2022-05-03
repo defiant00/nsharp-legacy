@@ -1,8 +1,6 @@
 
 class MyClass
-    fn Test()
-        DoThing(someVar)
-        DoThing(param = someVar)
-        DoThing(out someVar)
-        DoThing(ref someVar)
-        DoThing(param = out someVar, ref another)
+    fn Val str is "hello"
+    fn Test str
+    fn Test2 str get
+    fn Test3 str set
