@@ -155,6 +155,8 @@ public static class Helpers
         ["virtual"] = TokenType.Virtual,
         ["override"] = TokenType.Override,
         ["ext"] = TokenType.Extension,
+        ["out"] = TokenType.Out,
+        ["ref"] = TokenType.Reference,
         ["this"] = TokenType.This,
         ["str"] = TokenType.String,
         ["char"] = TokenType.Character,

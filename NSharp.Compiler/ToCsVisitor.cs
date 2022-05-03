@@ -118,6 +118,15 @@ public class ToCsVisitor : ISyntaxTreeVisitor, IDisposable
     {
         if (item.Name != null)
             Write($"{item.Name}: ");
+
+        string mods = string.Join(" ", item.Modifiers.Select(m => m switch
+        {
+            ArgumentModifierType.Out => "out",
+            ArgumentModifierType.Reference => "ref",
+            _ => $"[{m}]"
+        }));
+        Write($"{mods} ");
+
         item.Expr.Accept(this);
     }
 

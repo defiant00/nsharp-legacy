@@ -1,8 +1,8 @@
 
 class MyClass
     fn Test()
-        First.Second.Third
-        My.Test ? 1, 2
-        My.Test[3]
-        "hello".Print()
-        str.Empty
+        DoThing(someVar)
+        DoThing(param = someVar)
+        DoThing(out someVar)
+        DoThing(ref someVar)
+        DoThing(param = out someVar, ref another)

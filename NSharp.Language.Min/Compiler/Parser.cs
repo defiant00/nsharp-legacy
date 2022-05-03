@@ -176,26 +176,40 @@ public class Parser
 
         if (Peek.Type != TokenType.RightParenthesis)
         {
+            // Named arguments
             string? name = null;
             res = Accept(TokenType.Literal, TokenType.Assign);
             if (res.Success)
                 name = GetToken(res).Value;
 
+            // Argument modifiers
+            var modifiers = new List<ArgumentModifierType>();
+            while (Peek.Type.IsArgumentModifier())
+                modifiers.Add(Next().Type.ToArgumentModifier());
+
+            // Argument value
             var argExpr = ParseExpression();
             if (argExpr.Error)
                 return argExpr;
-            args.Add(new Argument(argExpr.Result.Position, argExpr.Result) { Name = name });
+            args.Add(new Argument(argExpr.Result.Position, name, modifiers, argExpr.Result));
             while (Accept(TokenType.Comma).Success)
             {
+                // Named arguments
                 name = null;
                 res = Accept(TokenType.Literal, TokenType.Assign);
                 if (res.Success)
                     name = GetToken(res).Value;
 
+                // Argument modifiers
+                modifiers = new List<ArgumentModifierType>();
+                while (Peek.Type.IsArgumentModifier())
+                    modifiers.Add(Next().Type.ToArgumentModifier());
+
+                // Argument value
                 argExpr = ParseExpression();
                 if (argExpr.Error)
                     return argExpr;
-                args.Add(new Argument(argExpr.Result.Position, argExpr.Result) { Name = name });
+                args.Add(new Argument(argExpr.Result.Position, name, modifiers, argExpr.Result));
             }
         }
 

@@ -8,6 +8,7 @@ public static class TokenHelper
     public static bool IsLineContinuationHeld(this TokenType type) => type > TokenType.Line_Continuation_Held_Start && type < TokenType.Line_Continuation_Held_End;
     public static bool IsLineContinuationPostfix(this TokenType type) => type > TokenType.Line_Continuation_Postfix_Start && type < TokenType.Line_Continuation_Postfix_End;
     public static bool IsLineContinuationPrefix(this TokenType type) => type > TokenType.Line_Continuation_Prefix_Start && type < TokenType.Line_Continuation_Prefix_End;
+    public static bool IsArgumentModifier(this TokenType type) => type > TokenType.Argument_Modifier_Start && type < TokenType.Argument_Modifier_End;
     public static bool IsModifier(this TokenType type) => type > TokenType.Modifier_Start && type < TokenType.Modifier_End;
     public static bool IsType(this TokenType type) => type > TokenType.Type_Start && type < TokenType.Type_End;
     public static bool IsUnaryOperator(this TokenType type) => type > TokenType.Unary_Operator_Start && type < TokenType.Unary_Operator_End;
@@ -25,6 +26,14 @@ public static class TokenHelper
             TokenType.Override => ModifierType.Override,
             TokenType.Extension => ModifierType.Extension,
             _ => throw new Exception($"Could not match token type {type} to a modifier."),
+        };
+
+    public static ArgumentModifierType ToArgumentModifier(this TokenType type) =>
+        type switch
+        {
+            TokenType.Out => ArgumentModifierType.Out,
+            TokenType.Reference => ArgumentModifierType.Reference,
+            _ => throw new Exception($"Could not match token type {type} to an argument modifier."),
         };
 
     public static UnaryOperatorType ToUnaryOperator(this TokenType type) =>

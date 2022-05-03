@@ -66,6 +66,7 @@ public class SyntaxTreePrinterVisitor : ISyntaxTreeVisitor
     {
         if (item.Name != null)
             Write($"{item.Name} = ");
+        Write($"{string.Join(" ", item.Modifiers)} ");
         item.Expr.Accept(this);
     }
 

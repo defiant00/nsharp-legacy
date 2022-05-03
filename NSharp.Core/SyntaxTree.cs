@@ -37,10 +37,13 @@ public class AnonymousFunction : Expression
 public class Argument : Expression
 {
     public string? Name { get; set; }
+    public List<ArgumentModifierType> Modifiers { get; set; }
     public Expression Expr { get; set; }
 
-    public Argument(Position position, Expression expr) : base(position)
+    public Argument(Position position, string? name, List<ArgumentModifierType> modifiers, Expression expr) : base(position)
     {
+        Name = name;
+        Modifiers = modifiers;
         Expr = expr;
     }
 
