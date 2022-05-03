@@ -790,7 +790,7 @@ public class Switch : Statement
     public override void Accept(ISyntaxTreeVisitor visitor) => visitor.Visit(this);
 }
 
-public class Throw : Statement
+public class Throw : Expression
 {
     public Expression Expr { get; set; }
 

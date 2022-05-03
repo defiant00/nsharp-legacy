@@ -5,6 +5,7 @@ namespace NSharp.Language.Min.Compiler;
 public static class TokenHelper
 {
     public static bool IsAssignment(this TokenType type) => type > TokenType.Assignment_Start && type < TokenType.Assignment_End;
+    public static bool IsOperatorCanThrow(this TokenType type) => type > TokenType.Operator_Can_Throw_Start && type < TokenType.Operator_Can_Throw_End;
     public static bool IsLineContinuationHeld(this TokenType type) => type > TokenType.Line_Continuation_Held_Start && type < TokenType.Line_Continuation_Held_End;
     public static bool IsLineContinuationPostfix(this TokenType type) => type > TokenType.Line_Continuation_Postfix_Start && type < TokenType.Line_Continuation_Postfix_End;
     public static bool IsLineContinuationPrefix(this TokenType type) => type > TokenType.Line_Continuation_Prefix_Start && type < TokenType.Line_Continuation_Prefix_End;

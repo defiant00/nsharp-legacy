@@ -289,7 +289,7 @@ public class Parser
                 return new ParseResult<Expression>(left);
 
             var op = Next();
-            var right = ParsePrimaryExpression(acceptIs);
+            var right = op.Type.IsOperatorCanThrow() ? ParseThrowOr(ParsePrimaryExpression, acceptIs) : ParsePrimaryExpression(acceptIs);
             if (right.Error)
                 return right;
 
@@ -448,7 +448,8 @@ public class Parser
 
         if (Peek.Type != TokenType.LeftCurly)
         {
-            var exprRes = ParseExpression();
+            // Condition results can be a throw.
+            var exprRes = ParseThrowOr(ParseExpression);
             if (exprRes.Error)
                 return exprRes;
             conditional.Conditions.Add(new Condition(
@@ -458,7 +459,9 @@ public class Parser
             res = Accept(TokenType.Comma);
             if (res.Failure)
                 return InvalidTokenErrorExpression("Invalid token in conditional", res);
-            exprRes = ParseExpression();
+
+            // Condition results can be a throw.
+            exprRes = ParseThrowOr(ParseExpression);
             if (exprRes.Error)
                 return exprRes;
             conditional.Conditions.Add(new Condition(
@@ -482,7 +485,8 @@ public class Parser
             if (res.Failure)
                 return InvalidTokenErrorExpression("Invalid token in condition", res);
 
-            var resRes = ParseExpression();
+            // Condition results can be a throw.
+            var resRes = ParseThrowOr(ParseExpression);
             if (resRes.Error)
                 return resRes;
 
@@ -791,7 +795,7 @@ public class Parser
 
     private ParseResult<Statement> ParseExpressionStatement(bool acceptEol)
     {
-        var expr = ParseExpression();
+        var expr = ParseThrowOr(ParseExpression);
         if (expr.Error && expr.Result is ErrorExpression ex)
             return ErrorStatement(ex);
 
@@ -1736,7 +1740,6 @@ public class Parser
             TokenType.For => ParseFor(),
             TokenType.If => ParseIf(),
             TokenType.Return => ParseReturn(acceptEol),
-            TokenType.Throw => ParseThrow(acceptEol),
             TokenType.Try => ParseTry(),
             TokenType.Use => ParseUsing(),
             TokenType.Variable => ParseLocalVariable(),
@@ -2183,22 +2186,19 @@ public class Parser
         return new ParseResult<Statement>(structRes);
     }
 
-    private ParseResult<Statement> ParseThrow(bool acceptEol)
+    private ParseResult<Expression> ParseThrowOr(Func<bool, ParseResult<Expression>> parseFn, bool acceptIs = true)
     {
+        if (Peek.Type != TokenType.Throw)
+            return parseFn(acceptIs);
+
         var start = Next();     // accept throw
         var expr = ParseExpression();
-        if (expr.Error && expr.Result is ErrorExpression ex)
-            return ErrorStatement(ex);
+        if (expr.Error)
+            return expr;
 
         var throwDef = new Throw(start.Position, expr.Result);
 
-        if (acceptEol)
-        {
-            var res = Accept(TokenType.EOL);
-            if (res.Failure)
-                return InvalidTokenErrorStatement("Invalid token in throw", res);
-        }
-        return new ParseResult<Statement>(throwDef);
+        return new ParseResult<Expression>(throwDef);
     }
 
     private ParseResult<Statement> ParseTry()

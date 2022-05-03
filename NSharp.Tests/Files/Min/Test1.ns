@@ -1,6 +1,15 @@
 
 class MyClass
+    fn Explode() is throw new Exception("boom")
+
     fn Test()
-        if x
-            is 3
-                ret "yay"
+        if true
+            throw new Exception("oop")
+        x ?? throw new Exception("ah!")
+        x ? "true", throw new Exception("ah")
+        x ? throw new Exception("oh"), "false"
+        x ? throw new Exception("yay"), throw new Exception("no")
+        x ? {
+            1 is "one",
+            _ is throw new Exception("oh no"),
+        }

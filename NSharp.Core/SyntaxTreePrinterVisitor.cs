@@ -771,9 +771,9 @@ public class SyntaxTreePrinterVisitor : ISyntaxTreeVisitor
 
     public void Visit(Throw item)
     {
-        WriteIndented("Throw: ");
+        Write("Throw(");
         item.Expr.Accept(this);
-        WriteLine();
+        Write(")");
     }
 
     public void Visit(Try item)

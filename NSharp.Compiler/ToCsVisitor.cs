@@ -908,9 +908,8 @@ public class ToCsVisitor : ISyntaxTreeVisitor, IDisposable
 
     public void Visit(Throw item)
     {
-        WriteIndented("throw ");
+        Write("throw ");
         item.Expr.Accept(this);
-        WriteLine(";");
     }
 
     public void Visit(Try item)
