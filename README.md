@@ -1,45 +1,5 @@
-# nsharp
+# nsharp - legacy
 
-[Neutral programming](Docs/neutral_programming.md) for .NET
+This is the initial N# Min to C# transpiler to bootstrap the [full N# project](https://github.com/defiant00/nsharp).
 
-## Status
-
-Feature                 | Min  | Compile
------------------------ | ---- | -------
-Space                   | Both | -
-Comments                | Both | -
-Operators               | Both |
-Order of Operations     | Both | -
-Assignment              | Both |
-Identifiers             | Both |
-Keyword Identifiers     | Both |
-Strings                 | Both | X
-Chars                   | Both |
-Arrays                  | Both |
-Unicode                 |      |
-Numbers                 | Both |
-Hex                     |      |
-Binary                  |      |
-String Interpolation    | Both | X
-Method Definitions      | Both | X
-Method Calls            | Both |
-Accessors               | Both |
-Generics                | Both |
-If                      | Both |
-Switch                  |      |
-For                     |      |
-Foreach                 |      |
-Try/Catch/Finally       |      |
-Namespace               | Both | X
-Class Definition        | Both |
-Interface Definition    |      |
-Struct Definition       |      |
-Enum Definition         |      |
-Fields                  | Both |
-Properties              | Both |
-Getters and Setters     | Both |
-Types                   | Both |
-Using                   |      |
-Import                  | Both |
-Attributes              |      |
-Tuples                  |      |
+_**Warning** - Very hacky and only supports the features required to transpile Min as of 05/2022. This will not be updated, and may be entirely out of date compared to the current spec._
