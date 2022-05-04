@@ -664,12 +664,15 @@ public class Number : Expression
 
 public class Parameter : Expression
 {
+    public List<ParameterModifierType> Modifiers { get; set; }
     public Expression? Type { get; set; }
     public string Name { get; set; }
     public Expression? Value { get; set; }
 
-    public Parameter(Position position, string name) : base(position)
+    public Parameter(Position position, List<ParameterModifierType> modifiers, Expression? type, string name) : base(position)
     {
+        Modifiers = modifiers;
+        Type = type;
         Name = name;
     }
 

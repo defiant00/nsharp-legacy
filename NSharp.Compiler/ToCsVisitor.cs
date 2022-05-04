@@ -772,6 +772,15 @@ public class ToCsVisitor : ISyntaxTreeVisitor, IDisposable
 
     public void Visit(Parameter item)
     {
+        string mods = string.Join(" ", item.Modifiers.Select(m => m switch
+        {
+            ParameterModifierType.Out => "out",
+            ParameterModifierType.Parameters => "params",
+            ParameterModifierType.Reference => "ref",
+            _ => $"[{m}]"
+        }));
+
+        Write($"{mods} ");
         item.Type?.Accept(this);
         Write($" {item.Name}");
         if (item.Value != null)

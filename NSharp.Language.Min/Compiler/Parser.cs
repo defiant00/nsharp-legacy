@@ -101,29 +101,15 @@ public class Parser
         //     [statements]
         // fn
 
-        var res = Accept(TokenType.Function, TokenType.LeftParenthesis);
+        var res = Accept(TokenType.Function);
         if (res.Failure)
             return InvalidTokenErrorExpression("Invalid token in anonymous function", res);
 
         var anonFn = new AnonymousFunction(GetToken(res).Position);
 
-        while (Peek.Type != TokenType.RightParenthesis)
-        {
-            res = Accept(TokenType.Literal);
-            if (res.Failure)
-                return InvalidTokenErrorExpression("Invalid token in parameter", res);
-            var paramNameToken = GetToken(res);
-            ParseResult<Expression>? paramType = null;
-            if (Peek.Type != TokenType.RightParenthesis && Peek.Type != TokenType.Comma)
-                paramType = ParseType();
-            anonFn.Parameters.Add(new Parameter(paramNameToken.Position, paramNameToken.Value) { Type = paramType?.Result });
-
-            Accept(TokenType.Comma);
-        }
-
-        res = Accept(TokenType.RightParenthesis);
-        if (res.Failure)
-            return InvalidTokenErrorExpression("Invalid token in anonymous function", res);
+        var paramRes = ParseParameters(anonFn.Parameters);
+        if (paramRes != null && paramRes.Result is ErrorStatement es)
+            return ErrorExpression(es);
 
         // return type
         if (Peek.Type != TokenType.EOL && Peek.Type != TokenType.Is)
@@ -138,8 +124,8 @@ public class Parser
         if (Accept(TokenType.Is).Success)
         {
             var stmtResult = ParseMethodStatement(false);
-            if (stmtResult.Error && stmtResult.Result is ErrorStatement es)
-                return ErrorExpression(es);
+            if (stmtResult.Error && stmtResult.Result is ErrorStatement est)
+                return ErrorExpression(est);
             anonFn.Statements.Add(stmtResult.Result);
             return new ParseResult<Expression>(anonFn);
         }
@@ -155,8 +141,8 @@ public class Parser
         while (Peek.Type != TokenType.Dedent)
         {
             var stmtRes = ParseMethodStatement();
-            if (stmtRes.Error && stmtRes.Result is ErrorStatement es)
-                return ErrorExpression(es);
+            if (stmtRes.Error && stmtRes.Result is ErrorStatement est)
+                return ErrorExpression(est);
             anonFn.Statements.Add(stmtRes.Result);
         }
 
@@ -590,39 +576,15 @@ public class Parser
         // [modifiers] fn new([params]) base([exprs])
         //     [statements]
 
-        var res = Accept(TokenType.New, TokenType.LeftParenthesis);
+        var res = Accept(TokenType.New);
         if (res.Failure)
             return InvalidTokenErrorStatement("Invalid token in ctor", res);
 
         var ctorDef = new ConstructorDefinition(start.Position, modifiers);
 
-        while (Peek.Type != TokenType.RightParenthesis)
-        {
-            res = Accept(TokenType.Literal);
-            if (res.Failure)
-                return InvalidTokenErrorStatement("Invalid token in parameter", res);
-            var paramNameToken = GetToken(res);
-            var paramType = ParseType();
-            if (paramType.Error && paramType.Result is ErrorExpression ex)
-                return ErrorStatement(ex);
-
-            var par = new Parameter(paramType.Result.Position, paramNameToken.Value) { Type = paramType.Result };
-            ctorDef.Parameters.Add(par);
-
-            if (Accept(TokenType.Assign).Success)
-            {
-                var exprRes = ParseExpression();
-                if (exprRes.Error && exprRes.Result is ErrorExpression exp)
-                    return ErrorStatement(exp);
-                par.Value = exprRes.Result;
-            }
-
-            Accept(TokenType.Comma);
-        }
-
-        res = Accept(TokenType.RightParenthesis);
-        if (res.Failure)
-            return InvalidTokenErrorStatement("Invalid token in ctor", res);
+        var paramRes = ParseParameters(ctorDef.Parameters);
+        if (paramRes != null)
+            return paramRes;
 
         // base([exprs])
         if (Accept(TokenType.Base, TokenType.LeftParenthesis).Success)
@@ -701,26 +663,9 @@ public class Parser
         if (genericRes != null)
             return genericRes;
 
-        res = Accept(TokenType.LeftParenthesis);
-        if (res.Failure)
-            return InvalidTokenErrorStatement("Invalid token in delegate", res);
-
-        while (Peek.Type != TokenType.RightParenthesis)
-        {
-            res = Accept(TokenType.Literal);
-            if (res.Failure)
-                return InvalidTokenErrorStatement("Invalid token in delegate", res);
-            var paramNameToken = GetToken(res);
-            var paramType = ParseType();
-            if (!paramType.Error)
-                delegateDef.Parameters.Add(new Parameter(paramType.Result.Position, paramNameToken.Value) { Type = paramType.Result });
-
-            Accept(TokenType.Comma);
-        }
-
-        res = Accept(TokenType.RightParenthesis);
-        if (res.Failure)
-            return InvalidTokenErrorStatement("Invalid token in delegate", res);
+        var paramRes = ParseParameters(delegateDef.Parameters);
+        if (paramRes != null)
+            return paramRes;
 
         if (Peek.Type != TokenType.EOL)
         {
@@ -1576,37 +1521,9 @@ public class Parser
         if (genericRes != null)
             return genericRes;
 
-        var res = Accept(TokenType.LeftParenthesis);
-        if (res.Failure)
-            return InvalidTokenErrorStatement("Invalid token in method", res);
-
-        while (Peek.Type != TokenType.RightParenthesis)
-        {
-            res = Accept(TokenType.Literal);
-            if (res.Failure)
-                return InvalidTokenErrorStatement("Invalid token in parameter", res);
-            var paramNameToken = GetToken(res);
-            var paramType = ParseType();
-            if (paramType.Error && paramType.Result is ErrorExpression ex)
-                return ErrorStatement(ex);
-
-            var par = new Parameter(paramType.Result.Position, paramNameToken.Value) { Type = paramType.Result };
-            methodDef.Parameters.Add(par);
-
-            if (Accept(TokenType.Assign).Success)
-            {
-                var exprRes = ParseExpression();
-                if (exprRes.Error && exprRes.Result is ErrorExpression exp)
-                    return ErrorStatement(exp);
-                par.Value = exprRes.Result;
-            }
-
-            Accept(TokenType.Comma);
-        }
-
-        res = Accept(TokenType.RightParenthesis);
-        if (res.Failure)
-            return InvalidTokenErrorStatement("Invalid token in method", res);
+        var paramRes = ParseParameters(methodDef.Parameters);
+        if (paramRes != null)
+            return paramRes;
 
         // [modifiers] fn [name]([params]) is [statement]
         if (Accept(TokenType.Is).Success)
@@ -1619,6 +1536,7 @@ public class Parser
         }
 
         // return type
+        AcceptResult res;
         if (Peek.Type != TokenType.EOL)
         {
             var typeResult = ParseType();
@@ -1693,26 +1611,9 @@ public class Parser
         if (genericRes != null)
             return genericRes;
 
-        var res = Accept(TokenType.LeftParenthesis);
-        if (res.Failure)
-            return InvalidTokenErrorStatement("Invalid token in method signature", res);
-
-        while (Peek.Type != TokenType.RightParenthesis)
-        {
-            res = Accept(TokenType.Literal);
-            if (res.Failure)
-                return InvalidTokenErrorStatement("Invalid token in parameter", res);
-            var paramNameToken = GetToken(res);
-            var paramType = ParseType();
-            if (!paramType.Error)
-                methodSig.Parameters.Add(new Parameter(paramType.Result.Position, paramNameToken.Value) { Type = paramType.Result });
-
-            Accept(TokenType.Comma);
-        }
-
-        res = Accept(TokenType.RightParenthesis);
-        if (res.Failure)
-            return InvalidTokenErrorStatement("Invalid token in method signature", res);
+        var paramRes = ParseParameters(methodSig.Parameters);
+        if (paramRes != null)
+            return paramRes;
 
         // return type
         if (Peek.Type != TokenType.EOL)
@@ -1723,7 +1624,7 @@ public class Parser
             methodSig.ReturnType = typeResult.Result;
         }
 
-        res = Accept(TokenType.EOL);
+        var res = Accept(TokenType.EOL);
         if (res.Failure)
             return InvalidTokenErrorStatement("Invalid token in method signature", res);
 
@@ -1805,6 +1706,50 @@ public class Parser
             return typeResult;
 
         return new ParseResult<Expression>(new Core.Ast.Nullable(start.Position, typeResult.Result));
+    }
+
+    // Returns an error, or null on success
+    private ParseResult<Statement>? ParseParameters(List<Parameter> parameters)
+    {
+        var res = Accept(TokenType.LeftParenthesis);
+        if (res.Failure)
+            return InvalidTokenErrorStatement("Invalid token in parameters", res);
+
+        while (Peek.Type != TokenType.RightParenthesis)
+        {
+            var modifiers = new List<ParameterModifierType>();
+            while (Peek.Type.IsParameterModifier())
+                modifiers.Add(Next().Type.ToParameterModifier());
+
+            res = Accept(TokenType.Literal);
+            if (res.Failure)
+                return InvalidTokenErrorStatement("Invalid token in parameter", res);
+            var paramNameToken = GetToken(res);
+            ParseResult<Expression>? paramType = null;
+            if (Peek.Type != TokenType.RightParenthesis && Peek.Type != TokenType.Comma && Peek.Type != TokenType.Assign)
+                paramType = ParseType();
+            if (paramType != null && paramType.Error && paramType.Result is ErrorExpression ex)
+                return ErrorStatement(ex);
+
+            var par = new Parameter(paramNameToken.Position, modifiers, paramType?.Result, paramNameToken.Value);
+            parameters.Add(par);
+
+            if (Accept(TokenType.Assign).Success)
+            {
+                var exprRes = ParseExpression();
+                if (exprRes.Error && exprRes.Result is ErrorExpression exp)
+                    return ErrorStatement(exp);
+                par.Value = exprRes.Result;
+            }
+
+            Accept(TokenType.Comma);
+        }
+
+        res = Accept(TokenType.RightParenthesis);
+        if (res.Failure)
+            return InvalidTokenErrorStatement("Invalid token in parameters", res);
+
+        return null;
     }
 
     private ParseResult<Expression> ParseParenthesizedExpression()

@@ -641,6 +641,7 @@ public class SyntaxTreePrinterVisitor : ISyntaxTreeVisitor
 
     public void Visit(Parameter item)
     {
+        Write($"{string.Join(" ", item.Modifiers)} ");
         item.Type?.Accept(this);
         Write($" {item.Name}");
         if (item.Value != null)

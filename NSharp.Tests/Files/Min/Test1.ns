@@ -1,15 +1,10 @@
 
 class MyClass
-    fn Explode() is throw new Exception("boom")
-
-    fn Test()
-        if true
-            throw new Exception("oop")
-        x ?? throw new Exception("ah!")
-        x ? "true", throw new Exception("ah")
-        x ? throw new Exception("oh"), "false"
-        x ? throw new Exception("yay"), throw new Exception("no")
-        x ? {
-            1 is "one",
-            _ is throw new Exception("oh no"),
-        }
+    fn MyFunc()
+        ; empty
+    fn AnotherTest(x int, y str)
+        ; empty
+    fn Test(var args []int)
+        ; empty
+    fn Test2(out name str)
+        ; empty
